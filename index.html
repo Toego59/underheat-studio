@@ -25,7 +25,17 @@
         header { background: rgba(18,18,18,0.9); padding: 16px 0; position: sticky; top:0; z-index:100; border-bottom:1px solid rgba(255,255,255,0.04); }
         .header-content { display:flex; justify-content:space-between; align-items:center; }
         .logo-container { display:flex; align-items:center; gap:12px; }
-        .logo-image { width:120px; height:60px; object-fit:contain; border-radius:8px; background:transparent; }
+        .logo-image { 
+            height: 50px; 
+            width: auto; 
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            transition: transform 0.3s ease;
+            border-radius: 8px;
+        }
+        .logo-image:hover {
+            transform: scale(1.05);
+        }
         .logo { font-size:24px; font-weight:700; background:linear-gradient(to right,var(--primary),var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         nav ul { display:flex; list-style:none; gap:18px; align-items:center; }
         nav a { color:var(--light); text-decoration:none; padding:8px 12px; border-radius:6px; transition:all .2s; }
@@ -50,6 +60,16 @@
         .form-group { margin-bottom:12px; }
         .form-group input { width:100%; padding:10px 12px; border-radius:8px; border:none; background:rgba(255,255,255,0.06); color:var(--light); }
         .login-btn { width:100%; padding:10px; border-radius:8px; border:none; background:linear-gradient(to right,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer; }
+
+        /* Control Panel */
+        .control-panel { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1200; justify-content:center; align-items:center; }
+        .control-panel-content { background:rgba(20,20,30,0.98); padding:26px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 8px 30px rgba(0,0,0,0.5); color:var(--light); }
+        .control-panel-content h2 { margin-bottom:14px; text-align:center; }
+        .logo-options { display: flex; justify-content: space-around; margin: 20px 0; }
+        .logo-option { text-align: center; cursor: pointer; padding: 10px; border-radius: 8px; transition: background 0.3s; }
+        .logo-option:hover { background: rgba(255,255,255,0.1); }
+        .logo-option img { height: 80px; width: auto; margin-bottom: 10px; border-radius: 8px; }
+        .logo-option.active { background: rgba(106,17,203,0.2); border: 2px solid var(--primary); }
 
         /* Audio Content */
         .audio-content { display:none; gap:18px; flex-direction:column; }
@@ -96,13 +116,17 @@
 
         footer { background: rgba(18,18,18,0.9); padding:30px 0; text-align:center; margin-top:30px; }
         .social-links { display:flex; gap:14px; justify-content:center; margin:12px 0; }
+        .admin-link { margin-top: 10px; }
+        .admin-link a { color: #888; text-decoration: none; font-size: 0.9rem; }
+        .admin-link a:hover { color: var(--primary); }
         
         @media (max-width:768px){
             .header-content{flex-direction:column; gap:10px;}
-            .logo-image{width:56px;height:56px;}
+            .logo-image{height: 40px;}
             .hero h1{font-size:2rem;}
             .qa-container { grid-template-columns: 1fr; }
             .form-row { flex-direction: column; }
+            .logo-options { flex-direction: column; gap: 15px; }
         }
     </style>
 </head>
@@ -112,7 +136,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo-container">
-                    <img id="logo-img" class="logo-image" src="logo.png" alt="UNDERHEAT Studio Logo" onerror="this.style.display='none'">
+                    <img id="logo-img" class="logo-image" src="images/logo.png" alt="UNDERHEAT Studio Logo" onerror="handleLogoError()">
                     <div class="logo">UNDERHEAT Studio</div>
                 </div>
                 <nav>
@@ -279,8 +303,31 @@
                 <label for="password">Password</label>
                 <input id="password" type="password" placeholder="777">
             </div>
-            <button class="login-btn" id="submit-login">Access Audio</button>
+            <button class="login-btn" id="submit-login">Access</button>
             <p id="login-message" style="color:#ff6b6b; margin-top:12px; display:none;">Incorrect credentials. Please try again.</p>
+        </div>
+    </div>
+
+    <!-- Control Panel Modal -->
+    <div class="control-panel" id="control-panel" aria-hidden="true">
+        <div class="control-panel-content" role="dialog" aria-labelledby="control-panel-title">
+            <h2 id="control-panel-title"><i class="fas fa-cog"></i> Logo Control Panel</h2>
+            <p style="text-align: center; margin-bottom: 20px;">Select which logo to display on the website</p>
+            
+            <div class="logo-options">
+                <div class="logo-option active" data-logo="regular">
+                    <img src="images/logo.png" alt="Regular Logo" onerror="this.src='https://via.placeholder.com/160x80/6a11cb/ffffff?text=Regular+Logo'">
+                    <p>Regular Logo</p>
+                </div>
+                <div class="logo-option" data-logo="pride">
+                    <img src="images/logo-pride.png" alt="Pride Logo" onerror="this.src='https://via.placeholder.com/160x80/ff66aa/ffffff?text=Pride+Logo'">
+                    <p>Pride Month Logo</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                <button class="login-btn" id="close-control-panel" style="max-width: 200px;">Close Panel</button>
+            </div>
         </div>
     </div>
 
@@ -351,6 +398,9 @@
                     <a href="#"><i class="fab fa-linkedin"></i></a>
                 </div>
                 <p style="color:#aaa;">© 2023 UNDERHEAT Studio. All rights reserved.</p>
+                <div class="admin-link">
+                    <a href="#" id="admin-panel-link">Admin Panel</a>
+                </div>
             </div>
         </div>
     </footer>
@@ -387,6 +437,13 @@
             const loginMessage = document.getElementById('login-message');
             const audioContent = document.getElementById('audio-content');
             const logoutBtn = document.getElementById('logout-btn');
+            const adminPanelLink = document.getElementById('admin-panel-link');
+            const controlPanel = document.getElementById('control-panel');
+            const closeControlPanel = document.getElementById('close-control-panel');
+            const logoOptions = document.querySelectorAll('.logo-option');
+            
+            // Current access state
+            let accessType = null; // 'audio' or 'control-panel'
 
             // Initialize SimpleLightbox
             const lightbox = new SimpleLightbox('.gallery a', {
@@ -476,9 +533,68 @@
                 });
             });
 
+            // Handle logo error
+            function handleLogoError() {
+                const logoImg = document.getElementById('logo-img');
+                logoImg.style.display = 'none';
+                // Try to load the pride logo if regular one fails
+                if (logoImg.src.includes('logo.png')) {
+                    setTimeout(() => {
+                        logoImg.src = 'images/logo-pride.png';
+                        logoImg.style.display = 'block';
+                    }, 100);
+                }
+            }
+
+            // Logo selection functionality
+            logoOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update UI
+                    logoOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update logo
+                    const logoType = this.getAttribute('data-logo');
+                    const logoImg = document.getElementById('logo-img');
+                    
+                    if (logoType === 'pride') {
+                        logoImg.src = 'images/logo-pride.png';
+                    } else {
+                        logoImg.src = 'images/logo.png';
+                    }
+                    
+                    // Store preference
+                    localStorage.setItem('logoPreference', logoType);
+                });
+            });
+
+            // Load saved logo preference
+            const savedLogoPreference = localStorage.getItem('logoPreference');
+            if (savedLogoPreference) {
+                const logoImg = document.getElementById('logo-img');
+                if (savedLogoPreference === 'pride') {
+                    logoImg.src = 'images/logo-pride.png';
+                    document.querySelector('.logo-option[data-logo="pride"]').classList.add('active');
+                    document.querySelector('.logo-option[data-logo="regular"]').classList.remove('active');
+                } else {
+                    logoImg.src = 'images/logo.png';
+                    document.querySelector('.logo-option[data-logo="regular"]').classList.add('active');
+                    document.querySelector('.logo-option[data-logo="pride"]').classList.remove('active');
+                }
+            }
+
+            // Open control panel when admin link clicked
+            adminPanelLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                accessType = 'control-panel';
+                loginModal.style.display = 'flex';
+                loginModal.setAttribute('aria-hidden', 'false');
+            });
+
             // open modal when audio tab clicked
             audioTab.addEventListener('click', function (e) {
                 e.preventDefault();
+                accessType = 'audio';
                 loginModal.style.display = 'flex';
                 loginModal.setAttribute('aria-hidden', 'false');
             });
@@ -492,11 +608,16 @@
                     loginModal.style.display = 'none';
                     loginModal.setAttribute('aria-hidden', 'true');
                     loginMessage.style.display = 'none';
-                    audioContent.style.display = 'flex';
-                    audioContent.scrollIntoView({ behavior: 'smooth' });
-
-                    // enable video placeholders after login
-                    enablePlaceholders();
+                    
+                    if (accessType === 'audio') {
+                        audioContent.style.display = 'flex';
+                        audioContent.scrollIntoView({ behavior: 'smooth' });
+                        // enable video placeholders after login
+                        enablePlaceholders();
+                    } else if (accessType === 'control-panel') {
+                        controlPanel.style.display = 'flex';
+                        controlPanel.setAttribute('aria-hidden', 'false');
+                    }
                 } else {
                     loginMessage.style.display = 'block';
                 }
@@ -508,11 +629,21 @@
                 alert('You have been logged out from the audio section.');
             });
 
+            // close control panel
+            closeControlPanel.addEventListener('click', function() {
+                controlPanel.style.display = 'none';
+                controlPanel.setAttribute('aria-hidden', 'true');
+            });
+
             // close modal when clicking outside the form
             window.addEventListener('click', function (ev) {
                 if (ev.target === loginModal) {
                     loginModal.style.display = 'none';
                     loginModal.setAttribute('aria-hidden', 'true');
+                }
+                if (ev.target === controlPanel) {
+                    controlPanel.style.display = 'none';
+                    controlPanel.setAttribute('aria-hidden', 'true');
                 }
             });
 
@@ -618,4 +749,3 @@
 
 </body>
 </html>
-
