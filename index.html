@@ -7,128 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplelightbox@2.14.2/dist/simple-lightbox.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css">
+    <link rel="stylesheet" href="style.css">
     <meta name="description" content="Educational content management system for creative digital arts">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        :root {
-            --primary: #6a11cb; --secondary: #2575fc; --dark: #121212; --light: #f8f9fa;
-            --deltarune-pink: #ff66aa; --deltarune-blue: #4466ff; --deltarune-yellow: #ffcc22;
-        }
-        body {
-            background: linear-gradient(to bottom, var(--dark), #0a0a1a);
-            color: var(--light);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-
-        header { background: rgba(18,18,18,0.9); padding: 16px 0; position: sticky; top:0; z-index:100; border-bottom:1px solid rgba(255,255,255,0.04); }
-        .header-content { display:flex; justify-content:space-between; align-items:center; }
-        .logo-container { display:flex; align-items:center; gap:12px; }
-        .logo-image { 
-            height: 50px; 
-            width: auto; 
-            object-fit: contain;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-            transition: transform 0.3s ease;
-            border-radius: 8px;
-        }
-        .logo-image:hover {
-            transform: scale(1.05);
-        }
-        .logo { font-size:24px; font-weight:700; background:linear-gradient(to right,var(--primary),var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        nav ul { display:flex; list-style:none; gap:18px; align-items:center; }
-        nav a { color:var(--light); text-decoration:none; padding:8px 12px; border-radius:6px; transition:all .2s; }
-        nav a:hover, nav a.active { color:var(--primary); background:rgba(106,17,203,0.06); }
-
-        .hero { text-align:center; padding:80px 0; background:radial-gradient(circle, rgba(37,117,252,0.12) 0%, rgba(10,10,26,0) 70%); }
-        .hero h1 { font-size:3rem; margin-bottom:12px; background:linear-gradient(to right,var(--primary),var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .btn { display:inline-block; background:linear-gradient(to right,var(--primary),var(--secondary)); color:#fff; padding:10px 22px; border-radius:28px; text-decoration:none; font-weight:600; }
-
-        section { padding:60px 0; }
-        .section-title { text-align:center; font-size:2rem; margin-bottom:30px; }
-        .projects { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; }
-
-        .project-card { background: rgba(255,255,255,0.03); border-radius:12px; overflow:hidden; padding-bottom:12px; transition: transform 0.3s; }
-        .project-card:hover { transform: translateY(-5px); }
-        .project-img { height:140px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; color:white; background:linear-gradient(45deg,var(--primary),var(--secondary)); cursor: pointer; }
-
-        /* Login Modal */
-        .login-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1200; justify-content:center; align-items:center; }
-        .login-form { background:rgba(20,20,30,0.98); padding:26px; border-radius:12px; width:90%; max-width:420px; box-shadow:0 8px 30px rgba(0,0,0,0.5); color:var(--light); }
-        .login-form h2 { margin-bottom:14px; text-align:center; }
-        .form-group { margin-bottom:12px; }
-        .form-group input { width:100%; padding:10px 12px; border-radius:8px; border:none; background:rgba(255,255,255,0.06); color:var(--light); }
-        .login-btn { width:100%; padding:10px; border-radius:8px; border:none; background:linear-gradient(to right,var(--primary),var(--secondary)); color:white; font-weight:700; cursor:pointer; }
-
-        /* Control Panel */
-        .control-panel { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1200; justify-content:center; align-items:center; }
-        .control-panel-content { background:rgba(20,20,30,0.98); padding:26px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 8px 30px rgba(0,0,0,0.5); color:var(--light); }
-        .control-panel-content h2 { margin-bottom:14px; text-align:center; }
-        .logo-options { display: flex; justify-content: space-around; margin: 20px 0; }
-        .logo-option { text-align: center; cursor: pointer; padding: 10px; border-radius: 8px; transition: background 0.3s; }
-        .logo-option:hover { background: rgba(255,255,255,0.1); }
-        .logo-option img { height: 80px; width: auto; margin-bottom: 10px; border-radius: 8px; }
-        .logo-option.active { background: rgba(106,17,203,0.2); border: 2px solid var(--primary); }
-
-        /* Audio Content */
-        .audio-content { display:none; gap:18px; flex-direction:column; }
-        .audio-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px; margin-top:18px; }
-        .audio-card { background: rgba(255,255,255,0.03); border-radius:10px; overflow:hidden; padding:0; }
-        .audio-info { padding:12px 14px; color:#ddd; }
-        .audio-info h4 { margin-bottom:6px; }
-
-        /* Video placeholder (click to load actual iframe) */
-        .audio-container { position:relative; width:100%; padding-bottom:56.25%; overflow:hidden; background:#111; }
-        .video-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; cursor:pointer; background-size:cover; background-position:center; }
-        .video-play-btn { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); border:4px solid rgba(255,255,255,0.85); font-size:28px; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.6); }
-
-        /* Q&A Section */
-        .qa-section { margin-top: 40px; }
-        .qa-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-        .qa-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; }
-        .qa-card h3 { margin-bottom: 15px; color: var(--deltarune-yellow); }
-        .qa-form { display: flex; flex-direction: column; gap: 12px; }
-        .qa-form input { width: 100%; padding: 10px 12px; border-radius:8px; border:none; background:rgba(255,255,255,0.06); color:var(--light); }
-        .qa-form button { background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .result { margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid var(--primary); }
-        pre { white-space: pre-wrap; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; overflow-x: auto; }
-
-        /* Contact Form */
-        .contact-form { background: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; margin-top: 30px; }
-        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .form-row input, .form-row textarea { flex: 1; padding: 12px; border-radius: 8px; border: none; background: rgba(255,255,255,0.06); color: var(--light); }
-        .form-row textarea { min-height: 120px; resize: vertical; }
-        .submit-btn { background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-
-        /* Comments Section */
-        .comments-section { margin-top: 50px; }
-        .comment { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .comment-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .comment-author { font-weight: bold; color: var(--deltarune-pink); }
-        .comment-date { color: #888; }
-        .comment-body { color: #ddd; }
-
-        /* Share Buttons */
-        .share-buttons { display: flex; gap: 10px; margin: 20px 0; }
-        .share-btn { display: flex; align-items: center; gap: 5px; padding: 8px 15px; border-radius: 20px; background: rgba(255,255,255,0.1); color: white; text-decoration: none; transition: background 0.3s; }
-        .share-btn:hover { background: rgba(255,255,255,0.2); }
-
-        footer { background: rgba(18,18,18,0.9); padding:30px 0; text-align:center; margin-top:30px; }
-        .social-links { display:flex; gap:14px; justify-content:center; margin:12px 0; }
-        .admin-link { margin-top: 10px; }
-        .admin-link a { color: #888; text-decoration: none; font-size: 0.9rem; }
-        .admin-link a:hover { color: var(--primary); }
-        
-        @media (max-width:768px){
-            .header-content{flex-direction:column; gap:10px;}
-            .logo-image{height: 40px;}
-            .hero h1{font-size:2rem;}
-            .qa-container { grid-template-columns: 1fr; }
-            .form-row { flex-direction: column; }
-            .logo-options { flex-direction: column; gap: 15px; }
-        }
-    </style>
 </head>
 <body>
 
@@ -182,17 +62,17 @@
             <div class="projects">
                 <div class="project-card">
                     <div class="project-img" data-src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80">AT</div>
-                    <div style="padding:16px;">
+                    <div class="project-info">
                         <h3>Ashes Till Tomorrow</h3>
-                        <p style="color:#bbb">Ashes Till Tomorrow is a realistic survival game based of retro futurism of the 20th century being bombed and rebuilt from the ashes.</p>
+                        <p>Ashes Till Tomorrow is a realistic survival game based of retro futurism of the 20th century being bombed and rebuilt from the ashes.</p>
                     </div>
                 </div>
 
                 <div class="project-card">
                     <div class="project-img" data-src="https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80">CL</div>
-                    <div style="padding:16px;">
+                    <div class="project-info">
                         <h3>Critter Land</h3>
-                        <p style="color:#bbb">Critter Land is a immersive Indie Mascot Horror Game, With it being a free roam exploration of you finding the forgotten park of Critter Land.</p>
+                        <p>Critter Land is a immersive Indie Mascot Horror Game, With it being a free roam exploration of you finding the forgotten park of Critter Land.</p>
                     </div>
                 </div>
             </div>
@@ -209,7 +89,7 @@
     <section id="qa" class="qa-section">
         <div class="container">
             <h2 class="section-title">Knowledge Base</h2>
-            <p style="text-align: center; margin-bottom: 30px; color: #bbb;">Search our knowledge base for answers to common questions</p>
+            <p class="section-subtitle">Search our knowledge base for answers to common questions</p>
             
             <div class="qa-container">
                 <div class="qa-card">
@@ -235,7 +115,7 @@
                 
                 <div class="qa-card">
                     <h3>Get All Data</h3>
-                    <p style="color: #bbb; margin-bottom: 15px;">Retrieve all questions and answers from the knowledge base</p>
+                    <p class="data-description">Retrieve all questions and answers from the knowledge base</p>
                     <button onclick="getAllData()">Get All Data</button>
                     <div id="dataResult" class="result"></div>
                 </div>
@@ -304,7 +184,7 @@
                 <input id="password" type="password" placeholder="777">
             </div>
             <button class="login-btn" id="submit-login">Access</button>
-            <p id="login-message" style="color:#ff6b6b; margin-top:12px; display:none;">Incorrect credentials. Please try again.</p>
+            <p id="login-message">Incorrect credentials. Please try again.</p>
         </div>
     </div>
 
@@ -312,7 +192,7 @@
     <div class="control-panel" id="control-panel" aria-hidden="true">
         <div class="control-panel-content" role="dialog" aria-labelledby="control-panel-title">
             <h2 id="control-panel-title"><i class="fas fa-cog"></i> Logo Control Panel</h2>
-            <p style="text-align: center; margin-bottom: 20px;">Select which logo to display on the website</p>
+            <p class="panel-description">Select which logo to display on the website</p>
             
             <div class="logo-options">
                 <div class="logo-option active" data-logo="regular">
@@ -325,8 +205,8 @@
                 </div>
             </div>
             
-            <div style="display: flex; justify-content: center; margin-top: 20px;">
-                <button class="login-btn" id="close-control-panel" style="max-width: 200px;">Close Panel</button>
+            <div class="panel-actions">
+                <button class="login-btn" id="close-control-panel">Close Panel</button>
             </div>
         </div>
     </div>
@@ -335,15 +215,15 @@
     <section id="audio">
         <div class="container">
             <div id="audio-content" class="audio-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-                    <h2 class="section-title" style="margin:0;">UNDERHEAT Studio Audio Collection</h2>
-                    <div style="display:flex; gap:12px;">
+                <div class="audio-header">
+                    <h2 class="section-title">UNDERHEAT Studio Audio Collection</h2>
+                    <div class="audio-actions">
                         <button class="btn" id="logout-btn">Log Out</button>
                     </div>
                 </div>
 
-                <div style="margin-top:14px;">
-                    <h3 style="color:#ddd">Deltarune Official Soundtrack <span style="color:var(--deltarune-yellow)">by Toby Fox</span></h3>
+                <div class="audio-collection">
+                    <h3 class="collection-title">Deltarune Official Soundtrack <span class="composer">by Toby Fox</span></h3>
                     <div class="audio-gallery" id="audio-gallery">
                         <!-- Each audio-card contains a placeholder with data-video-id; clicking it will create the iframe -->
                         <div class="audio-card">
@@ -353,8 +233,8 @@
                                 </div>
                             </div>
                             <div class="audio-info">
-                                <h4><span style="color:var(--deltarune-pink)">Gyaa Ha ha!</span></h4>
-                                <p style="color:#bbb">From Deltarune Chapter 2</p>
+                                <h4><span class="audio-name">Gyaa Ha ha!</span></h4>
+                                <p class="audio-description">From Deltarune Chapter 2</p>
                             </div>
                         </div>
 
@@ -365,8 +245,8 @@
                                 </div>
                             </div>
                             <div class="audio-info">
-                                <h4><span style="color:var(--deltarune-blue)">Hammer of Justice</span></h4>
-                                <p style="color:#bbb">From Deltarune Chapter 2</p>
+                                <h4><span class="audio-name">Hammer of Justice</span></h4>
+                                <p class="audio-description">From Deltarune Chapter 2</p>
                             </div>
                         </div>
 
@@ -377,8 +257,8 @@
                                 </div>
                             </div>
                             <div class="audio-info">
-                                <h4><span style="color:var(--deltarune-yellow)">Spear of Justice</span></h4>
-                                <p style="color:#bbb">From Undertale (Bonus Track)</p>
+                                <h4><span class="audio-name">Spear of Justice</span></h4>
+                                <p class="audio-description">From Undertale (Bonus Track)</p>
                             </div>
                         </div>
                     </div>
@@ -389,7 +269,7 @@
 
     <footer>
         <div class="container">
-            <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="footer-content">
                 <div class="logo">UNDERHEAT Studio</div>
                 <div class="social-links">
                     <a href="#"><i class="fab fa-twitter"></i></a>
@@ -397,7 +277,7 @@
                     <a href="#"><i class="fab fa-youtube"></i></a>
                     <a href="#"><i class="fab fa-linkedin"></i></a>
                 </div>
-                <p style="color:#aaa;">© 2023 UNDERHEAT Studio. All rights reserved.</p>
+                <p class="copyright">© 2023 UNDERHEAT Studio. All rights reserved.</p>
                 <div class="admin-link">
                     <a href="#" id="admin-panel-link">Admin Panel</a>
                 </div>
@@ -441,6 +321,9 @@
             const controlPanel = document.getElementById('control-panel');
             const closeControlPanel = document.getElementById('close-control-panel');
             const logoOptions = document.querySelectorAll('.logo-option');
+            
+            // Hide login message initially
+            loginMessage.style.display = 'none';
             
             // Current access state
             let accessType = null; // 'audio' or 'control-panel'
