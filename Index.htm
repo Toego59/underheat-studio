@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNDERHEAT Studio</title>
+    <style>
+        :root {
+            --primary-color: #ff5500;
+            --secondary-color: #333333;
+            --accent-color: #00aaff;
+            --text-color: #ffffff;
+            --background-color: #1a1a1a;
+            --vr-scale: 1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 60px;
+            width: auto;
+        }
+
+        .pride-logo {
+            display: none;
+            height: 60px;
+            width: auto;
+        }
+
+        .pride-mode .logo {
+            display: none;
+        }
+
+        .pride-mode .pride-logo {
+            display: block;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+        }
+
+        nav ul li a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        nav ul li a:hover {
+            background-color: var(--primary-color);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 0;
+        }
+
+        .hero h1 {
+            font-size: calc(3rem * var(--vr-scale));
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .hero p {
+            font-size: calc(1.2rem * var(--vr-scale));
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin: 40px 0 20px;
+            color: var(--primary-color);
+            font-size: calc(2.5rem * var(--vr-scale));
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .game-card {
+            background: linear-gradient(145deg, var(--secondary-color), #252525);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .game-image {
+            width: 100%;
+            height: 200px;
+            background-color: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+        }
+
+        .game-info {
+            padding: 20px;
+        }
+
+        .game-info h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: calc(1.5rem * var(--vr-scale));
+        }
+
+        .auth-section {
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .auth-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: var(--text-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff7733;
+        }
+
+        .audio-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .audio-item {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .audio-item iframe {
+            width: 100%;
+            height: 200px;
+            border: none;
+        }
+
+        .audio-info {
+            padding: 15px;
+        }
+
+        .control-panel {
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .color-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .color-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .color-control label {
+            margin-bottom: 5px;
+        }
+
+        .color-control input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .theme-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .vr-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+
+        .scale-control {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .scale-control label {
+            margin-right: 10px;
+        }
+
+        .scale-control input {
+            flex-grow: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            border-top: 1px solid var(--primary-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Debugging info */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        /* VR Mode Styles */
+        @media (max-width: 768px) {
+            .games-grid, .audio-gallery {
+                grid-template-columns: 1fr;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            nav ul li {
+                margin: 10px 0;
+            }
+        }
+
+        /* Pride theme */
+        .pride-mode {
+            --primary-color: #e40303;
+            --secondary-color: #ff8c00;
+            --accent-color: #ffed00;
+            --text-color: #000000;
+            --background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <!-- Multiple approaches to fix logo issue -->
+                <img src="images/logo.png" alt="UNDERHEAT Studio Logo" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjx0ZXh0IHg9IjEwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjI0IiBmaWxsPSIjZmY1NTAwIj5VTkRFUkhFQVQ8L3RleHQ+PC9zdmc+'">
+                <img src="images/logo-pride.png" alt="UNDERHEAT Studio Pride Logo" class="pride-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxsaW5lYXJHcmFkaWVudCBpZD0iYSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIwIiB5MT0iMCIgeDI9IjIwMCIgeTI9IjAiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2U0MDMwMyIvPjxzdG9wIG9mZnNldD0iLjIiIHN0b3AtY29sb3I9IiNmZjhjMDAiLz48c3RvcCBvZmZzZXQ9Ii40IiBzdG9wLWNvbG9yPSIjZmZlZDAwIi8+PHN0b3Agb2Zmc2V0PSIuNiIgc3RvcC1jb2xvcj0iIzAwODAyNiIvPjxzdG9wIG9mZnNldD0iLjgiIHN0b3AtY29sb3I9IiMwMDQ1ZjQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjJiOGIiLz48L2xpbmVhckdyYWRpZW50PjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iNjAiIGZpbGw9InVybCgjYSkiLz48dGV4dCB4PSIxMCIgeT0iMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iIzAwMCI+VU5ERVJIRUFUIFBSSURFPC90ZXh0Pjwvc3ZnPg=='">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#games">Games</a></li>
+                    <li><a href="#audio">Audio</a></li>
+                    <li><a href="#controls">Controls</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <section id="home" class="hero">
+            <h1>UNDERHEAT Studio</h1>
+            <p>Creating immersive gaming experiences with stunning visuals and captivating audio</p>
+        </section>
+
+        <section id="games">
+            <h2 class="section-title">Our Games</h2>
+            <div class="games-grid">
+                <div class="game-card">
+                    <div class="game-image">Ashes Till Tomorrow Image</div>
+                    <div class="game-info">
+                        <h3>Ashes Till Tomorrow</h3>
+                        <p>A post-apocalyptic survival game set in a world reclaimed by nature. Explore, craft, and survive against all odds.</p>
+                    </div>
+                </div>
+                <div class="game-card">
+                    <div class="game-image">Critter Land Image</div>
+                    <div class="game-info">
+                        <h3>Critter Land</h3>
+                        <p>A charming life simulation game where you build and maintain your own animal sanctuary. Care for adorable creatures and expand your paradise.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="auth" class="auth-section">
+            <h2>Authentication Required</h2>
+            <p>Please log in to access the audio gallery and customization features</p>
+            <form class="auth-form">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="button" id="login-btn">Login</button>
+            </form>
+        </section>
+
+        <section id="audio" class="hidden">
+            <h2 class="section-title">Audio Gallery</h2>
+            <div class="audio-gallery">
+                <div class="audio-item">
+                    <iframe src="https://www.youtube.com/embed/t6lqoRS9J-c" allowfullscreen></iframe>
+                    <div class="audio-info">
+                        <h3>Piano Man</h3>
+                        <p>A beautiful piano composition from our game Ashes Till Tomorrow</p>
+                    </div>
+                </div>
+                <div class="audio-item">
+                    <iframe src="https://www.youtube.com/embed/3N4eWzitjUc" allowfullscreen></iframe>
+                    <div class="audio-info">
+                        <h3>Death by Glamour</h3>
+                        <p>An energetic battle theme from Critter Land</p>
+                    </div>
+                </div>
+                <div class="audio-item">
+                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+                    <div class="audio-info">
+                        <h3>Forest Whispers</h3>
+                        <p>Calming ambient music from Ashes Till Tomorrow</p>
+                    </div>
+                </div>
+                <div class="audio-item">
+                    <iframe src="https://www.youtube.com/embed/jNQXAC9IVRw" allowfullscreen></iframe>
+                    <div class="audio-info">
+                        <h3>City of Rust</h3>
+                        <p>Exploration theme from Ashes Till Tomorrow</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="controls" class="control-panel hidden">
+            <h2 class="section-title">Customization Panel</h2>
+            
+            <div class="color-controls">
+                <div class="color-control">
+                    <label for="primaryColor">Primary Color</label>
+                    <input type="color" id="primaryColor" value="#ff5500">
+                </div>
+                <div class="color-control">
+                    <label for="secondaryColor">Secondary Color</label>
+                    <input type="color" id="secondaryColor" value="#333333">
+                </div>
+                <div class="color-control">
+                    <label for="accentColor">Accent Color</label>
+                    <input type="color" id="accentColor" value="#00aaff">
+                </div>
+                <div class="color-control">
+                    <label for="textColor">Text Color</label>
+                    <input type="color" id="textColor" value="#ffffff">
+                </div>
+                <div class="color-control">
+                    <label for="backgroundColor">Background Color</label>
+                    <input type="color" id="backgroundColor" value="#1a1a1a">
+                </div>
+            </div>
+
+            <div class="theme-buttons">
+                <button id="theme-underheat">Underheat Theme</button>
+                <button id="theme-dark">Dark Theme</button>
+                <button id="theme-blue">Blue Theme</button>
+                <button id="theme-purple">Purple Theme</button>
+                <button id="theme-green">Green Theme</button>
+                <button id="theme-pride">Pride Theme</button>
+            </div>
+
+            <div class="vr-controls">
+                <h3>VR Settings</h3>
+                <div class="scale-control">
+                    <label for="vr-scale">VR Scale:</label>
+                    <input type="range" id="vr-scale" min="1" max="2" step="0.1" value="1">
+                    <span id="vr-scale-value">1</span>
+                </div>
+                <button id="vr-toggle">Enable VR Mode</button>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2023 UNDERHEAT Studio. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <div class="debug-info" id="debugInfo">
+        Debug: Logos loaded with fallback
+    </div>
+
+    <script>
+        // Authentication system
+        document.getElementById('login-btn').addEventListener('click', function() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === '777' && password === '777') {
+                document.getElementById('audio').classList.remove('hidden');
+                document.getElementById('controls').classList.remove('hidden');
+                document.getElementById('auth').classList.add('hidden');
+                
+                // Save authentication state
+                localStorage.setItem('authenticated', 'true');
+            } else {
+                alert('Invalid credentials. Please try again.');
+            }
+        });
+
+        // Check if already authenticated
+        if (localStorage.getItem('authenticated') === 'true') {
+            document.getElementById('audio').classList.remove('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('auth').classList.add('hidden');
+        }
+
+        // Color customization
+        const colorInputs = document.querySelectorAll('.color-control input[type="color"]');
+        
+        colorInputs.forEach(input => {
+            // Load saved colors
+            const savedColor = localStorage.getItem(input.id);
+            if (savedColor) {
+                input.value = savedColor;
+                document.documentElement.style.setProperty(`--${input.id.replace('Color', '').toLowerCase()}`, savedColor);
+            }
+            
+            // Add event listeners for color changes
+            input.addEventListener('input', function() {
+                document.documentElement.style.setProperty(`--${this.id.replace('Color', '').toLowerCase()}`, this.value);
+                localStorage.setItem(this.id, this.value);
+            });
+        });
+
+        // Theme presets
+        document.getElementById('theme-underheat').addEventListener('click', function() {
+            setTheme('#ff5500', '#333333', '#00aaff', '#ffffff', '#1a1a1a');
+        });
+
+        document.getElementById('theme-dark').addEventListener('click', function() {
+            setTheme('#333333', '#555555', '#888888', '#ffffff', '#000000');
+        });
+
+        document.getElementById('theme-blue').addEventListener('click', function() {
+            setTheme('#1a73e8', '#4285f4', '#34a853', '#ffffff', '#0d47a1');
+        });
+
+        document.getElementById('theme-purple').addEventListener('click', function() {
+            setTheme('#6a0dad', '#8e44ad', '#e74c3c', '#ffffff', '#2c003e');
+        });
+
+        document.getElementById('theme-green').addEventListener('click', function() {
+            setTheme('#2ecc71', '#27ae60', '#f39c12', '#ffffff', '#1e272e');
+        });
+
+        document.getElementById('theme-pride').addEventListener('click', function() {
+            document.body.classList.add('pride-mode');
+            localStorage.setItem('prideMode', 'true');
+        });
+
+        function setTheme(primary, secondary, accent, text, background) {
+            document.documentElement.style.setProperty('--primary-color', primary);
+            document.documentElement.style.setProperty('--secondary-color', secondary);
+            document.documentElement.style.setProperty('--accent-color', accent);
+            document.documentElement.style.setProperty('--text-color', text);
+            document.documentElement.style.setProperty('--background-color', background);
+            
+            // Update color inputs
+            document.getElementById('primaryColor').value = primary;
+            document.getElementById('secondaryColor').value = secondary;
+            document.getElementById('accentColor').value = accent;
+            document.getElementById('textColor').value = text;
+            document.getElementById('backgroundColor').value = background;
+            
+            // Save to localStorage
+            localStorage.setItem('primaryColor', primary);
+            localStorage.setItem('secondaryColor', secondary);
+            localStorage.setItem('accentColor', accent);
+            localStorage.setItem('textColor', text);
+            localStorage.setItem('backgroundColor', background);
+            
+            // Disable pride mode if active
+            document.body.classList.remove('pride-mode');
+            localStorage.setItem('prideMode', 'false');
+        }
+
+        // Check for saved pride mode
+        if (localStorage.getItem('prideMode') === 'true') {
+            document.body.classList.add('pride-mode');
+        }
+
+        // VR Controls
+        const vrScale = document.getElementById('vr-scale');
+        const vrScaleValue = document.getElementById('vr-scale-value');
+        const vrToggle = document.getElementById('vr-toggle');
+        
+        // Load saved VR settings
+        const savedVrScale = localStorage.getItem('vrScale');
+        if (savedVrScale) {
+            vrScale.value = savedVrScale;
+            vrScaleValue.textContent = savedVrScale;
+            document.documentElement.style.setProperty('--vr-scale', savedVrScale);
+        }
+        
+        vrScale.addEventListener('input', function() {
+            const scaleValue = this.value;
+            vrScaleValue.textContent = scaleValue;
+            document.documentElement.style.setProperty('--vr-scale', scaleValue);
+            localStorage.setItem('vrScale', scaleValue);
+        });
+        
+        let vrMode = localStorage.getItem('vrMode') === 'true';
+        if (vrMode) {
+            vrToggle.textContent = 'Disable VR Mode';
+            document.documentElement.style.setProperty('--vr-scale', '1.5');
+            vrScale.value = 1.5;
+            vrScaleValue.textContent = '1.5';
+        }
+        
+        vrToggle.addEventListener('click', function() {
+            vrMode = !vrMode;
+            if (vrMode) {
+                this.textContent = 'Disable VR Mode';
+                document.documentElement.style.setProperty('--vr-scale', '1.5');
+                vrScale.value = 1.5;
+                vrScaleValue.textContent = '1.5';
+                localStorage.setItem('vrScale', '1.5');
+            } else {
+                this.textContent = 'Enable VR Mode';
+                document.documentElement.style.setProperty('--vr-scale', '1');
+                vrScale.value = 1;
+                vrScaleValue.textContent = '1';
+                localStorage.setItem('vrScale', '1');
+            }
+            localStorage.setItem('vrMode', vrMode);
+        });
+
+        // Logo loading issue fixes
+        function fixLogoPaths() {
+            const logos = document.querySelectorAll('.logo, .pride-logo');
+            const debugInfo = document.getElementById('debugInfo');
+            
+            logos.forEach(logo => {
+                // Try multiple approaches to load the logo
+                const originalSrc = logo.src;
+                
+                // Approach 1: Check if image loaded successfully
+                logo.onerror = function() {
+                    // Approach 2: Try absolute path from root
+                    logo.src = window.location.origin + '/images/' + originalSrc.split('/').pop();
+                    
+                    logo.onerror = function() {
+                        // Approach 3: Try relative path from current location
+                        logo.src = './images/' + originalSrc.split('/').pop();
+                        
+                        logo.onerror = function() {
+                            // Approach 4: Try GitHub Pages specific path
+                            const repoName = window.location.pathname.split('/')[1];
+                            if (repoName) {
+                                logo.src = '/' + repoName + '/images/' + originalSrc.split('/').pop();
+                            }
+                            
+                            logo.onerror = function() {
+                                // Approach 5: Use embedded SVG as fallback (already in onerror attribute)
+                                debugInfo.textContent = 'Debug: Using embedded SVG fallback for logos';
+                            };
+                        };
+                    };
+                };
+            });
+        }
+
+        // Fix logo paths on load
+        window.addEventListener('load', fixLogoPaths);
+        
+        // Additional fix for GitHub Pages
+        if (window.location.hostname.includes('github.io')) {
+            // We're on GitHub Pages, adjust paths if needed
+            const repoName = window.location.pathname.split('/')[1];
+            if (repoName) {
+                // Update all relative paths to include repo name
+                document.querySelectorAll('img').forEach(img => {
+                    if (img.src.includes('/images/')) {
+                        img.src = `/${repoName}${img.src.substring(img.src.indexOf('/images/'))}`;
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>￼Enter file contents here
