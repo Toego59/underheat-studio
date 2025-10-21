@@ -435,7 +435,43 @@
             --text-color: #000000;
             --background-color: #ffffff;
         }
+
+        /* Webamp Styles (added) */
+        .webamp-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #webamp-access-form {
+            padding: 20px;
+        }
+
+        #webamp-access-form input {
+            padding: 10px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #333;
+            color: var(--text-color);
+        }
+
+        #webamp-container {
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+        }
     </style>
+
+    <!-- Webamp script (kept in head and loaded before app code) -->
+    <script src="https://unpkg.com/webamp@1.4.0/built/webamp.bundle.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -537,6 +573,20 @@
             </div>
         </section>
 
+        <!-- Webamp protected section (added) -->
+        <section id="webamp-section" class="hidden">
+            <h2 class="section-title">Webamp Player</h2>
+            <div class="webamp-container">
+                <div id="webamp-protected-area" style="display: none;">
+                    <div id="webamp-container"></div>
+                </div>
+                <div id="webamp-access-form">
+                    <input type="password" id="webamp-access-code" placeholder="Enter Webamp access code">
+                    <button id="webamp-access-btn" type="button">Access Webamp</button>
+                </div>
+            </div>
+        </section>
+
         <section id="controls" class="control-panel hidden">
             <h2 class="section-title">Customization Panel</h2>
             
@@ -635,7 +685,7 @@
     </div>
 
     <script>
-        // Authentication system
+        // Authentication system (modified to reveal Webamp section)
         document.getElementById('login-btn').addEventListener('click', function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -643,6 +693,7 @@
             if (username === '777' && password === '777') {
                 document.getElementById('audio').classList.remove('hidden');
                 document.getElementById('controls').classList.remove('hidden');
+                document.getElementById('webamp-section').classList.remove('hidden'); // reveal webamp section
                 document.getElementById('auth').classList.add('hidden');
                 document.getElementById('debugCodeContainer').classList.remove('hidden');
                 
@@ -657,6 +708,7 @@
         if (localStorage.getItem('authenticated') === 'true') {
             document.getElementById('audio').classList.remove('hidden');
             document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('webamp-section').classList.remove('hidden'); // reveal webamp section on load
             document.getElementById('auth').classList.add('hidden');
             document.getElementById('debugCodeContainer').classList.remove('hidden');
         }
@@ -879,12 +931,58 @@
             document.getElementById('debug').style.display = 'none';
         }
 
+        // Webamp functionality (added)
+        function checkWebampAccess() {
+            const accessCode = document.getElementById('webamp-access-code').value;
+            if (accessCode === 'webamp777') {
+                document.getElementById('webamp-access-form').style.display = 'none';
+                document.getElementById('webamp-protected-area').style.display = 'block';
+                
+                // Initialize Webamp if supported
+                if (window.Webamp && Webamp.browserIsSupported()) {
+                    const webamp = new Webamp({
+                        initialTracks: [{
+                            url: "https://cdn.jsdelivr.net/gh/captbaritone/webamp@43434d82/mp3/llama-2.91.mp3",
+                            duration: 5.322286,
+                            metaData: {
+                                title: "Demo Track",
+                                artist: "UNDERHEAT Studio",
+                            }
+                        }]
+                    });
+
+                    webamp.renderWhenReady(document.getElementById('webamp-container'))
+                        .then(() => {
+                            console.log("Webamp is ready!");
+                        })
+                        .catch(err => {
+                            console.error("Error loading Webamp:", err);
+                            alert("Error initializing Webamp. See console for details.");
+                        });
+
+                    // When user closes the Webamp UI restore the access form
+                    webamp.onClose(() => {
+                        document.getElementById('webamp-protected-area').style.display = 'none';
+                        document.getElementById('webamp-access-form').style.display = 'block';
+                        document.getElementById('webamp-access-code').value = '';
+                    });
+                } else {
+                    alert("Sorry, your browser doesn't support Webamp!");
+                }
+            } else {
+                alert('Invalid Webamp access code');
+            }
+        }
+
+        // Bind Webamp access button
+        document.getElementById('webamp-access-btn').addEventListener('click', checkWebampAccess);
+
         // Initialize the page
         window.addEventListener('load', function() {
             // Ensure debugger is hidden on load
             document.getElementById('debug').style.display = 'none';
             
-            // Add a shortcut key to run all tests (Ctrl+Shift+D) when debugger is visible   updatedddddddddd
+            // Add a shortcut key to run all tests (Ctrl+Shift+D) when debugger is visible
             document.addEventListener('keydown', function(e) {
                 if (e.ctrlKey && e.shiftKey && e.key === 'D' && document.getElementById('debug').style.display === 'block') {
                     testLogos();
@@ -898,4 +996,4 @@
         });
     </script>
 </body>
-</html>￼Enter file contents here
+</html>

@@ -1,8 +1,10 @@
 {
   "dependencies": {
+    "@plasmicapp/loader-nextjs": "^1.0.440",
     "body-parser": "^2.2.0",
     "express": "^5.1.0",
     "fuzzyset": "^1.0.7",
-    "nodemailer": "^7.0.5"
+    "nodemailer": "^7.0.5",
+    "webamp": "^2.2.0"
   }
 }
