@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UNDERHEAT Studio</title>
+  <base href="./">
+  <link rel="icon" href="favicon.ico">
+  <style>
+    :root{
+      --primary-color:#ff5500;
+      --secondary-color:#333;
+      --accent-color:#00aaff;
+      --text-color:#fff;
+      --background-color:#111;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui;background:var(--background-color);color:var(--text-color)}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between}
+    .logo{height:60px}
+    .pride-logo{display:none}
+    .hidden{display:none}
+    /* When webamp is open, make background ignore pointer events but keep visual */
+    body.webamp-open .container{pointer-events:none;user-select:none}
+    /* Webamp overlay: full-screen, holds the player and allows clicks */
+    #webamp-protected-area{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.6);
+      z-index:10000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    /* container inside overlay that hosts webamp */
+    #webamp-wrapper{
+      width:980px;
+      max-width:98vw;
+      height:600px;
+      max-height:92vh;
+      background:transparent;
+      pointer-events:auto; /* ensure clicks reach webamp */
+    }
+    /* ensure the actual webamp element can receive pointer events */
+    #webamp-container{width:100%;height:100%;pointer-events:auto}
+    /* small layout helpers */
+    .auth-section,.control-panel,.audio-gallery{margin-top:20px;padding:12px;background:#222;border-radius:8px}
+    input,button{padding:8px;border-radius:6px;border:0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div style="display:flex;align-items:center;gap:12px">
+        <!-- Put your PNG at assets/logo.png -->
+        <img id="main-logo" src="assets/logo.png" alt="UNDERHEAT logo" class="logo" onerror="this.style.display='none'">
+        <div class="pride-logo">UNDERHEAT PRIDE</div>
+      </div>
+
+      <nav>
+        <button id="open-login">Login</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="auth" class="auth-section">
+        <div>
+          <label>Username</label><br>
+          <input id="username" type="text" value="">
+        </div>
+        <div style="margin-top:8px">
+          <label>Password</label><br>
+          <input id="password" type="password" value="">
+        </div>
+        <div style="margin-top:10px">
+          <button id="login-btn">Login</button>
+        </div>
+      </section>
+
+      <section id="audio" class="audio-gallery hidden">
+        <h3>Audio Gallery</h3>
+        <!-- audio entries -->
+      </section>
+
+      <section id="controls" class="control-panel hidden">
+        <h3>Customization Panel</h3>
+        <!-- controls -->
+      </section>
+
+      <section id="webamp-section" class="hidden" style="margin-top:16px">
+        <h3>Webamp Player</h3>
+        <div id="webamp-access-form">
+          <input id="webamp-access-code" type="password" placeholder="Enter Webamp access code">
+          <button id="webamp-access-btn">Access Webamp</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- overlay that hosts Webamp; pointer-events allowed here -->
+  <div id="webamp-protected-area" aria-hidden="true">
+    <div id="webamp-wrapper">
+      <div id="webamp-container"></div>
+    </div>
+  </div>
+
+  <script>
+    // safe init + helpers
+    (function(){
+      console.log('UNDERHEAT: script start');
+
+      function $id(id){return document.getElementById(id)}
+
+      function showSections(){
+        $id('audio').classList.remove('hidden');
+        $id('controls').classList.remove('hidden');
+        $id('webamp-section').classList.remove('hidden');
+        $id('auth').classList.add('hidden');
+      }
+
+      // AUTH
+      const loginBtn = $id('login-btn');
+      const usernameInput = $id('username');
+      const passwordInput = $id('password');
+
+      function doLogin(){
+        const u = usernameInput.value;
+        const p = passwordInput.value;
+        console.log('login attempt',u);
+        if(u==='777' && p==='777'){
+          localStorage.setItem('authenticated','true');
+          showSections();
+          return;
+        }
+        alert('Invalid credentials — for demo use 777 / 777');
+      }
+
+      loginBtn?.addEventListener('click', doLogin);
+      [usernameInput,passwordInput].forEach(el=>{
+        el?.addEventListener('keypress', e=>{ if(e.key==='Enter') doLogin() })
+      });
+
+      if(localStorage.getItem('authenticated')==='true') showSections();
+
+      // WEBAMP loader and init
+      let webampInstance = null;
+
+      function loadWebampScript(version='2.2.0'){
+        return new Promise((resolve,reject)=>{
+          if(window.Webamp) return resolve(window.Webamp);
+          const s=document.createElement('script');
+          s.src = `https://unpkg.com/webamp@${version}/built/webamp.bundle.min.js`;
+          s.async = true;
+          s.onload = ()=> window.Webamp ? resolve(window.Webamp) : reject(new Error('Webamp loaded but not available'));
+          s.onerror = ()=> reject(new Error('Failed to load webamp script'));
+          document.head.appendChild(s);
+        });
+      }
+
+      async function initWebamp(wrapperEl){
+        if(!wrapperEl) throw new Error('No wrapper for Webamp');
+        if(webampInstance) return webampInstance;
+
+        const WebampLib = window.Webamp;
+        if(!WebampLib) throw new Error('Webamp library missing');
+
+        const initialTracks = [{
+          url: "https://cdn.jsdelivr.net/gh/captbaritone/webamp/mp3/llama-2.91.mp3",
+          duration: 5.0,
+          metaData:{title:'Demo Track', artist:'UNDERHEAT'}
+        }];
+
+        const webamp = new WebampLib({ initialTracks });
+        try {
+          await webamp.renderWhenReady(wrapperEl);
+          webampInstance = webamp;
+          webamp.onClose(()=>{
+            $id('webamp-protected-area').style.display='none';
+            $id('webamp-access-form').style.display='block';
+            $id('webamp-access-code').value='';
+            document.body.classList.remove('webamp-open');
+            // remove overlay aria state
+            $id('webamp-protected-area').setAttribute('aria-hidden','true');
+          });
+          return webamp;
+        } catch(e){
+          webamp.dispose?.();
+          throw e;
+        }
+      }
+
+      async function openWebampIfAuthorized(){
+        const code = $id('webamp-access-code').value;
+        if(code !== 'webamp777'){ alert('Invalid Webamp access code'); return; }
+
+        $id('webamp-access-form').style.display='none';
+        $id('webamp-protected-area').style.display='flex';
+        document.body.classList.add('webamp-open');
+        $id('webamp-protected-area').setAttribute('aria-hidden','false');
+
+        try{
+          if(!window.Webamp) await loadWebampScript('2.2.0');
+
+          // browser support check if available
+          const supported = (window.Webamp && typeof window.Webamp.browserIsSupported === 'function') ? window.Webamp.browserIsSupported() : true;
+          if(!supported){ alert("Browser doesn't support Webamp"); $id('webamp-protected-area').style.display='none'; $id('webamp-access-form').style.display='block'; return; }
+
+          await initWebamp($id('webamp-wrapper'));
+        }catch(err){
+          console.error('Failed to init Webamp',err);
+          alert('Error initializing Webamp — see console.');
+          $id('webamp-protected-area').style.display='none';
+          $id('webamp-access-form').style.display='block';
+          document.body.classList.remove('webamp-open');
+        }
+      }
+
+      $id('webamp-access-btn')?.addEventListener('click', openWebampIfAuthorized);
+
+      // allow clicking outside wrapper to close Webamp overlay
+      $id('webamp-protected-area')?.addEventListener('click', function(e){
+        if(e.target === this){
+          // simulate close
+          webampInstance?.close?.();
+          this.style.display='none';
+          document.body.classList.remove('webamp-open');
+          this.setAttribute('aria-hidden','true');
+          $id('webamp-access-form').style.display='block';
+        }
+      });
+
+      // Provide an easy way to open login panel
+      $id('open-login')?.addEventListener('click', ()=> { $id('auth').scrollIntoView(); });
+
+      // ensure logo image exists: if missing show text
+      const logo = $id('main-logo');
+      if(logo && !logo.complete){
+        logo.addEventListener('error', ()=> {
+          console.warn('logo not found at assets/logo.png');
+          logo.style.display='none';
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
