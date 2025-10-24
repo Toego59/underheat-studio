@@ -1,4 +1,37 @@
-html {
-  height: 100%;
-  width: 100%;
+/* Logo styles */
+.logo-container {
+    background: transparent !important;
+}
+
+.logo, .pride-logo {
+    height: 60px;
+    width: auto;
+    transition: transform 0.3s ease;
+    background: transparent !important;
+}
+
+/* Pride theme styles */
+.pride-theme {
+    background: linear-gradient(
+        45deg,
+        #ff0000,
+        #ff8800,
+        #ffff00,
+        #00ff00,
+        #0088ff,
+        #8800ff
+    ) !important;
+    background-size: 600% 600% !important;
+    animation: prideGradient 15s ease infinite !important;
+}
+
+@keyframes prideGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Public sections */
+.public-section {
+    display: block !important;
 }

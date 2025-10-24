@@ -1,145 +1,244 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const FuzzySet = require('fuzzyset');
-const nodemailer = require('nodemailer');
+// Constants and Settings
+const VALID_USERNAME = '777777';
+const VALID_PASSWORD = '777777';
+const WEBAMP_CODE = 'webamp2025';
 
-const app = express();
+// DOM Elements
+const loginBtn = document.getElementById('loginBtn');
+const authSection = document.getElementById('auth');
+const protectedContent = document.getElementById('protected-content');
+const webampOverlay = document.getElementById('webamp-overlay');
+const webampContainer = document.getElementById('webamp-container');
+const debugPanel = document.getElementById('debug-panel');
+const mainLogo = document.getElementById('main-logo');
+const prideLogo = document.getElementById('pride-logo');
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+// State
+let isAuthenticated = false;
+let webampInstance = null;
+let debugMode = true;  // Force debug mode on
 
-// Serve the HTML interface
-app.get('/', (req, res) => {
-  // Read the HTML file and send it
-  fs.readFile('index.html', 'utf8', (err, data) => {
-    if (err) {
-      res.status(500).send('Error loading website');
-      return;
+// Logo Management
+function updateLogo() {
+    const now = new Date();
+    const isPrideMonth = now.getMonth() === 5; // June is 5 (0-based months)
+    mainLogo.style.display = isPrideMonth ? 'none' : 'block';
+    prideLogo.style.display = isPrideMonth ? 'block' : 'none';
+    if (isPrideMonth) {
+        document.body.classList.add('pride-theme');
+    } else {
+        document.body.classList.remove('pride-theme');
     }
-    res.send(data);
-  });
+}
+
+// Initialize logo on load and check daily
+updateLogo();
+setInterval(updateLogo, 24 * 60 * 60 * 1000); // Check every 24 hours
+
+// Debug Functions
+function log(message) {
+    if (debugMode && debugPanel) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        debugPanel.appendChild(logEntry);
+        debugPanel.scrollTop = debugPanel.scrollHeight;
+    }
+}
+
+function toggleDebug() {
+    debugMode = !debugMode;
+    debugPanel.style.display = debugMode ? 'block' : 'none';
+    log('Debug mode ' + (debugMode ? 'enabled' : 'disabled'));
+}
+
+// Initialize debug mode with keyboard shortcut
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        toggleDebug();
+    }
 });
 
-// API endpoints
-app.get('/api/addanswer/:Id/:question/:answer/', (req, res) => {
-  try{
-    fs.readFile("questions_and_answers.json", 'utf8', function(err, data) {
-      if (err) {
-        // If file doesn't exist, create it with an empty object
-        if (err.code === 'ENOENT') {
-          data = '{}';
-        } else {
-          throw err;
+// Authentication
+function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+        isAuthenticated = true;
+        authSection.classList.add('hidden');
+        protectedContent.classList.remove('hidden');
+        loginBtn.textContent = 'Logout';
+        localStorage.setItem('isAuthenticated', 'true');
+        log('User authenticated successfully');
+    } else {
+        alert('Invalid credentials');
+        log('Login attempt failed');
+    }
+}
+
+loginBtn.addEventListener('click', () => {
+    if (isAuthenticated) {
+        isAuthenticated = false;
+        authSection.classList.remove('hidden');
+        protectedContent.classList.add('hidden');
+        loginBtn.textContent = 'Login';
+        localStorage.removeItem('isAuthenticated');
+        log('User logged out');
+    } else {
+        authSection.classList.remove('hidden');
+    }
+});
+
+// Check for existing authentication
+if (localStorage.getItem('isAuthenticated') === 'true') {
+    isAuthenticated = true;
+    authSection.classList.add('hidden');
+    protectedContent.classList.remove('hidden');
+    loginBtn.textContent = 'Logout';
+    log('Restored authenticated session');
+}
+
+// Webamp Integration
+function openWebamp() {
+    const code = document.getElementById('webamp-code').value;
+    if (code === WEBAMP_CODE) {
+        webampOverlay.style.display = 'block';
+        if (!webampInstance) {
+            webampInstance = new Webamp({
+                initialTracks: [{
+                    url: "https://example.com/demo.mp3",
+                    duration: 300,
+                    metaData: {
+                        title: "Demo Track",
+                        artist: "UNDERHEAT Studio"
+                    }
+                }]
+            });
+            webampInstance.renderWhenReady(webampContainer).then(() => {
+                log('Webamp initialized and rendered');
+            });
         }
-      }
-      var datajson = JSON.parse(data);
-      if (!(typeof datajson[req.params.Id] === 'object' && datajson[req.params.Id] !== null)) {
-        datajson[req.params.Id] = {};
-      }
-      datajson[req.params.Id][req.params.question] = req.params.answer;
-      var dataupdated = JSON.stringify(datajson);
-      fs.writeFile("questions_and_answers.json", dataupdated, function(err) {
-        if (err) return console.log(err);
-        res.send("id: " + req.params.Id + "\nadded question: " + req.params.question + "\nwith answer: " + req.params.answer);
-      });
-    });
-  }catch(Err){
-    console.log(Err);
-    res.status(500).send("Error adding question");
-  }
+        log('Webamp overlay opened');
+    } else {
+        alert('Invalid Webamp access code');
+        log('Invalid Webamp access code attempt');
+    }
+}
+
+// YouTube Search Integration
+async function searchYouTube() {
+    if (!isAuthenticated) {
+        alert('Please login to use YouTube search');
+        return;
+    }
+    
+    const query = document.getElementById('youtube-query').value;
+    const resultsContainer = document.getElementById('youtube-results');
+    
+    try {
+        // Replace with actual YouTube API implementation
+        const mockResults = [
+            { id: '1', title: 'Demo Result 1', thumbnail: 'thumbnail1.jpg' },
+            { id: '2', title: 'Demo Result 2', thumbnail: 'thumbnail2.jpg' }
+        ];
+        
+        resultsContainer.innerHTML = mockResults.map(result => `
+            <div class="video-item">
+                <img src="${result.thumbnail}" alt="${result.title}">
+                <h3>${result.title}</h3>
+                <button onclick="playVideo('${result.id}')">Play</button>
+            </div>
+        `).join('');
+        
+        log('YouTube search completed');
+    } catch (error) {
+        log('YouTube search error: ' + error.message);
+        alert('Error searching YouTube');
+    }
+}
+
+function playVideo(videoId) {
+    if (!isAuthenticated) {
+        alert('Please login to play videos');
+        return;
+    }
+    // Implement video playback logic
+    log('Playing video: ' + videoId);
+}
+
+// Theme Customization
+function setTheme(theme) {
+    const root = document.documentElement;
+    
+    switch (theme) {
+        case 'default':
+            root.style.setProperty('--primary-color', '#ff5500');
+            root.style.setProperty('--secondary-color', '#333333');
+            root.style.setProperty('--accent-color', '#00aaff');
+            root.style.setProperty('--background-color', '#1a1a1a');
+            break;
+        case 'dark':
+            root.style.setProperty('--primary-color', '#8800ff');
+            root.style.setProperty('--secondary-color', '#222222');
+            root.style.setProperty('--accent-color', '#00ff88');
+            root.style.setProperty('--background-color', '#000000');
+            break;
+        case 'pride':
+            root.style.setProperty('--primary-color', '#ff0000');
+            root.style.setProperty('--secondary-color', '#ff8800');
+            root.style.setProperty('--accent-color', '#ffff00');
+            root.style.setProperty('--background-color', '#111111');
+            document.body.classList.add('pride-theme');
+            break;
+    }
+    
+    if (theme !== 'pride') {
+        document.body.classList.remove('pride-theme');
+    }
+    
+    localStorage.setItem('theme', theme);
+    log('Theme changed to: ' + theme);
+}
+
+// Color picker event listeners
+document.getElementById('primary-color').addEventListener('input', (e) => {
+    document.documentElement.style.setProperty('--primary-color', e.target.value);
+    log('Primary color updated');
 });
 
-app.get('/api/getdata/', (req, res) => {
-  try{
-    fs.readFile("questions_and_answers.json", 'utf8', function(err, data) {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          // If file doesn't exist, return empty object
-          return res.send('{}');
-        }
-        return console.log(err);
-      }
-      res.send(data);
-    });
-  }catch(Err){
-    console.log(Err);
-    res.status(500).send("Error retrieving data");
-  }
+document.getElementById('secondary-color').addEventListener('input', (e) => {
+    document.documentElement.style.setProperty('--secondary-color', e.target.value);
+    log('Secondary color updated');
 });
 
-app.get('/api/search/:id/:question', (req, res) => {
-  try{
-    fs.readFile("questions_and_answers.json", 'utf8', function(err, data) {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          // If file doesn't exist, return no match
-          return res.send("no match");
-        }
-        return console.log(err);
-      }
-      a = FuzzySet();
-      var questions=JSON.parse(data)[req.params.id];
-      if (!questions) {
-        return res.send("no match");
-      }
-      for(var question in questions)a.add(question);
-      var searchResult=a.get(req.params.question,"no match",0.33);
-      var question, confidence,tempJSON;
-      if(searchResult!=="no match"){
-        question=searchResult[0][1];
-        confidence=searchResult[0][0];
-        tempJSON=JSON.parse("{}");
-        tempJSON.question=question;
-        tempJSON.answer=questions[question];
-        tempJSON.confidence=confidence;
-      }
-      res.send((searchResult=="no match")?searchResult:JSON.stringify(tempJSON));
-    });
-  }catch(Err){
-    console.log(Err);
-    res.status(500).send("Error searching");
-  }
+document.getElementById('accent-color').addEventListener('input', (e) => {
+    document.documentElement.style.setProperty('--accent-color', e.target.value);
+    log('Accent color updated');
 });
 
-app.get('/api/search/:id', (req, res) => {
-  try{
-    fs.readFile("questions_and_answers.json", 'utf8', function(err, data) {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          // If file doesn't exist, return empty object
-          return res.send('{}');
-        }
-        return console.log(err);
-      }
-      var questions=JSON.parse(data)[req.params.id];
-      res.send(JSON.stringify(questions || {}));
-    });
-  }catch(Err){
-    console.log(Err);
-    res.status(500).send("Error retrieving questions");
-  }
+document.getElementById('bg-color').addEventListener('input', (e) => {
+    document.documentElement.style.setProperty('--background-color', e.target.value);
+    log('Background color updated');
 });
 
-// Contact form endpoint
-app.post('/api/contact', (req, res) => {
-  const { name, email, subject, message } = req.body;
+// Restore saved theme
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+    setTheme(savedTheme);
+    log('Restored saved theme: ' + savedTheme);
+}
 
-  // Here you would typically:
-  // 1. Save to database
-  // 2. Send email notification
-  // 3. Or process the contact form data
-
-  console.log('Contact form submission:', { name, email, subject, message });
-
-  // For demo purposes, we'll just return a success message
-  res.json({ success: true, message: 'Thank you for your message! We will get back to you soon.' });
+// Console log for immediate debug info
+console.log('Script loaded');
+window.addEventListener('load', () => {
+    console.log('Window loaded');
+    debugPanel.style.display = 'block';
+    log('Debug panel initialized');
+    log('DOM Elements status:');
+    log(`loginBtn: ${loginBtn ? 'found' : 'missing'}`);
+    log(`authSection: ${authSection ? 'found' : 'missing'}`);
+    log(`protectedContent: ${protectedContent ? 'found' : 'missing'}`);
+    log(`mainLogo: ${mainLogo ? 'found' : 'missing'}`);
+    log(`prideLogo: ${prideLogo ? 'found' : 'missing'}`);
 });
-
-app.get('/api/test', (req, res) => {
-  res.send("hello world!");
-});
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log('Server started on port ' + port));
