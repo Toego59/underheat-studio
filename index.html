@@ -52,33 +52,42 @@
             align-items: center;
         }
 
-        .logo {
+            .logo {
             height: 60px;
             width: auto;
-            background: linear-gradient(45deg, #ff5500, #ff9933);
             border-radius: 10px;
             padding: 5px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
             font-size: 20px;
+            background: linear-gradient(45deg, #ff5500, #ff9933);
         }
 
+        /* image-based pride logo (hidden by default) */
         .pride-logo {
             display: none;
             height: 60px;
             width: auto;
-            background: linear-gradient(90deg, red, orange, yellow, green, blue, purple);
             border-radius: 10px;
             padding: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: black;
-            font-weight: bold;
-            font-size: 18px;
+        }
+
+        /* animated rainbow background used when pride-mode active for logo/header */
+        .pride-mode .logo, .pride-mode .pride-logo {
+            background: linear-gradient(90deg, #e40303, #ff8c00, #ffed00, #008026, #004dff, #750787);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: prideShift 6s linear infinite;
+        }
+
+        @keyframes prideShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .pride-mode .logo {
@@ -433,6 +442,7 @@
 
         /* Pride theme */
         .pride-mode {
+            /* keep variables reasonable but use animated logo/header gradient for the visual effect */
             --primary-color: #e40303;
             --secondary-color: #ff8c00;
             --accent-color: #ffed00;
@@ -471,7 +481,10 @@
             right: 0;
             bottom: 0;
             z-index: 9999;
+            pointer-events: auto;
         }
+        /* when webamp is open, make background non-interactive but keep visual */
+        body.webamp-open .container { pointer-events: none; user-select: none; }
     </style>
 
     <!-- Webamp script: updated to match package.json (v2.2.0) -->
@@ -481,8 +494,10 @@
     <div class="container">
         <header>
             <div class="logo-container">
-                <div class="logo">UNDERHEAT</div>
-                <div class="pride-logo">UNDERHEAT PRIDE</div>
+                <!-- Use image logos when available; fall back to text if missing -->
+                <img id="main-logo" class="logo" src="assets/logo.png" alt="UNDERHEAT logo" onerror="this.style.display='none'" />
+                <img id="pride-logo" class="pride-logo" src="assets/pride-logo.png" alt="UNDERHEAT Pride logo" onerror="this.style.display='none'" />
+                <div id="logo-fallback" class="logo" style="display:none">UNDERHEAT</div>
             </div>
             <nav>
                 <ul>
@@ -725,12 +740,13 @@
             const savedColor = localStorage.getItem(input.id);
             if (savedColor) {
                 input.value = savedColor;
-                document.documentElement.style.setProperty(`--${input.id.replace('Color', '').toLowerCase()}`, savedColor);
+                // variables use the -color suffix (e.g. --primary-color)
+                document.documentElement.style.setProperty(`--${input.id.replace('Color', '').toLowerCase()}-color`, savedColor);
             }
             
             // Add event listeners for color changes
             input.addEventListener('input', function() {
-                document.documentElement.style.setProperty(`--${this.id.replace('Color', '').toLowerCase()}`, this.value);
+                document.documentElement.style.setProperty(`--${this.id.replace('Color', '').toLowerCase()}-color`, this.value);
                 localStorage.setItem(this.id, this.value);
             });
         });
@@ -757,7 +773,20 @@
         });
 
         document.getElementById('theme-pride').addEventListener('click', function() {
+            // enable pride animated gradient and persist
             document.body.classList.add('pride-mode');
+            // set color inputs to representative values (still allow user override)
+            document.documentElement.style.setProperty('--primary-color', '#e40303');
+            document.documentElement.style.setProperty('--secondary-color', '#ff8c00');
+            document.documentElement.style.setProperty('--accent-color', '#ffed00');
+            document.documentElement.style.setProperty('--text-color', '#000000');
+            document.documentElement.style.setProperty('--background-color', '#ffffff');
+            // update inputs and save
+            ['primaryColor','secondaryColor','accentColor','textColor','backgroundColor'].forEach(id=>{
+                const el = document.getElementById(id);
+                if(el) el.value = getComputedStyle(document.documentElement).getPropertyValue('--'+id.replace('Color','-color')).trim() || el.value;
+                localStorage.setItem(id, el ? el.value : '');
+            });
             localStorage.setItem('prideMode', 'true');
         });
 
@@ -846,17 +875,63 @@
         }
 
         function testLogos() {
-            debugLog('logoDebug', 'Testing logos...', 'info');
-            setTimeout(() => {
-                debugLog('logoDebug', '✓ CSS-based logos are displaying correctly<br>✓ Pride logo toggle working<br>✓ Logo styling applied correctly', 'success');
-            }, 1000);
+            debugLog('logoDebug', 'Testing logos (assets/logo.png & assets/pride-logo.png)...', 'info');
+            // real checks using Image objects
+            const checks = [
+                { id: 'main-logo', path: 'assets/logo.png', name: 'Main logo' },
+                { id: 'pride-logo', path: 'assets/pride-logo.png', name: 'Pride logo' }
+            ];
+
+            Promise.all(checks.map(chk => new Promise(resolve => {
+                const img = new Image();
+                img.src = chk.path + '?_=' + Date.now();
+                img.onload = () => resolve({ ok: true, name: chk.name, path: chk.path });
+                img.onerror = () => resolve({ ok: false, name: chk.name, path: chk.path });
+            }))).then(results => {
+                let out = '';
+                results.forEach(r => {
+                    if (r.ok) out += `✓ ${r.name} found at <code>${r.path}</code><br>`;
+                    else out += `✕ ${r.name} missing at <code>${r.path}</code><br>`;
+                });
+                debugLog('logoDebug', out, results.every(r => r.ok) ? 'success' : 'warning');
+                // update fallback visibility
+                const mainImg = document.getElementById('main-logo');
+                const prideImg = document.getElementById('pride-logo');
+                const fallback = document.getElementById('logo-fallback');
+                if (mainImg && mainImg.complete && mainImg.naturalWidth > 0) {
+                    fallback.style.display = 'none';
+                } else {
+                    fallback.style.display = 'block';
+                }
+            });
         }
 
         function fixLogoPaths() {
-            debugLog('logoDebug', 'Applying logo path fixes...', 'info');
-            setTimeout(() => {
-                debugLog('logoDebug', '✓ Multiple path approaches implemented<br>✓ SVG fallbacks added<br>✓ GitHub Pages path detection active', 'success');
-            }, 1000);
+            debugLog('logoDebug', 'Attempting to set logo paths to assets/ and providing fallbacks...', 'info');
+            const main = document.getElementById('main-logo');
+            const pride = document.getElementById('pride-logo');
+            // attempt common locations
+            const candidates = ['assets/logo.png', 'assets/logo.svg', 'logo.png', 'logo.svg'];
+            const prideCandidates = ['assets/pride-logo.png', 'assets/pride-logo.svg', 'pride-logo.png'];
+
+            function trySet(imgEl, list) {
+                if (!imgEl) return Promise.resolve(false);
+                return new Promise(resolve => {
+                    (function attempt(i){
+                        if(i>=list.length) return resolve(false);
+                        imgEl.src = list[i] + '?_=' + Date.now();
+                        imgEl.onload = () => resolve(true);
+                        imgEl.onerror = () => attempt(i+1);
+                    })(0);
+                });
+            }
+
+            Promise.all([trySet(main, candidates), trySet(pride, prideCandidates)]).then(res => {
+                let out = '';
+                out += res[0] ? '✓ Main logo set\n' : '✕ Main logo not found in candidates\n';
+                out += res[1] ? '✓ Pride logo set\n' : '✕ Pride logo not found in candidates\n';
+                debugLog('logoDebug', out.replace(/\n/g,'<br>'), (res[0] && res[1]) ? 'success' : 'warning');
+            });
         }
 
         function testColorPickers() {
@@ -966,6 +1041,8 @@
                     document.getElementById('webamp-protected-area').style.display = 'none';
                     document.getElementById('webamp-access-form').style.display = 'block';
                     document.getElementById('webamp-access-code').value = '';
+                    // ensure page regains pointer events
+                    document.body.classList.remove('webamp-open');
                 });
                 return webamp;
             } catch (err) {
@@ -986,6 +1063,8 @@
 
             accessForm.style.display = 'none';
             protectedArea.style.display = 'block';
+            // mark page as webamp-open so background is non-interactive
+            document.body.classList.add('webamp-open');
 
             try {
                 if (!window.Webamp) {
@@ -1033,6 +1112,19 @@
                     e.preventDefault();
                 }
             });
+
+            // logo fallback handling: show text fallback if images fail to load
+            const mainImg = document.getElementById('main-logo');
+            const fallback = document.getElementById('logo-fallback');
+            if (mainImg) {
+                if (mainImg.complete) {
+                    if (!mainImg.naturalWidth) fallback.style.display = 'block';
+                    else fallback.style.display = 'none';
+                } else {
+                    mainImg.addEventListener('load', () => { fallback.style.display = 'none'; });
+                    mainImg.addEventListener('error', () => { fallback.style.display = 'block'; });
+                }
+            }
         });
     </script>
 </body>
