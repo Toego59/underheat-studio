@@ -55,6 +55,7 @@
             height: 60px;
             width: auto;
             transition: transform 0.3s ease;
+            background-color: transparent; /* ensure image background isn't painted by CSS */
         }
 
         .logo:hover, .pride-logo:hover {
@@ -102,6 +103,48 @@
         /* Protected Content Styles */
         .hidden {
             display: none !important;
+        }
+
+        /* Game cards */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 0;
+        }
+
+        .game-card {
+            background-color: rgba(0,0,0,0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .game-card img {
+            width: 120px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            background-color: transparent;
+        }
+
+        .game-card h3 { margin-bottom: 0.25rem; }
+
+        /* Audio placeholder styling */
+        .audio-placeholder {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.5rem;
+        }
+
+        .audio-placeholder img {
+            width: 160px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 6px;
         }
 
         .section-title {
@@ -230,8 +273,8 @@
             </nav>
         </header>
 
-        <!-- Auth Section -->
-        <section id="auth" class="auth-form">
+        <!-- Auth Section (hidden by default; opened via Login button) -->
+        <section id="auth" class="auth-form hidden">
             <h2>Login Required</h2>
             <div class="form-group">
                 <input type="text" id="username" placeholder="Username">
@@ -242,24 +285,53 @@
             <button onclick="login()">Login</button>
         </section>
 
-        <!-- Protected Sections (hidden until auth) -->
-        <div id="protected-content" class="hidden">
+        <!-- Main content visible by default: showcase studio's games -->
+        <div id="main-content">
+            <section id="games">
+                <h2 class="section-title">Our Games</h2>
+                <div class="games-grid">
+                    <div class="game-card">
+                        <img src="assets/ashes-thumb.png" alt="Ashes Till Tomorrow">
+                        <div>
+                            <h3>Ashes Till Tomorrow</h3>
+                            <p>A narrative-driven atmospheric game featuring original music and environmental storytelling.</p>
+                        </div>
+                    </div>
+                    <div class="game-card">
+                        <img src="assets/critter-thumb.png" alt="Critter Land">
+                        <div>
+                            <h3>Critter Land</h3>
+                            <p>An energetic action-adventure with memorable soundtrack and vibrant pixel art.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Gated features (require login) -->
+        <div id="gated-content" class="hidden">
             <!-- Audio Gallery -->
             <section id="audio">
                 <h2 class="section-title">Audio Gallery</h2>
                 <div class="audio-gallery">
                     <div class="audio-item">
-                        <iframe src="https://www.youtube.com/embed/t6lqoRS9J-c" allowfullscreen></iframe>
-                        <div class="audio-info">
-                            <h3>Piano Man</h3>
-                            <p>A beautiful piano composition from our game Ashes Till Tomorrow</p>
+                        <div id="audio-1" class="audio-placeholder">
+                            <img src="https://img.youtube.com/vi/t6lqoRS9J-c/hqdefault.jpg" alt="Piano Man">
+                            <div class="audio-info">
+                                <h3>Piano Man</h3>
+                                <p>A beautiful piano composition from our game Ashes Till Tomorrow</p>
+                                <button onclick="playVideo('t6lqoRS9J-c','audio-1')">Play</button>
+                            </div>
                         </div>
                     </div>
                     <div class="audio-item">
-                        <iframe src="https://www.youtube.com/embed/3N4eWzitjUc" allowfullscreen></iframe>
-                        <div class="audio-info">
-                            <h3>Death by Glamour</h3>
-                            <p>An energetic battle theme from Critter Land</p>
+                        <div id="audio-2" class="audio-placeholder">
+                            <img src="https://img.youtube.com/vi/3N4eWzitjUc/hqdefault.jpg" alt="Death by Glamour">
+                            <div class="audio-info">
+                                <h3>Death by Glamour</h3>
+                                <p>An energetic battle theme from Critter Land</p>
+                                <button onclick="playVideo('3N4eWzitjUc','audio-2')">Play</button>
+                            </div>
                         </div>
                     </div>
                 </div>

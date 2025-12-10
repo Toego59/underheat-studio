@@ -1,12 +1,16 @@
 // Constants and Settings
 const VALID_USERNAME = '777';
 const VALID_PASSWORD = '777';
+// Allow short form as well in case you typed "77"
+const VALID_ALT_USERNAME = '77';
+const VALID_ALT_PASSWORD = '77';
 const WEBAMP_CODE = 'webamp2025';
 
 // DOM Elements
 const loginBtn = document.getElementById('loginBtn');
 const authSection = document.getElementById('auth');
-const protectedContent = document.getElementById('protected-content');
+// gated content (features that require login)
+const gatedContent = document.getElementById('gated-content');
 const webampOverlay = document.getElementById('webamp-overlay');
 const webampContainer = document.getElementById('webamp-container');
 const debugPanel = document.getElementById('debug-panel');
@@ -16,7 +20,7 @@ const prideLogo = document.getElementById('pride-logo');
 // State
 let isAuthenticated = false;
 let webampInstance = null;
-let debugMode = true;  // Force debug mode on
+let debugMode = false;  // debug panel hidden by default
 
 // Logo Management
 function updateLogo() {
@@ -64,10 +68,13 @@ function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+    const usernameOk = username === VALID_USERNAME || username === VALID_ALT_USERNAME;
+    const passwordOk = password === VALID_PASSWORD || password === VALID_ALT_PASSWORD;
+
+    if (usernameOk && passwordOk) {
         isAuthenticated = true;
         authSection.classList.add('hidden');
-        protectedContent.classList.remove('hidden');
+        if (gatedContent) gatedContent.classList.remove('hidden');
         loginBtn.textContent = 'Logout';
         localStorage.setItem('isAuthenticated', 'true');
         log('User authenticated successfully');
@@ -81,7 +88,7 @@ loginBtn.addEventListener('click', () => {
     if (isAuthenticated) {
         isAuthenticated = false;
         authSection.classList.remove('hidden');
-        protectedContent.classList.add('hidden');
+        if (gatedContent) gatedContent.classList.add('hidden');
         loginBtn.textContent = 'Login';
         localStorage.removeItem('isAuthenticated');
         log('User logged out');
@@ -94,13 +101,18 @@ loginBtn.addEventListener('click', () => {
 if (localStorage.getItem('isAuthenticated') === 'true') {
     isAuthenticated = true;
     authSection.classList.add('hidden');
-    protectedContent.classList.remove('hidden');
+    if (gatedContent) gatedContent.classList.remove('hidden');
     loginBtn.textContent = 'Logout';
     log('Restored authenticated session');
 }
 
 // Webamp Integration
 function openWebamp() {
+    if (!isAuthenticated) {
+        alert('Please login to open Webamp');
+        return;
+    }
+
     const code = document.getElementById('webamp-code').value;
     if (code === WEBAMP_CODE) {
         webampOverlay.style.display = 'block';
@@ -159,11 +171,21 @@ async function searchYouTube() {
 }
 
 function playVideo(videoId) {
+    // New signature: playVideo(videoId, containerId)
+    const containerId = arguments[1];
     if (!isAuthenticated) {
         alert('Please login to play videos');
         return;
     }
-    // Implement video playback logic
+
+    const container = containerId ? document.getElementById(containerId) : null;
+    const embed = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen style="width:100%;height:200px;border:none"></iframe>`;
+    if (container) {
+        container.innerHTML = embed;
+    } else {
+        // fallback: open in new tab
+        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+    }
     log('Playing video: ' + videoId);
 }
 
@@ -233,12 +255,10 @@ if (savedTheme) {
 console.log('Script loaded');
 window.addEventListener('load', () => {
     console.log('Window loaded');
-    debugPanel.style.display = 'block';
-    log('Debug panel initialized');
     log('DOM Elements status:');
     log(`loginBtn: ${loginBtn ? 'found' : 'missing'}`);
     log(`authSection: ${authSection ? 'found' : 'missing'}`);
-    log(`protectedContent: ${protectedContent ? 'found' : 'missing'}`);
+    log(`gatedContent: ${gatedContent ? 'found' : 'missing'}`);
     log(`mainLogo: ${mainLogo ? 'found' : 'missing'}`);
     log(`prideLogo: ${prideLogo ? 'found' : 'missing'}`);
 });
