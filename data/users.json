@@ -1,0 +1,14 @@
+[
+  {
+    "username": "777",
+    "passwordHash": "$2a$10$svF61fZu2aRcKkz1Zby7FuqCceukx6gBu4QJj1iLxRKg4wUlrBbwW",
+    "createdAt": "2025-12-10T16:45:36.100Z",
+    "isAdmin": true
+  },
+  {
+    "username": "alice",
+    "passwordHash": "$2a$10$p5We2mUqVirjG3DrZBE1LuN8.I6y4TREIupV0uvYKsCoBCIRn2V4e",
+    "createdAt": "2025-12-10T16:46:08.690Z",
+    "isAdmin": false
+  }
+]

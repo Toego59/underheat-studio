@@ -5,6 +5,7 @@
     "express": "^5.1.0",
     "fuzzyset": "^1.0.7",
     "nodemailer": "^7.0.5",
-    "webamp": "^2.2.0"
+    "webamp": "^2.2.0",
+    "bcryptjs": "^2.4.3"
   }
 }

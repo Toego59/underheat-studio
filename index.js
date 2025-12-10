@@ -1,10 +1,9 @@
 // Constants and Settings
-const VALID_USERNAME = '777';
-const VALID_PASSWORD = '777';
-// Allow short form as well in case you typed "77"
-const VALID_ALT_USERNAME = '77';
-const VALID_ALT_PASSWORD = '77';
 const WEBAMP_CODE = 'webamp2025';
+
+// Authentication server endpoints
+const API_REGISTER = '/api/register';
+const API_LOGIN = '/api/login';
 
 // DOM Elements
 const loginBtn = document.getElementById('loginBtn');
@@ -51,6 +50,11 @@ function log(message) {
 }
 
 function toggleDebug() {
+    const isAdmin = window.currentIsAdmin || localStorage.getItem('username') === '777';
+    if (!isAdmin) {
+        alert('Dev tools are restricted to admin users');
+        return;
+    }
     debugMode = !debugMode;
     debugPanel.style.display = debugMode ? 'block' : 'none';
     log('Debug mode ' + (debugMode ? 'enabled' : 'disabled'));
@@ -65,22 +69,59 @@ document.addEventListener('keydown', (e) => {
 
 // Authentication
 function login() {
+    // legacy function kept for compatibility; prefer loginViaApi()
+    loginViaApi();
+}
+
+async function loginViaApi() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const msgEl = document.getElementById('auth-message');
+    if (!username || !password) {
+        msgEl.textContent = 'username and password required';
+        return;
+    }
+    try {
+        const res = await fetch(API_LOGIN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+        const data = await res.json();
+        if (data && data.success) {
+            isAuthenticated = true;
+            window.currentUser = data.username;
+            window.currentIsAdmin = !!data.isAdmin;
+            authSection.classList.add('hidden');
+            if (gatedContent) gatedContent.classList.remove('hidden');
+            loginBtn.textContent = 'Logout';
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('username', data.username);
+            log('User authenticated via API: ' + data.username);
+        } else {
+            msgEl.textContent = (data && data.message) || 'Login failed';
+        }
+    } catch (err) {
+        console.error(err);
+        msgEl.textContent = 'Network error';
+    }
+}
 
-    const usernameOk = username === VALID_USERNAME || username === VALID_ALT_USERNAME;
-    const passwordOk = password === VALID_PASSWORD || password === VALID_ALT_PASSWORD;
-
-    if (usernameOk && passwordOk) {
-        isAuthenticated = true;
-        authSection.classList.add('hidden');
-        if (gatedContent) gatedContent.classList.remove('hidden');
-        loginBtn.textContent = 'Logout';
-        localStorage.setItem('isAuthenticated', 'true');
-        log('User authenticated successfully');
-    } else {
-        alert('Invalid credentials');
-        log('Login attempt failed');
+async function registerViaApi() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const msgEl = document.getElementById('auth-message');
+    if (!username || !password) {
+        msgEl.textContent = 'username and password required';
+        return;
+    }
+    try {
+        const res = await fetch(API_REGISTER, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+        const data = await res.json();
+        if (data && data.success) {
+            msgEl.textContent = 'Registered — you can now login';
+        } else {
+            msgEl.textContent = (data && data.message) || 'Registration failed';
+        }
+    } catch (err) {
+        console.error(err);
+        msgEl.textContent = 'Network error';
     }
 }
 
@@ -93,6 +134,7 @@ loginBtn.addEventListener('click', () => {
         localStorage.removeItem('isAuthenticated');
         log('User logged out');
     } else {
+        // show auth modal/form
         authSection.classList.remove('hidden');
     }
 });
@@ -261,4 +303,29 @@ window.addEventListener('load', () => {
     log(`gatedContent: ${gatedContent ? 'found' : 'missing'}`);
     log(`mainLogo: ${mainLogo ? 'found' : 'missing'}`);
     log(`prideLogo: ${prideLogo ? 'found' : 'missing'}`);
+
+    // Wire auth form buttons
+    const authAction = document.getElementById('auth-action');
+    const authToggle = document.getElementById('auth-toggle');
+    let registerMode = false;
+    if (authAction) authAction.addEventListener('click', () => {
+        if (registerMode) registerViaApi(); else loginViaApi();
+    });
+    if (authToggle) authToggle.addEventListener('click', () => {
+        registerMode = !registerMode;
+        document.getElementById('auth-title').textContent = registerMode ? 'Register' : 'Login';
+        document.getElementById('auth-action').textContent = registerMode ? 'Register' : 'Login';
+        authToggle.textContent = registerMode ? 'Switch to Login' : 'Switch to Register';
+        document.getElementById('auth-message').textContent = '';
+    });
+
+    // Restore session info if present
+    const savedUser = localStorage.getItem('username');
+    if (localStorage.getItem('isAuthenticated') === 'true' && savedUser) {
+        window.currentUser = savedUser;
+        window.currentIsAdmin = savedUser === '777';
+        if (window.currentIsAdmin) {
+            // allow debug panel to be toggled for admin
+        }
+    }
 });

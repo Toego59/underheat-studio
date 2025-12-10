@@ -275,14 +275,18 @@
 
         <!-- Auth Section (hidden by default; opened via Login button) -->
         <section id="auth" class="auth-form hidden">
-            <h2>Login Required</h2>
+            <h2 id="auth-title">Login</h2>
             <div class="form-group">
                 <input type="text" id="username" placeholder="Username">
             </div>
             <div class="form-group">
                 <input type="password" id="password" placeholder="Password">
             </div>
-            <button onclick="login()">Login</button>
+            <div class="form-group" style="display:flex;gap:8px;">
+                <button id="auth-action">Login</button>
+                <button id="auth-toggle">Switch to Register</button>
+            </div>
+            <div id="auth-message" style="margin-top:8px;color:#ffcc00;font-family:monospace;"></div>
         </section>
 
         <!-- Main content visible by default: showcase studio's games -->
@@ -291,16 +295,16 @@
                 <h2 class="section-title">Our Games</h2>
                 <div class="games-grid">
                     <div class="game-card">
-                        <img src="assets/ashes-thumb.png" alt="Ashes Till Tomorrow">
+                        <a href="ashes.html"><img src="assets/ashes-thumb.png" alt="Ashes Till Tomorrow"></a>
                         <div>
-                            <h3>Ashes Till Tomorrow</h3>
+                            <h3><a href="ashes.html">Ashes Till Tomorrow</a></h3>
                             <p>A narrative-driven atmospheric game featuring original music and environmental storytelling.</p>
                         </div>
                     </div>
                     <div class="game-card">
-                        <img src="assets/critter-thumb.png" alt="Critter Land">
+                        <a href="critter.html"><img src="assets/critter-thumb.png" alt="Critter Land"></a>
                         <div>
-                            <h3>Critter Land</h3>
+                            <h3><a href="critter.html">Critter Land</a></h3>
                             <p>An energetic action-adventure with memorable soundtrack and vibrant pixel art.</p>
                         </div>
                     </div>
