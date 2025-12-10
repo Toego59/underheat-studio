@@ -1,6 +1,6 @@
 // Constants and Settings
-const VALID_USERNAME = '777777';
-const VALID_PASSWORD = '777777';
+const VALID_USERNAME = '777';
+const VALID_PASSWORD = '777';
 const WEBAMP_CODE = 'webamp2025';
 
 // DOM Elements
