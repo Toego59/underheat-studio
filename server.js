@@ -43,6 +43,14 @@ ensureDefaultAdmin();
 
 const app = express();
 app.use(bodyParser.json());
+// Simple CORS headers so frontends served from other origins/ports can talk to the API
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 // Serve static files (the site)
 app.use(express.static(path.join(__dirname)));
@@ -82,6 +90,17 @@ app.get('/api/users', (req, res) => {
   // return non-sensitive list (no password hashes)
   const users = loadUsers().map(u => ({ username: u.username, createdAt: u.createdAt, isAdmin: !!u.isAdmin }));
   res.json({ success: true, users });
+});
+
+// Health check
+app.get('/api/ping', (req, res) => {
+  res.json({ success: true, uptime: process.uptime() });
+});
+
+// Helpful message on root
+app.get('/', (req, res, next) => {
+  // let static middleware handle index.html by default
+  next();
 });
 
 app.listen(PORT, () => {

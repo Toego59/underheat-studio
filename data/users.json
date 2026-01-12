@@ -10,5 +10,23 @@
     "passwordHash": "$2a$10$p5We2mUqVirjG3DrZBE1LuN8.I6y4TREIupV0uvYKsCoBCIRn2V4e",
     "createdAt": "2025-12-10T16:46:08.690Z",
     "isAdmin": false
+  },
+  {
+    "username": "testuser",
+    "passwordHash": "$2a$10$Gz.Yu4I0cfDH1rO0Ur8Mw.ihdbfDcDbzOumoM42Qzc3.Lt8tc4.Da",
+    "createdAt": "2025-12-10T16:52:08.112Z",
+    "isAdmin": false
+  },
+  {
+    "username": "newuser",
+    "passwordHash": "$2a$10$3UE2OQUzjp5DsnMjy8QFfOuZrZGKCSZ.tEF9a8H7W6kls63JsiKOC",
+    "createdAt": "2025-12-10T16:54:46.589Z",
+    "isAdmin": false
+  },
+  {
+    "username": "jkmeiihh@gmail.com",
+    "passwordHash": "$2a$10$a.2MUSDnBZg7yEgZeHtw5uTddGjy1/QsqyKJuwH9eCzr.oXkoZOPS",
+    "createdAt": "2025-12-10T16:56:02.669Z",
+    "isAdmin": true
   }
 ]

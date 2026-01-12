@@ -39,37 +39,67 @@ updateLogo();
 setInterval(updateLogo, 24 * 60 * 60 * 1000); // Check every 24 hours
 
 // Debug Functions
-function log(message) {
-    if (debugMode && debugPanel) {
-        const timestamp = new Date().toLocaleTimeString();
-        const logEntry = document.createElement('div');
-        logEntry.textContent = `[${timestamp}] ${message}`;
-        debugPanel.appendChild(logEntry);
-        debugPanel.scrollTop = debugPanel.scrollHeight;
-    }
-}
-
-function toggleDebug() {
-    const isAdmin = window.currentIsAdmin || localStorage.getItem('username') === '777';
-    if (!isAdmin) {
-        alert('Dev tools are restricted to admin users');
+async function openWebamp() {
+    if (!isAuthenticated) {
+        alert('Please login to open Webamp');
         return;
     }
-    debugMode = !debugMode;
-    debugPanel.style.display = debugMode ? 'block' : 'none';
-    log('Debug mode ' + (debugMode ? 'enabled' : 'disabled'));
-}
 
-// Initialize debug mode with keyboard shortcut
-document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        toggleDebug();
+    const code = (document.getElementById('webamp-code').value || '').trim();
+    // accept case-insensitive and trimmed match
+    if (!code || code.toLowerCase() !== WEBAMP_CODE.toLowerCase()) {
+        alert('Invalid Webamp access code');
+        log('Invalid Webamp access code attempt');
+        return;
     }
-});
 
-// Authentication
-function login() {
-    // legacy function kept for compatibility; prefer loginViaApi()
+    // Show overlay immediately so user sees progress
+    try {
+        webampOverlay.style.display = 'block';
+    } catch (e) {
+        console.warn('webampOverlay element missing', e);
+    }
+
+    try {
+        // Ensure Webamp library is loaded; load dynamically if needed
+        if (!window.Webamp) {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://unpkg.com/webamp@2.2.0/built/webamp.bundle.min.js';
+                s.onload = () => resolve();
+                s.onerror = () => reject(new Error('Failed to load Webamp script'));
+                document.head.appendChild(s);
+            });
+        }
+
+        if (!webampInstance) {
+            // Create instance and await readiness
+            webampInstance = new Webamp({
+                initialTracks: [{
+                    url: "https://example.com/demo.mp3",
+                    duration: 300,
+                    metaData: {
+                        title: "Demo Track",
+                        artist: "UNDERHEAT Studio"
+                    }
+                }]
+            });
+
+            // renderWhenReady can throw; await it
+            await webampInstance.renderWhenReady(webampContainer);
+        }
+
+        log('Webamp initialized and rendered');
+        webampOverlay.style.display = 'block';
+    } catch (err) {
+        console.error('Webamp initialization failed', err);
+        alert('Failed to initialize Webamp: ' + (err && err.message ? err.message : err));
+        // Clean up overlay and instance so site remains usable
+        try { webampOverlay.style.display = 'none'; } catch (e) {}
+        try { if (webampContainer) webampContainer.innerHTML = ''; } catch (e) {}
+        webampInstance = null;
+    }
+}
     loginViaApi();
 }
 
@@ -77,8 +107,10 @@ async function loginViaApi() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const msgEl = document.getElementById('auth-message');
+    // require both fields
     if (!username || !password) {
         msgEl.textContent = 'username and password required';
+        alert('Please enter both username and password');
         return;
     }
     try {
@@ -96,10 +128,12 @@ async function loginViaApi() {
             log('User authenticated via API: ' + data.username);
         } else {
             msgEl.textContent = (data && data.message) || 'Login failed';
+            alert(msgEl.textContent || 'Login failed');
         }
     } catch (err) {
         console.error(err);
         msgEl.textContent = 'Network error';
+        alert('Network error — could not reach server');
     }
 }
 
@@ -107,8 +141,10 @@ async function registerViaApi() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const msgEl = document.getElementById('auth-message');
+    // require both fields
     if (!username || !password) {
         msgEl.textContent = 'username and password required';
+        alert('Please enter both username and password to register');
         return;
     }
     try {
@@ -116,12 +152,15 @@ async function registerViaApi() {
         const data = await res.json();
         if (data && data.success) {
             msgEl.textContent = 'Registered — you can now login';
+            alert('Registration successful — you can now login');
         } else {
             msgEl.textContent = (data && data.message) || 'Registration failed';
+            alert(msgEl.textContent || 'Registration failed');
         }
     } catch (err) {
         console.error(err);
         msgEl.textContent = 'Network error';
+        alert('Network error — could not reach server');
     }
 }
 
@@ -154,9 +193,9 @@ function openWebamp() {
         alert('Please login to open Webamp');
         return;
     }
-
-    const code = document.getElementById('webamp-code').value;
-    if (code === WEBAMP_CODE) {
+    const code = (document.getElementById('webamp-code').value || '').trim();
+    // accept case-insensitive and trimmed match
+    if (code && code.toLowerCase() === WEBAMP_CODE.toLowerCase()) {
         webampOverlay.style.display = 'block';
         if (!webampInstance) {
             webampInstance = new Webamp({
@@ -229,6 +268,21 @@ function playVideo(videoId) {
         window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
     }
     log('Playing video: ' + videoId);
+}
+
+function closeWebamp() {
+    try {
+        if (webampInstance) {
+            // Try graceful close if available
+            try { if (typeof webampInstance.close === 'function') webampInstance.close(); } catch (e) {}
+            // Remove any rendered DOM inside container
+            try { webampContainer.innerHTML = ''; } catch (e) {}
+            webampInstance = null;
+        }
+    } catch (e) {
+        console.error('Error while closing Webamp', e);
+    }
+    try { webampOverlay.style.display = 'none'; } catch (e) {}
 }
 
 // Theme Customization
@@ -328,4 +382,40 @@ window.addEventListener('load', () => {
             // allow debug panel to be toggled for admin
         }
     }
+
+    // Check server availability and advise user if running from file://
+    async function checkServer() {
+        const msgEl = document.getElementById('auth-message');
+        if (window.location.protocol === 'file:') {
+            const text = 'The site must be served from the server. Run `npm start` and open http://localhost:3000';
+            if (msgEl) msgEl.textContent = text;
+            alert(text);
+            // disable auth controls
+            if (document.getElementById('auth-action')) document.getElementById('auth-action').disabled = true;
+            if (document.getElementById('auth-toggle')) document.getElementById('auth-toggle').disabled = true;
+            return false;
+        }
+
+        try {
+            const r = await fetch('/api/ping', { cache: 'no-store' , method: 'GET'});
+            if (!r.ok) throw new Error('bad response');
+            const j = await r.json();
+            log('Server reachable — uptime: ' + (j.uptime || '?'));
+            // enable auth controls
+            if (document.getElementById('auth-action')) document.getElementById('auth-action').disabled = false;
+            if (document.getElementById('auth-toggle')) document.getElementById('auth-toggle').disabled = false;
+            return true;
+        } catch (err) {
+            const text = 'Server unreachable — start it with `npm start` and open the site at http://localhost:3000';
+            if (msgEl) msgEl.textContent = text;
+            alert(text);
+            if (document.getElementById('auth-action')) document.getElementById('auth-action').disabled = true;
+            if (document.getElementById('auth-toggle')) document.getElementById('auth-toggle').disabled = true;
+            console.error('Server ping failed', err);
+            return false;
+        }
+    }
+
+    // run check on load
+    checkServer();
 });

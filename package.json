@@ -8,4 +8,9 @@
     "webamp": "^2.2.0",
     "bcryptjs": "^2.4.3"
   }
+  ,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js"
+  }
 }
