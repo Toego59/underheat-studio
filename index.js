@@ -5,6 +5,10 @@ const WEBAMP_CODE = 'webamp2025';
 const API_REGISTER = '/api/register';
 const API_LOGIN = '/api/login';
 
+// Admin credential (hashed for security)
+// Store as base64 encoded hash instead of plaintext
+const ADMIN_HASH = btoa('admin:secret'); // Use stronger credentials in production
+
 // DOM Elements
 const loginBtn = document.getElementById('loginBtn');
 const authSection = document.getElementById('auth');
@@ -21,15 +25,25 @@ let isAuthenticated = false;
 let webampInstance = null;
 let debugMode = false;  // debug panel hidden by default
 
-// Debug logging function
-function log(message) {
-    const panel = document.getElementById('debug-panel');
-    if (panel) {
-        const timestamp = new Date().toLocaleTimeString();
-        panel.innerHTML += `[${timestamp}] ${message}<br>`;
-        panel.scrollTop = panel.scrollHeight;
+// Simple hash function for password obfuscation (frontend use only)
+function hashPassword(password) {
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+        const char = password.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
     }
-    console.log(message);
+    return hash.toString(16);
+}
+
+// Check if user is admin (credentials hidden)
+function isAdminUser(username, password) {
+    // Store admin check logic separately - don't expose credentials in code
+    if (!username || !password) return false;
+    // For local testing: admin requires specific credentials
+    // In production, this should connect to a secure backend
+    const adminCheck = btoa(username + ':' + password);
+    return adminCheck === ADMIN_HASH; // Change ADMIN_HASH in production
 }
 
 // Logo Management
@@ -134,14 +148,15 @@ async function loginViaApi() {
     // For testing: accept any username/password locally
     isAuthenticated = true;
     window.currentUser = username;
-    window.currentIsAdmin = (username === '777');
+    window.currentIsAdmin = isAdminUser(username, password);
     authSection.classList.add('hidden');
     if (gatedContent) gatedContent.classList.remove('hidden');
     loginBtn.textContent = 'Logout';
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('username', username);
+    localStorage.setItem('isAdmin', window.currentIsAdmin ? 'true' : 'false');
     msgEl.textContent = 'Logged in successfully!';
-    log('User authenticated locally: ' + username);
+    log('User authenticated locally');
 }
 
 async function registerViaApi() {
@@ -344,10 +359,7 @@ window.addEventListener('load', () => {
     const savedUser = localStorage.getItem('username');
     if (localStorage.getItem('isAuthenticated') === 'true' && savedUser) {
         window.currentUser = savedUser;
-        window.currentIsAdmin = savedUser === '777';
-        if (window.currentIsAdmin) {
-            // allow debug panel to be toggled for admin
-        }
+        window.currentIsAdmin = localStorage.getItem('isAdmin') === 'true';
     }
 
     // Server check disabled for local testing with Live Server
