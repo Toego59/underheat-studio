@@ -124,7 +124,7 @@ function verify2FA() {
         setTimeout(() => {
             const modal = document.getElementById('twofa-modal');
             modal.classList.add('hidden');
-            log('User passed 2FA verification');
+            log('User passed 2FA verification - access granted');
         }, 1000);
     } else {
         msgEl.textContent = 'Invalid code - try again';
@@ -255,8 +255,11 @@ async function loginViaApi() {
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('username', username);
     localStorage.setItem('isAdmin', window.currentIsAdmin ? 'true' : 'false');
-    msgEl.textContent = 'Logged in successfully!';
-    log('User authenticated locally');
+    msgEl.textContent = 'Logged in successfully! Check for 2FA code...';
+    log('User authenticated locally - showing 2FA');
+
+    // Show 2FA modal after login
+    show2FAModal();
 }
 
 async function registerViaApi() {
