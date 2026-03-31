@@ -46,6 +46,105 @@ function isAdminUser(username, password) {
     return adminCheck === ADMIN_HASH; // Change ADMIN_HASH in production
 }
 
+// Debug logging function
+function log(message) {
+    const panel = document.getElementById('debug-panel');
+    if (panel) {
+        const timestamp = new Date().toLocaleTimeString();
+        panel.innerHTML += `[${timestamp}] ${message}<br>`;
+        panel.scrollTop = panel.scrollHeight;
+    }
+    console.log(message);
+}
+
+// Generate 2FA Code
+function generate2FACode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Show 2FA modal
+function show2FAModal() {
+    const modal = document.getElementById('twofa-modal');
+    const codeInput = document.getElementById('twofa-code');
+    modal.classList.remove('hidden');
+    codeInput.value = '';
+    codeInput.focus();
+
+    // Store current code and expiry time (15 minutes)
+    window.current2FACode = generate2FACode();
+    window.twoFAExpiry = Date.now() + (15 * 60 * 1000);
+
+    log('2FA code generated: ' + window.current2FACode);
+    startCodeTimer();
+}
+
+// Start timer for code expiry
+function startCodeTimer() {
+    if (window.timerInterval) clearInterval(window.timerInterval);
+
+    const updateTimer = () => {
+        const remaining = Math.max(0, Math.ceil((window.twoFAExpiry - Date.now()) / 1000));
+        const timerEl = document.getElementById('twofa-timer');
+        if (remaining > 0) {
+            timerEl.textContent = `Code expires in: ${remaining}s`;
+        } else {
+            timerEl.textContent = 'Code expired - request a new one';
+            clearInterval(window.timerInterval);
+        }
+    };
+
+    updateTimer();
+    window.timerInterval = setInterval(updateTimer, 1000);
+}
+
+// Verify 2FA code
+function verify2FA() {
+    const code = document.getElementById('twofa-code').value;
+    const msgEl = document.getElementById('twofa-message');
+
+    if (!code || code.length !== 6) {
+        msgEl.textContent = 'Please enter a 6-digit code';
+        msgEl.style.color = '#ff6666';
+        return;
+    }
+
+    if (Date.now() > window.twoFAExpiry) {
+        msgEl.textContent = 'Code has expired - request a new one';
+        msgEl.style.color = '#ff6666';
+        return;
+    }
+
+    if (code === window.current2FACode) {
+        msgEl.textContent = '✓ Verified successfully!';
+        msgEl.style.color = '#66ff66';
+        clearInterval(window.timerInterval);
+
+        // Complete login after brief delay
+        setTimeout(() => {
+            const modal = document.getElementById('twofa-modal');
+            modal.classList.add('hidden');
+            log('User passed 2FA verification');
+        }, 1000);
+    } else {
+        msgEl.textContent = 'Invalid code - try again';
+        msgEl.style.color = '#ff6666';
+        log('Failed 2FA attempt');
+    }
+}
+
+// Resend 2FA code
+function resend2FA() {
+    const msgEl = document.getElementById('twofa-message');
+    window.current2FACode = generate2FACode();
+    window.twoFAExpiry = Date.now() + (15 * 60 * 1000);
+    document.getElementById('twofa-code').value = '';
+    document.getElementById('twofa-code').focus();
+    msgEl.textContent = 'New code sent to your email';
+    msgEl.style.color = '#ffcc00';
+    log('2FA code resent: ' + window.current2FACode);
+    startCodeTimer();
+}
+
 // Logo Management
 function updateLogo() {
     const now = new Date();
