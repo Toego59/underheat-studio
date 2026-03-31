@@ -7,7 +7,8 @@ const API_LOGIN = '/api/login';
 
 // Admin credential (hashed for security)
 // Store as base64 encoded hash instead of plaintext
-const ADMIN_HASH = btoa('admin:secret'); // Use stronger credentials in production
+// Change these to your own admin credentials
+const ADMIN_HASH = btoa('admin:admin'); // Update with your own username:password
 
 // DOM Elements
 const loginBtn = document.getElementById('loginBtn');
