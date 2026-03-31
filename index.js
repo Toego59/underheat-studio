@@ -154,15 +154,43 @@ async function toggleWebamp() {
                 ],
                 initialSkin: {
                     url: "./assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
-                },
-                // Equalizer settings - always use Laptop Speaker/Headphones preset
-                initialEqSliders: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Flat preset
-                // Enable shuffle and repeat by default
-                enableShuffle: true,
-                enableRepeat: true
+                }
             });
 
             await webampInstance.renderWhenReady(container);
+
+            // Set equalizer, shuffle, and repeat after rendering completes
+            // Give Webamp time to fully render all elements
+            setTimeout(() => {
+                try {
+                    // Try to enable shuffle - find and click shuffle button
+                    const shuffleBtn = container.querySelector('[title*="huff"], [title*="HUFF"], button[aria-label*="huff"], button[aria-label*="huff"]');
+                    if (shuffleBtn) {
+                        shuffleBtn.click();
+                        log('Shuffle enabled');
+                    }
+
+                    // Try to enable repeat - find and click repeat button
+                    const repeatBtn = container.querySelector('[title*="epeat"], [title*="EPEAT"], button[aria-label*="epeat"]');
+                    if (repeatBtn) {
+                        repeatBtn.click();
+                        log('Repeat enabled');
+                    }
+
+                    // Set equalizer to flat (all sliders to 0) if we can find them
+                    const eqSliders = container.querySelectorAll('input[type="range"][title*="q"]');
+                    eqSliders.forEach(slider => {
+                        slider.value = 0;
+                        slider.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                    if (eqSliders.length > 0) {
+                        log(`Equalizer reset to flat (${eqSliders.length} sliders)`);
+                    }
+                } catch (e) {
+                    console.log('Note: Some Webamp settings may require manual adjustment:', e.message);
+                }
+            }, 500); // Wait 500ms for full rendering
+
             log('Webamp player loaded and displayed');
         } catch (err) {
             console.error('Webamp initialization failed', err);
