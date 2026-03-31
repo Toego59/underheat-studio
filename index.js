@@ -255,10 +255,17 @@ async function loginViaApi() {
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('username', username);
     localStorage.setItem('isAdmin', window.currentIsAdmin ? 'true' : 'false');
-    msgEl.textContent = 'Logged in successfully! Check for 2FA code...';
-    log('User authenticated locally - showing 2FA');
+    msgEl.textContent = 'Logged in successfully!';
+    log('User authenticated locally');
 
-    // Show 2FA modal after login
+    // Skip 2FA for test account (777)
+    if (username === '777') {
+        log('Test account login - 2FA skipped');
+        return;
+    }
+
+    // Show 2FA modal for all other users
+    msgEl.textContent = 'Logged in successfully! Check for 2FA code...';
     show2FAModal();
 }
 

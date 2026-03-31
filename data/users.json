@@ -1,5 +1,12 @@
 [
   {
+    "username": "777",
+    "passwordHash": "$2a$10$svF61fZu2aRcKkz1Zby7FuqCceukx6gBu4QJj1iLxRKg4wUlrBbwW",
+    "createdAt": "2025-12-10T16:45:36.100Z",
+    "isAdmin": false,
+    "skipTwoFA": true
+  },
+  {
     "username": "jkmeiihh@gmail.com",
     "passwordHash": "$2a$10$a.2MUSDnBZg7yEgZeHtw5uTddGjy1/QsqyKJuwH9eCzr.oXkoZOPS",
     "createdAt": "2025-12-10T16:56:02.669Z",
