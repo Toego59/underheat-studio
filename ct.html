@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Critter Land — UNDERHEAT Studio</title>
+    <link rel="icon" href="favicon.ico">
+    <style>
+        :root {
+            --primary-color: #ff5500;
+            --secondary-color: #333333;
+            --accent-color: #00aaff;
+            --text-color: #ffffff;
+            --background-color: #1a1a1a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid var(--primary-color);
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+        }
+
+        header a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        header a:hover {
+            color: var(--primary-color);
+        }
+
+        main {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.5));
+            border: 1px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 3rem;
+            min-height: 60vh;
+        }
+
+        main h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        main p {
+            color: #ccc;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            max-width: 800px;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1.5rem;
+            }
+
+            main h1 {
+                font-size: 1.8rem;
+            }
+
+            header {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html">← Back to Home</a>
+            <h2 style="color: var(--accent-color);">UNDERHEAT Studio</h2>
+        </header>
+        <main>
+            <h1>Critter Land</h1>
+            <p>An energetic action-adventure with memorable soundtrack and vibrant pixel art.</p>
+            <p style="margin-top: 2rem; color: #999;">
+                This is the Critter Land game page. Add description, screenshots, trailers, gameplay details, download links, and more information about the game here.
+            </p>
+        </main>
+    </div>
+
+    <script>
+        // Load and apply theme colors from main site
+        function loadThemeColors() {
+            const root = document.documentElement;
+
+            // Get colors from localStorage (set by main site)
+            const primaryColor = localStorage.getItem('--primary-color') || '#ff5500';
+            const secondaryColor = localStorage.getItem('--secondary-color') || '#333333';
+            const accentColor = localStorage.getItem('--accent-color') || '#00aaff';
+            const backgroundColor = localStorage.getItem('--background-color') || '#1a1a1a';
+
+            // Apply to CSS variables
+            root.style.setProperty('--primary-color', primaryColor);
+            root.style.setProperty('--secondary-color', secondaryColor);
+            root.style.setProperty('--accent-color', accentColor);
+            root.style.setProperty('--background-color', backgroundColor);
+        }
+
+        // Load theme on page load
+        loadThemeColors();
+
+        // Listen for storage changes (if user changes theme on another tab)
+        window.addEventListener('storage', loadThemeColors);
+    </script>
+</body>
+</html>

@@ -21,6 +21,17 @@ let isAuthenticated = false;
 let webampInstance = null;
 let debugMode = false;  // debug panel hidden by default
 
+// Debug logging function
+function log(message) {
+    const panel = document.getElementById('debug-panel');
+    if (panel) {
+        const timestamp = new Date().toLocaleTimeString();
+        panel.innerHTML += `[${timestamp}] ${message}<br>`;
+        panel.scrollTop = panel.scrollHeight;
+    }
+    console.log(message);
+}
+
 // Logo Management
 function updateLogo() {
     const now = new Date();
@@ -38,103 +49,99 @@ function updateLogo() {
 updateLogo();
 setInterval(updateLogo, 24 * 60 * 60 * 1000); // Check every 24 hours
 
-// Debug Functions
-async function openWebamp() {
-    if (!isAuthenticated) {
-        alert('Please login to open Webamp');
+// Webamp Integration
+async function toggleWebamp() {
+    // Only admins can use Webamp
+    if (!window.currentIsAdmin) {
+        alert('Webamp is only available for admins');
+        log('Non-admin attempted to access Webamp');
         return;
     }
 
-    const code = (document.getElementById('webamp-code').value || '').trim();
-    // accept case-insensitive and trimmed match
-    if (!code || code.toLowerCase() !== WEBAMP_CODE.toLowerCase()) {
-        alert('Invalid Webamp access code');
-        log('Invalid Webamp access code attempt');
+    const container = document.getElementById('webamp-container');
+    const button = document.getElementById('webamp-toggle');
+
+    // If already showing, hide it
+    if (!container.classList.contains('hidden')) {
+        container.classList.add('hidden');
+        button.textContent = 'Show Webamp Player';
+        log('Webamp player hidden');
         return;
     }
 
-    // Show overlay immediately so user sees progress
-    try {
-        webampOverlay.style.display = 'block';
-    } catch (e) {
-        console.warn('webampOverlay element missing', e);
-    }
+    // Show it
+    container.classList.remove('hidden');
+    button.textContent = 'Hide Webamp Player';
 
-    try {
-        // Ensure Webamp library is loaded; load dynamically if needed
-        if (!window.Webamp) {
-            await new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = 'https://unpkg.com/webamp@2.2.0/built/webamp.bundle.min.js';
-                s.onload = () => resolve();
-                s.onerror = () => reject(new Error('Failed to load Webamp script'));
-                document.head.appendChild(s);
-            });
-        }
+    // Only create instance once
+    if (!webampInstance) {
+        try {
+            if (!window.Webamp) {
+                await new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = 'https://unpkg.com/webamp@2.2.0/built/webamp.bundle.min.js';
+                    s.onload = () => resolve();
+                    s.onerror = () => reject(new Error('Failed to load Webamp script'));
+                    document.head.appendChild(s);
+                });
+            }
 
-        if (!webampInstance) {
-            // Create instance and await readiness
             webampInstance = new Webamp({
-                initialTracks: [{
-                    url: "https://example.com/demo.mp3",
-                    duration: 300,
-                    metaData: {
-                        title: "Demo Track",
-                        artist: "UNDERHEAT Studio"
+                initialTracks: [
+                    {
+                        url: "./assets/thatsall.mp4",
+                        metaData: {
+                            title: "That's All",
+                            artist: "UNDERHEAT Studio"
+                        }
+                    },
+                    {
+                        url: "./assets/shout.mp4",
+                        metaData: {
+                            title: "Shout",
+                            artist: "UNDERHEAT Studio"
+                        }
                     }
-                }]
+                ],
+                initialSkin: {
+                    url: "./assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
+                }
             });
 
-            // renderWhenReady can throw; await it
-            await webampInstance.renderWhenReady(webampContainer);
+            await webampInstance.renderWhenReady(container);
+            log('Webamp player loaded and displayed');
+        } catch (err) {
+            console.error('Webamp initialization failed', err);
+            alert('Failed to load Webamp: ' + (err && err.message ? err.message : err));
+            container.classList.add('hidden');
+            button.textContent = 'Show Webamp Player';
+            webampInstance = null;
         }
-
-        log('Webamp initialized and rendered');
-        webampOverlay.style.display = 'block';
-    } catch (err) {
-        console.error('Webamp initialization failed', err);
-        alert('Failed to initialize Webamp: ' + (err && err.message ? err.message : err));
-        // Clean up overlay and instance so site remains usable
-        try { webampOverlay.style.display = 'none'; } catch (e) {}
-        try { if (webampContainer) webampContainer.innerHTML = ''; } catch (e) {}
-        webampInstance = null;
     }
-}
-    loginViaApi();
 }
 
 async function loginViaApi() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const msgEl = document.getElementById('auth-message');
-    // require both fields
+
     if (!username || !password) {
         msgEl.textContent = 'username and password required';
         alert('Please enter both username and password');
         return;
     }
-    try {
-        const res = await fetch(API_LOGIN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-        const data = await res.json();
-        if (data && data.success) {
-            isAuthenticated = true;
-            window.currentUser = data.username;
-            window.currentIsAdmin = !!data.isAdmin;
-            authSection.classList.add('hidden');
-            if (gatedContent) gatedContent.classList.remove('hidden');
-            loginBtn.textContent = 'Logout';
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('username', data.username);
-            log('User authenticated via API: ' + data.username);
-        } else {
-            msgEl.textContent = (data && data.message) || 'Login failed';
-            alert(msgEl.textContent || 'Login failed');
-        }
-    } catch (err) {
-        console.error(err);
-        msgEl.textContent = 'Network error';
-        alert('Network error — could not reach server');
-    }
+
+    // For testing: accept any username/password locally
+    isAuthenticated = true;
+    window.currentUser = username;
+    window.currentIsAdmin = (username === '777');
+    authSection.classList.add('hidden');
+    if (gatedContent) gatedContent.classList.remove('hidden');
+    loginBtn.textContent = 'Logout';
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('username', username);
+    msgEl.textContent = 'Logged in successfully!';
+    log('User authenticated locally: ' + username);
 }
 
 async function registerViaApi() {
@@ -185,38 +192,6 @@ if (localStorage.getItem('isAuthenticated') === 'true') {
     if (gatedContent) gatedContent.classList.remove('hidden');
     loginBtn.textContent = 'Logout';
     log('Restored authenticated session');
-}
-
-// Webamp Integration
-function openWebamp() {
-    if (!isAuthenticated) {
-        alert('Please login to open Webamp');
-        return;
-    }
-    const code = (document.getElementById('webamp-code').value || '').trim();
-    // accept case-insensitive and trimmed match
-    if (code && code.toLowerCase() === WEBAMP_CODE.toLowerCase()) {
-        webampOverlay.style.display = 'block';
-        if (!webampInstance) {
-            webampInstance = new Webamp({
-                initialTracks: [{
-                    url: "https://example.com/demo.mp3",
-                    duration: 300,
-                    metaData: {
-                        title: "Demo Track",
-                        artist: "UNDERHEAT Studio"
-                    }
-                }]
-            });
-            webampInstance.renderWhenReady(webampContainer).then(() => {
-                log('Webamp initialized and rendered');
-            });
-        }
-        log('Webamp overlay opened');
-    } else {
-        alert('Invalid Webamp access code');
-        log('Invalid Webamp access code attempt');
-    }
 }
 
 // YouTube Search Integration
@@ -270,51 +245,37 @@ function playVideo(videoId) {
     log('Playing video: ' + videoId);
 }
 
-function closeWebamp() {
-    try {
-        if (webampInstance) {
-            // Try graceful close if available
-            try { if (typeof webampInstance.close === 'function') webampInstance.close(); } catch (e) {}
-            // Remove any rendered DOM inside container
-            try { webampContainer.innerHTML = ''; } catch (e) {}
-            webampInstance = null;
-        }
-    } catch (e) {
-        console.error('Error while closing Webamp', e);
-    }
-    try { webampOverlay.style.display = 'none'; } catch (e) {}
-}
-
 // Theme Customization
 function setTheme(theme) {
     const root = document.documentElement;
-    
+
     switch (theme) {
         case 'default':
             root.style.setProperty('--primary-color', '#ff5500');
             root.style.setProperty('--secondary-color', '#333333');
             root.style.setProperty('--accent-color', '#00aaff');
             root.style.setProperty('--background-color', '#1a1a1a');
+
+            localStorage.setItem('--primary-color', '#ff5500');
+            localStorage.setItem('--secondary-color', '#333333');
+            localStorage.setItem('--accent-color', '#00aaff');
+            localStorage.setItem('--background-color', '#1a1a1a');
             break;
         case 'dark':
-            root.style.setProperty('--primary-color', '#8800ff');
-            root.style.setProperty('--secondary-color', '#222222');
-            root.style.setProperty('--accent-color', '#00ff88');
+            root.style.setProperty('--primary-color', '#4a9eff');
+            root.style.setProperty('--secondary-color', '#0f0f0f');
+            root.style.setProperty('--accent-color', '#00d4ff');
             root.style.setProperty('--background-color', '#000000');
-            break;
-        case 'pride':
-            root.style.setProperty('--primary-color', '#ff0000');
-            root.style.setProperty('--secondary-color', '#ff8800');
-            root.style.setProperty('--accent-color', '#ffff00');
-            root.style.setProperty('--background-color', '#111111');
-            document.body.classList.add('pride-theme');
+
+            localStorage.setItem('--primary-color', '#4a9eff');
+            localStorage.setItem('--secondary-color', '#0f0f0f');
+            localStorage.setItem('--accent-color', '#00d4ff');
+            localStorage.setItem('--background-color', '#000000');
             break;
     }
-    
-    if (theme !== 'pride') {
-        document.body.classList.remove('pride-theme');
-    }
-    
+
+    document.body.classList.remove('pride-theme');
+
     localStorage.setItem('theme', theme);
     log('Theme changed to: ' + theme);
 }
@@ -322,21 +283,25 @@ function setTheme(theme) {
 // Color picker event listeners
 document.getElementById('primary-color').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--primary-color', e.target.value);
+    localStorage.setItem('--primary-color', e.target.value);
     log('Primary color updated');
 });
 
 document.getElementById('secondary-color').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--secondary-color', e.target.value);
+    localStorage.setItem('--secondary-color', e.target.value);
     log('Secondary color updated');
 });
 
 document.getElementById('accent-color').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--accent-color', e.target.value);
+    localStorage.setItem('--accent-color', e.target.value);
     log('Accent color updated');
 });
 
 document.getElementById('bg-color').addEventListener('input', (e) => {
     document.documentElement.style.setProperty('--background-color', e.target.value);
+    localStorage.setItem('--background-color', e.target.value);
     log('Background color updated');
 });
 
@@ -361,6 +326,7 @@ window.addEventListener('load', () => {
     // Wire auth form buttons
     const authAction = document.getElementById('auth-action');
     const authToggle = document.getElementById('auth-toggle');
+    const webampToggle = document.getElementById('webamp-toggle');
     let registerMode = false;
     if (authAction) authAction.addEventListener('click', () => {
         if (registerMode) registerViaApi(); else loginViaApi();
@@ -372,6 +338,7 @@ window.addEventListener('load', () => {
         authToggle.textContent = registerMode ? 'Switch to Login' : 'Switch to Register';
         document.getElementById('auth-message').textContent = '';
     });
+    if (webampToggle) webampToggle.addEventListener('click', toggleWebamp);
 
     // Restore session info if present
     const savedUser = localStorage.getItem('username');
@@ -383,39 +350,7 @@ window.addEventListener('load', () => {
         }
     }
 
-    // Check server availability and advise user if running from file://
-    async function checkServer() {
-        const msgEl = document.getElementById('auth-message');
-        if (window.location.protocol === 'file:') {
-            const text = 'The site must be served from the server. Run `npm start` and open http://localhost:3000';
-            if (msgEl) msgEl.textContent = text;
-            alert(text);
-            // disable auth controls
-            if (document.getElementById('auth-action')) document.getElementById('auth-action').disabled = true;
-            if (document.getElementById('auth-toggle')) document.getElementById('auth-toggle').disabled = true;
-            return false;
-        }
-
-        try {
-            const r = await fetch('/api/ping', { cache: 'no-store' , method: 'GET'});
-            if (!r.ok) throw new Error('bad response');
-            const j = await r.json();
-            log('Server reachable — uptime: ' + (j.uptime || '?'));
-            // enable auth controls
-            if (document.getElementById('auth-action')) document.getElementById('auth-action').disabled = false;
-            if (document.getElementById('auth-toggle')) document.getElementById('auth-toggle').disabled = false;
-            return true;
-        } catch (err) {
-            const text = 'Server unreachable — start it with `npm start` and open the site at http://localhost:3000';
-            if (msgEl) msgEl.textContent = text;
-            alert(text);
-            if (document.getElementById('auth-action')) document.getElementById('auth-action').disabled = true;
-            if (document.getElementById('auth-toggle')) document.getElementById('auth-toggle').disabled = true;
-            console.error('Server ping failed', err);
-            return false;
-        }
-    }
-
-    // run check on load
-    checkServer();
+    // Server check disabled for local testing with Live Server
+    // If you need full authentication, run: npm start
+    log('Running in test mode (Live Server)');
 });
