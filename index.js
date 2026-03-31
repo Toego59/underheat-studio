@@ -203,11 +203,8 @@ async function loginViaApi() {
         localStorage.removeItem('adminToken');
     }
 
-    msgEl.textContent = 'Logged in successfully! Check for 2FA code...';
-    log('User authenticated locally - showing 2FA');
-
-    // Show 2FA modal after login
-    show2FAModal();
+    msgEl.textContent = 'Logged in successfully!';
+    log('User authenticated locally');
 }
 
 async function registerViaApi() {
