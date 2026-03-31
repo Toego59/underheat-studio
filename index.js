@@ -154,7 +154,12 @@ async function toggleWebamp() {
                 ],
                 initialSkin: {
                     url: "./assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
-                }
+                },
+                // Equalizer settings - always use Laptop Speaker/Headphones preset
+                initialEqSliders: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Flat preset
+                // Enable shuffle and repeat by default
+                enableShuffle: true,
+                enableRepeat: true
             });
 
             await webampInstance.renderWhenReady(container);
