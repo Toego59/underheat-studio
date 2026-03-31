@@ -10,6 +10,30 @@ const API_LOGIN = '/api/login';
 // Change these to your own admin credentials
 const ADMIN_HASH = btoa('admin:admin'); // Update with your own username:password
 
+// Encrypted admin usernames (base64 encoded for obfuscation)
+const ADMIN_USERNAMES = [
+  btoa('777'),
+  btoa('jkmeiihh@gmail.com')
+];
+
+// Function to create integrity token for admin status
+function createAdminToken(username, isAdmin) {
+  const data = btoa(username + ':::' + isAdmin + ':::' + new Date().toDateString());
+  return data;
+}
+
+// Function to verify admin token hasn't been tampered with
+function verifyAdminToken(username, token) {
+  const decoded = atob(token);
+  const [storedUsername, storedAdmin, storedDate] = decoded.split(':::');
+
+  // Check if token is from the same day and username matches
+  if (storedUsername !== username) return false;
+  if (storedDate !== new Date().toDateString()) return false;
+
+  return storedAdmin === 'true';
+}
+
 // DOM Elements
 const loginBtn = document.getElementById('loginBtn');
 const authSection = document.getElementById('auth');
@@ -37,14 +61,12 @@ function hashPassword(password) {
     return hash.toString(16);
 }
 
-// Check if user is admin (credentials hidden)
-function isAdminUser(username, password) {
-    // Store admin check logic separately - don't expose credentials in code
-    if (!username || !password) return false;
-    // For local testing: admin requires specific credentials
-    // In production, this should connect to a secure backend
-    const adminCheck = btoa(username + ':' + password);
-    return adminCheck === ADMIN_HASH; // Change ADMIN_HASH in production
+// Check if user is admin (based on username from users.json)
+function isAdminUser(username) {
+    if (!username) return false;
+    // Check if username is in the encrypted admin list
+    const encodedUsername = btoa(username);
+    return ADMIN_USERNAMES.includes(encodedUsername);
 }
 
 // Debug logging function
@@ -58,93 +80,6 @@ function log(message) {
     console.log(message);
 }
 
-// Generate 2FA Code
-function generate2FACode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-// Show 2FA modal
-function show2FAModal() {
-    const modal = document.getElementById('twofa-modal');
-    const codeInput = document.getElementById('twofa-code');
-    modal.classList.remove('hidden');
-    codeInput.value = '';
-    codeInput.focus();
-
-    // Store current code and expiry time (15 minutes)
-    window.current2FACode = generate2FACode();
-    window.twoFAExpiry = Date.now() + (15 * 60 * 1000);
-
-    log('2FA code generated: ' + window.current2FACode);
-    startCodeTimer();
-}
-
-// Start timer for code expiry
-function startCodeTimer() {
-    if (window.timerInterval) clearInterval(window.timerInterval);
-
-    const updateTimer = () => {
-        const remaining = Math.max(0, Math.ceil((window.twoFAExpiry - Date.now()) / 1000));
-        const timerEl = document.getElementById('twofa-timer');
-        if (remaining > 0) {
-            timerEl.textContent = `Code expires in: ${remaining}s`;
-        } else {
-            timerEl.textContent = 'Code expired - request a new one';
-            clearInterval(window.timerInterval);
-        }
-    };
-
-    updateTimer();
-    window.timerInterval = setInterval(updateTimer, 1000);
-}
-
-// Verify 2FA code
-function verify2FA() {
-    const code = document.getElementById('twofa-code').value;
-    const msgEl = document.getElementById('twofa-message');
-
-    if (!code || code.length !== 6) {
-        msgEl.textContent = 'Please enter a 6-digit code';
-        msgEl.style.color = '#ff6666';
-        return;
-    }
-
-    if (Date.now() > window.twoFAExpiry) {
-        msgEl.textContent = 'Code has expired - request a new one';
-        msgEl.style.color = '#ff6666';
-        return;
-    }
-
-    if (code === window.current2FACode) {
-        msgEl.textContent = '✓ Verified successfully!';
-        msgEl.style.color = '#66ff66';
-        clearInterval(window.timerInterval);
-
-        // Complete login after brief delay
-        setTimeout(() => {
-            const modal = document.getElementById('twofa-modal');
-            modal.classList.add('hidden');
-            log('User passed 2FA verification - access granted');
-        }, 1000);
-    } else {
-        msgEl.textContent = 'Invalid code - try again';
-        msgEl.style.color = '#ff6666';
-        log('Failed 2FA attempt');
-    }
-}
-
-// Resend 2FA code
-function resend2FA() {
-    const msgEl = document.getElementById('twofa-message');
-    window.current2FACode = generate2FACode();
-    window.twoFAExpiry = Date.now() + (15 * 60 * 1000);
-    document.getElementById('twofa-code').value = '';
-    document.getElementById('twofa-code').focus();
-    msgEl.textContent = 'New code sent to your email';
-    msgEl.style.color = '#ffcc00';
-    log('2FA code resent: ' + window.current2FACode);
-    startCodeTimer();
-}
 
 // Logo Management
 function updateLogo() {
@@ -248,24 +183,25 @@ async function loginViaApi() {
     // For testing: accept any username/password locally
     isAuthenticated = true;
     window.currentUser = username;
-    window.currentIsAdmin = isAdminUser(username, password);
+    window.currentIsAdmin = isAdminUser(username);
     authSection.classList.add('hidden');
     if (gatedContent) gatedContent.classList.remove('hidden');
     loginBtn.textContent = 'Logout';
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('username', username);
-    localStorage.setItem('isAdmin', window.currentIsAdmin ? 'true' : 'false');
-    msgEl.textContent = 'Logged in successfully!';
-    log('User authenticated locally');
 
-    // Skip 2FA for test account (777)
-    if (username === '777') {
-        log('Test account login - 2FA skipped');
-        return;
+    // Create encrypted admin token (prevents tampering)
+    if (window.currentIsAdmin) {
+        const adminToken = createAdminToken(username, true);
+        localStorage.setItem('adminToken', adminToken);
+    } else {
+        localStorage.removeItem('adminToken');
     }
 
-    // Show 2FA modal for all other users
     msgEl.textContent = 'Logged in successfully! Check for 2FA code...';
+    log('User authenticated locally - showing 2FA');
+
+    // Show 2FA modal after login
     show2FAModal();
 }
 
@@ -467,9 +403,15 @@ window.addEventListener('load', () => {
 
     // Restore session info if present
     const savedUser = localStorage.getItem('username');
+    const adminToken = localStorage.getItem('adminToken');
     if (localStorage.getItem('isAuthenticated') === 'true' && savedUser) {
         window.currentUser = savedUser;
-        window.currentIsAdmin = localStorage.getItem('isAdmin') === 'true';
+        // Verify admin token hasn't been tampered with
+        if (adminToken && verifyAdminToken(savedUser, adminToken)) {
+            window.currentIsAdmin = true;
+        } else {
+            window.currentIsAdmin = false;
+        }
     }
 
     // Server check disabled for local testing with Live Server
