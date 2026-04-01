@@ -151,10 +151,7 @@ async function toggleWebamp() {
                             artist: "UNDERHEAT Studio"
                         }
                     }
-                ],
-                initialSkin: {
-                    url: "./assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
-                }
+                ]
             });
 
             await webampInstance.renderWhenReady(container);
