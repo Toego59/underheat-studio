@@ -1,7 +1,6 @@
 # Backend secrets
-.env
-data/
-users.db
+backend/.env
+backend/data/users.db
 
 # Node modules
 node_modules/
