@@ -1,14 +1,20 @@
 {
+  "name": "underheat-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "dependencies": {
-    "@plasmicapp/loader-nextjs": "^1.0.440",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^2.2.0",
-    "express": "^5.1.0",
-    "fuzzyset": "^1.0.7",
+    "dotenv": "^16.4.5",
     "nodemailer": "^7.0.5",
-    "webamp": "^2.2.0",
-    "bcryptjs": "^2.4.3"
-  }
-  ,
+    "fuzzyset": "^1.0.7"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "NODE_ENV=development node server.js"

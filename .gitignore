@@ -1,8 +1,4 @@
-# Backend secrets
-backend/.env
-backend/data/users.db
-
-# Node modules
+# Dependencies
 node_modules/
 
 # Logs

@@ -1,129 +1,106 @@
-// server.js
-const express = require('express');
+// backend/server.js
+require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-const cors = require('cors');
 app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// --- DB SETUP ---
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+// Ensure data folder exists
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
-const DB_PATH = path.join(DATA_DIR, 'users.db');
-const db = new sqlite3.Database(DB_PATH);
-
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      is_admin INTEGER NOT NULL DEFAULT 0
-    )
-  `);
-
-  const defaultAdminUser = process.env.ADMIN_USER || 'admin';
-  const defaultAdminPass = process.env.ADMIN_PASS || 'admin123';
-
-  db.get('SELECT * FROM users WHERE username = ?', [defaultAdminUser], async (err, row) => {
-    if (err) {
-      console.error('Error checking admin user:', err);
-      return;
-    }
-    if (!row) {
-      const hash = await bcrypt.hash(defaultAdminPass, 10);
-      db.run(
-        'INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)',
-        [defaultAdminUser, hash, 1],
-        (err2) => {
-          if (err2) console.error('Error seeding admin user:', err2);
-          else console.log(`Seeded admin user: ${defaultAdminUser}/${defaultAdminPass}`);
-        }
-      );
-    }
-  });
+// DB path and open
+const dbPath = path.join(dataDir, 'users.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Failed to open DB', err);
+    process.exit(1);
+  } else {
+    console.log('Connected to SQLite DB at', dbPath);
+  }
 });
 
-// --- MIDDLEWARE ---
-app.use(express.json());
+// Initialize users table if missing
+db.serialize(() => {
+  db.run(
+    `CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT,
+      isAdmin INTEGER DEFAULT 0
+    )`,
+    (err) => {
+      if (err) console.error('Failed to create users table', err);
+    }
+  );
+});
 
-// --- API ROUTES ---
+// Health route
+app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 // Register
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', (req, res) => {
   const { username, password } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ success: false, message: 'Username and password required' });
-  }
+  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
 
-  try {
-    const hash = await bcrypt.hash(password, 10);
-    db.run(
-      'INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)',
-      [username, hash, 0],
-      (err) => {
-        if (err) {
-          if (err.code === 'SQLITE_CONSTRAINT') {
-            return res.status(409).json({ success: false, message: 'Username already exists' });
-          }
-          console.error(err);
-          return res.status(500).json({ success: false, message: 'Internal server error' });
-        }
-        return res.json({ success: true, message: 'Registered successfully' });
-      }
-    );
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
+  const hashed = bcrypt.hashSync(password, 10);
+  const stmt = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)');
+  stmt.run(username, hashed, function (err) {
+    if (err) {
+      if (err.code === 'SQLITE_CONSTRAINT') return res.status(409).json({ error: 'User exists' });
+      console.error(err);
+      return res.status(500).json({ error: 'DB error' });
+    }
+    res.json({ ok: true, id: this.lastID });
+  });
+  stmt.finalize();
 });
 
 // Login
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ success: false, message: 'Username and password required' });
-  }
+  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
 
-  db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
+  db.get('SELECT id, username, password, isAdmin FROM users WHERE username = ?', [username], (err, row) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ success: false, message: 'Internal server error' });
+      return res.status(500).json({ error: 'DB error' });
     }
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
+    if (!row) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
+    const match = bcrypt.compareSync(password, row.password);
+    if (!match) return res.status(401).json({ error: 'Invalid credentials' });
 
-    return res.json({
-      success: true,
-      message: 'Login successful',
-      username: user.username,
-      isAdmin: !!user.is_admin
-    });
+    // Minimal session token placeholder (replace with real auth if needed)
+    res.json({ ok: true, user: { id: row.id, username: row.username, isAdmin: !!row.isAdmin } });
   });
 });
 
-// Health check
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true });
+// Example admin toggle route (adjust to your app)
+app.post('/api/admin/toggle', (req, res) => {
+  const { username, makeAdmin } = req.body || {};
+  if (!username) return res.status(400).json({ error: 'Missing username' });
+
+  db.run('UPDATE users SET isAdmin = ? WHERE username = ?', [makeAdmin ? 1 : 0, username], function (err) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'DB error' });
+    }
+    if (this.changes === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ ok: true });
+  });
 });
 
-// Root
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
+// Use environment port or default 3000
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`UNDERHEAT Studio server running on http://localhost:${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });

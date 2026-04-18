@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UNDERHEAT Studio</title>
   <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=1776870060">
+  <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/webamp@2.2.0/built/webamp.bundle.min.js"></script>
 </head>
 <body>
@@ -15,29 +15,9 @@
         <img src="assets/logo.png" alt="UNDERHEAT" class="logo" id="main-logo">
         <img src="assets/pride-logo.png" alt="UNDERHEAT PRIDE" class="pride-logo" id="pride-logo">
       </div>
-
       <nav class="nav">
         <span id="user-indicator" class="user-indicator"></span>
-
-        <!-- Settings button (hidden until logged in) -->
-        <button id="settingsBtn" class="btn secondary" style="display:none;">
-          Settings
-        </button>
-
-        <!-- Admin Panel button (hidden unless admin) -->
-        <button id="adminBtn" class="btn secondary" style="display:none;">
-          Admin Panel
-        </button>
-
-        <!-- Logout button (hidden until logged in) -->
-        <button id="logoutBtn" class="btn ghost" style="display:none;">
-          Logout
-        </button>
-
-        <!-- Login button (hidden when logged in) -->
-        <button id="loginBtn" class="btn primary">
-          Login
-        </button>
+        <button id="loginBtn" class="btn primary">Login</button>
       </nav>
     </header>
 
@@ -76,11 +56,9 @@
               <p>A narrative-driven atmospheric game featuring original music and environmental storytelling.</p>
             </div>
           </article>
-
           <article class="game-card">
             <a href="ct.html" class="game-thumb">
-              <!-- Critter Land image: replaced placeholder with cl.png from project root -->
-              <img src="/cl.png" alt="Critter Land">
+              <img src="assets/placeholder.png" alt="Critter Land">
             </a>
             <div class="game-info">
               <h3><a href="ct.html">Critter Land</a></h3>
@@ -202,6 +180,6 @@
     </footer>
   </div>
 
-  <script src="index.js?v=1776870060"></script>
+  <script src="index.js"></script>
 </body>
 </html>

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Settings</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    :root {
+      --bg: #070707;
+      --card: #0f0f0f;
+      --muted: #9aa3ad;
+      --accent: #0a84ff;
+      --success: #16a34a;
+      --danger: #ef4444;
+      color-scheme: dark;
+    }
+    html,body { height:100%; margin:0; padding:0; background:var(--bg); color:#e6eef6; font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; }
+    .container { max-width:1100px; margin:28px auto; padding:0 18px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    header h1 { margin:0; font-size:20px; }
+    .links a { color:var(--accent); text-decoration:none; margin-left:12px; font-size:14px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+    .card { background:var(--card); padding:14px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.6); }
+    label { display:block; font-size:13px; color:var(--muted); margin-top:8px; }
+    input[type="text"], input[type="color"], select, textarea { width:100%; padding:8px 10px; margin-top:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:#0b0b0b; color:#e6eef6; box-sizing:border-box; }
+    .btn { margin-top:10px; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:var(--accent); color:#fff; }
+    .btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted); }
+    .small { font-size:13px; color:var(--muted); margin-top:8px; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    #webamp-container { margin-top:12px; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Settings</h1>
+        <div class="small">Customize theme, UI scale, background, and optional Webamp restore</div>
+      </div>
+      <nav class="links">
+        <a href="/">Main site</a>
+        <a href="/admin.html">Admin</a>
+        <a href="/ct.html">Critterland</a>
+      </nav>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Theme Presets</h3>
+        <div class="row">
+          <button class="btn theme-btn" data-theme="default">Default</button>
+          <button class="btn theme-btn" data-theme="dark">Dark</button>
+        </div>
+        <div class="small">Quick presets that save to localStorage</div>
+      </div>
+
+      <div class="card">
+        <h3>Colors</h3>
+        <label>Primary Color</label>
+        <input id="primary-color" type="color" />
+        <label>Secondary Color</label>
+        <input id="secondary-color" type="color" />
+        <label>Accent Color</label>
+        <input id="accent-color" type="color" />
+        <label>Background Color</label>
+        <input id="bg-color" type="color" />
+        <button id="reset-custom" class="btn ghost">Reset Customizations</button>
+      </div>
+
+      <div class="card">
+        <h3>Background</h3>
+        <label>Background Style</label>
+        <select id="bg-style">
+          <option value="solid">Solid</option>
+          <option value="image">Image</option>
+        </select>
+        <div id="bg-image-picker" class="hidden">
+          <label>Background Image URL</label>
+          <input id="bg-image-url" type="text" placeholder="https://..." />
+        </div>
+        <label>Card Style</label>
+        <select id="card-style">
+          <option value="rounded">Rounded</option>
+          <option value="flat">Flat</option>
+        </select>
+        <label>Font Style</label>
+        <select id="font-style">
+          <option value="modern">Modern</option>
+          <option value="classic">Classic</option>
+        </select>
+        <label>UI Scale</label>
+        <select id="ui-scale">
+          <option value="0.9">Small</option>
+          <option value="1" selected>Normal</option>
+          <option value="1.1">Large</option>
+          <option value="1.2">XL</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <h3>Webamp Restore</h3>
+        <div class="small">If you want the player state restored on this page, enable the container below. Admins can toggle the player from the main page and state will persist.</div>
+        <div class="row" style="margin-top:10px;">
+          <button id="show-webamp" class="btn">Show Webamp Player</button>
+          <button id="hide-webamp" class="btn ghost">Hide Webamp Player</button>
+        </div>
+        <div id="webamp-container" class="hidden"></div>
+      </div>
+
+      <div class="card">
+        <h3>Reset All Settings</h3>
+        <div class="small">Clears theme, colors, background, and UI scale from localStorage</div>
+        <button id="reset-all" class="btn ghost">Reset All</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API base detection (kept for parity with other pages)
+    const API_BASE =
+      location.hostname === "127.0.0.1" || location.hostname === "localhost"
+        ? "http://127.0.0.1:3000/api"
+        : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
+
+    // Theme and customization logic (same behavior as index.js)
+    function applyThemeFromStorage() {
+      const root = document.documentElement;
+      const p = localStorage.getItem("--primary-color");
+      const s = localStorage.getItem("--secondary-color");
+      const a = localStorage.getItem("--accent-color");
+      const b = localStorage.getItem("--background-color");
+      if (p) root.style.setProperty("--primary-color", p);
+      if (s) root.style.setProperty("--secondary-color", s);
+      if (a) root.style.setProperty("--accent-color", a);
+      if (b) root.style.setProperty("--background-color", b);
+    }
+
+    function setTheme(theme) {
+      const root = document.documentElement;
+      if (theme === "default") {
+        root.style.setProperty("--primary-color", "#ff5500");
+        root.style.setProperty("--secondary-color", "#333333");
+        root.style.setProperty("--accent-color", "#00aaff");
+        root.style.setProperty("--background-color", "#1a1a1a");
+      } else if (theme === "dark") {
+        root.style.setProperty("--primary-color", "#4a9eff");
+        root.style.setProperty("--secondary-color", "#0f0f0f");
+        root.style.setProperty("--accent-color", "#00d4ff");
+        root.style.setProperty("--background-color", "#000000");
+      }
+      localStorage.setItem("--primary-color", getComputedStyle(root).getPropertyValue("--primary-color").trim());
+      localStorage.setItem("--secondary-color", getComputedStyle(root).getPropertyValue("--secondary-color").trim());
+      localStorage.setItem("--accent-color", getComputedStyle(root).getPropertyValue("--accent-color").trim());
+      localStorage.setItem("--background-color", getComputedStyle(root).getPropertyValue("--background-color").trim());
+      localStorage.setItem("theme", theme);
+    }
+
+    // Wire controls
+    document.querySelectorAll(".theme-btn").forEach(btn => {
+      btn.addEventListener("click", () => setTheme(btn.getAttribute("data-theme")));
+    });
+
+    const primary = document.getElementById("primary-color");
+    const secondary = document.getElementById("secondary-color");
+    const accent = document.getElementById("accent-color");
+    const bg = document.getElementById("bg-color");
+    const resetCustom = document.getElementById("reset-custom");
+    const resetAll = document.getElementById("reset-all");
+    const bgStyleSelect = document.getElementById("bg-style");
+    const bgImagePicker = document.getElementById("bg-image-picker");
+    const bgImageInput = document.getElementById("bg-image-url");
+    const cardStyleSelect = document.getElementById("card-style");
+    const fontStyleSelect = document.getElementById("font-style");
+    const uiScaleSelect = document.getElementById("ui-scale");
+
+    if (primary) primary.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--primary-color", e.target.value);
+      localStorage.setItem("--primary-color", e.target.value);
+    });
+    if (secondary) secondary.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--secondary-color", e.target.value);
+      localStorage.setItem("--secondary-color", e.target.value);
+    });
+    if (accent) accent.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--accent-color", e.target.value);
+      localStorage.setItem("--accent-color", e.target.value);
+    });
+    if (bg) bg.addEventListener("input", e => {
+      document.documentElement.style.setProperty("--background-color", e.target.value);
+      localStorage.setItem("--background-color", e.target.value);
+    });
+
+    if (resetCustom) resetCustom.addEventListener("click", () => {
+      localStorage.removeItem("--primary-color");
+      localStorage.removeItem("--secondary-color");
+      localStorage.removeItem("--accent-color");
+      localStorage.removeItem("--background-color");
+      applyThemeFromStorage();
+      populateColorInputs();
+    });
+
+    if (resetAll) resetAll.addEventListener("click", () => {
+      localStorage.clear();
+      applyThemeFromStorage();
+      populateColorInputs();
+      alert("All local settings cleared");
+    });
+
+    if (bgStyleSelect) bgStyleSelect.addEventListener("change", (e) => {
+      const v = e.target.value;
+      localStorage.setItem("bg-style", v);
+      if (bgImagePicker) bgImagePicker.classList.toggle("hidden", v !== "image");
+      applyBackgroundSettings();
+    });
+
+    if (bgImageInput) bgImageInput.addEventListener("input", (e) => {
+      const url = e.target.value.trim();
+      localStorage.setItem("bg-image", url);
+      applyBackgroundSettings();
+    });
+
+    if (cardStyleSelect) cardStyleSelect.addEventListener("change", (e) => {
+      localStorage.setItem("card-style", e.target.value);
+      document.body.setAttribute("card-style", e.target.value);
+    });
+
+    if (fontStyleSelect) fontStyleSelect.addEventListener("change", (e) => {
+      localStorage.setItem("font-style", e.target.value);
+      document.body.setAttribute("font-style", e.target.value);
+    });
+
+    if (uiScaleSelect) uiScaleSelect.addEventListener("change", (e) => {
+      localStorage.setItem("ui-scale", e.target.value);
+      document.documentElement.style.setProperty("--ui-scale", e.target.value);
+    });
+
+    function applyBackgroundSettings() {
+      const bgStyle = localStorage.getItem("bg-style") || "solid";
+      const bgImage = localStorage.getItem("bg-image") || "";
+      document.body.setAttribute("bg-style", bgStyle);
+      if (bgStyle === "image" && bgImage) {
+        document.body.style.setProperty("--background-image", `url("${bgImage}")`);
+      } else {
+        document.body.style.removeProperty("--background-image");
+      }
+    }
+
+    function populateColorInputs() {
+      const root = getComputedStyle(document.documentElement);
+      primary.value = root.getPropertyValue("--primary-color").trim() || "#ff5500";
+      secondary.value = root.getPropertyValue("--secondary-color").trim() || "#333333";
+      accent.value = root.getPropertyValue("--accent-color").trim() || "#00aaff";
+      bg.value = root.getPropertyValue("--background-color").trim() || "#1a1a1a";
+      const bgStyle = localStorage.getItem("bg-style") || "solid";
+      bgStyleSelect.value = bgStyle;
+      if (bgStyle === "image") bgImagePicker.classList.remove("hidden");
+      bgImageInput.value = localStorage.getItem("bg-image") || "";
+      cardStyleSelect.value = localStorage.getItem("card-style") || "rounded";
+      fontStyleSelect.value = localStorage.getItem("font-style") || "modern";
+      uiScaleSelect.value = localStorage.getItem("ui-scale") || "1";
+    }
+
+    // Webamp restore logic (attempt to restore playlist/state if webamp container is present)
+    let webampInstance = null;
+    async function restoreWebampState(container) {
+      const raw = localStorage.getItem("webamp_state");
+      let initialTracks = [
+        { url: "./assets/thatsall.mp4", metaData: { title: "That's All", artist: "UNDERHEAT Studio" } },
+        { url: "./assets/shout.mp4", metaData: { title: "Shout", artist: "UNDERHEAT Studio" } }
+      ];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.tracks && parsed.tracks.length) initialTracks = parsed.tracks;
+        } catch (e) {}
+      }
+
+      if (!webampInstance) {
+        try {
+          webampInstance = new Webamp({
+            initialTracks,
+            initialSkin: { url: "./assets/Fallout_Pip-Boy_3000_Amber_v4.wsz" }
+          });
+          await webampInstance.renderWhenReady(container);
+          const raw2 = localStorage.getItem("webamp_state");
+          if (raw2) {
+            const parsed = JSON.parse(raw2);
+            if (parsed && parsed.isPlaying) {
+              try { webampInstance.play(); } catch (e) {}
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to load Webamp on settings page", err);
+          container.classList.add("hidden");
+          webampInstance = null;
+        }
+      }
+    }
+
+    // Show/hide webamp container controls
+    const showWebampBtn = document.getElementById("show-webamp");
+    const hideWebampBtn = document.getElementById("hide-webamp");
+    const webampContainer = document.getElementById("webamp-container");
+
+    if (showWebampBtn) showWebampBtn.addEventListener("click", async () => {
+      if (!webampContainer) return;
+      webampContainer.classList.remove("hidden");
+      await restoreWebampState(webampContainer);
+    });
+
+    if (hideWebampBtn) hideWebampBtn.addEventListener("click", () => {
+      if (!webampContainer) return;
+      webampContainer.classList.add("hidden");
+      if (webampInstance && webampInstance.destroy) {
+        try { webampInstance.destroy(); } catch (e) {}
+        webampInstance = null;
+      }
+    });
+
+    // Initialize UI from storage
+    applyThemeFromStorage();
+    applyBackgroundSettings();
+    populateColorInputs();
+  </script>
+
+  <!-- Optional: include Webamp bundle if you want the player to load on this page.
+       If you don't host webamp locally, remove or update the src path. -->
+  <!-- <script src="/path/to/webamp.bundle.js"></script> -->
+</body>
+</html>
