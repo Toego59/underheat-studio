@@ -1,5 +1,20 @@
-# Dependencies
+# Backend secrets
+backend/.env
+backend/data/users.db
+
+# Node modules
 node_modules/
+
+# Python / virtual envs (if any)
+.venv/
+
+# Build artifacts
+dist/
+build/
 
 # Logs
 *.log
+
+# OS files
+.DS_Store
+Thumbs.db
