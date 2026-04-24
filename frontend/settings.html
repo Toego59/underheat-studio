@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings — UNDERHEAT Studio</title>
+  <title>Site Settings — UNDERHEAT Studio</title>
 
-  <link rel="icon" href="favicon.ico" />
   <link rel="stylesheet" href="style.css?v=1776870060" />
 </head>
 <body>
@@ -19,10 +18,10 @@
 
       <nav class="nav">
         <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
-        <button id="logoutBtn" class="btn ghost" style="display:none;">Logout</button>
       </nav>
     </header>
 
+    <!-- MAIN -->
     <main class="main">
       <h2 class="section-title">Site Settings</h2>
 
@@ -31,59 +30,82 @@
         <!-- THEME PRESETS -->
         <section class="panel">
           <h3>Theme Presets</h3>
-          <div class="row">
-            <button class="btn secondary theme-btn" data-theme="default">Default</button>
-            <button class="btn secondary theme-btn" data-theme="dark">Dark</button>
-          </div>
           <p class="small">Quick presets saved to localStorage.</p>
+
+          <div class="row" style="margin-top:10px;">
+            <button class="btn primary" id="preset-default">Default</button>
+            <button class="btn secondary" id="preset-dark">Dark</button>
+          </div>
         </section>
 
-        <!-- COLOR PICKERS -->
+        <!-- CUSTOM COLORS -->
         <section class="panel">
           <h3>Custom Colors</h3>
 
           <label>Primary Color</label>
-          <input id="primary-color" type="color" />
+          <input type="color" id="primary-color" />
 
           <label>Secondary Color</label>
-          <input id="secondary-color" type="color" />
+          <input type="color" id="secondary-color" />
 
           <label>Accent Color</label>
-          <input id="accent-color" type="color" />
+          <input type="color" id="accent-color" />
 
           <label>Background Color</label>
-          <input id="bg-color" type="color" />
+          <input type="color" id="background-color" />
 
-          <button id="reset-custom" class="btn ghost">Reset Custom Colors</button>
+          <button class="btn ghost" id="reset-colors" style="margin-top:12px;">
+            Reset Custom Colors
+          </button>
         </section>
 
-        <!-- BACKGROUND STYLE -->
+        <!-- LIVE PREVIEW -->
         <section class="panel">
-          <h3>Background</h3>
+          <h3>Live Preview</h3>
+          <p class="small">Updates instantly as you change settings.</p>
+
+          <div id="preview-box" style="
+            margin-top:14px;
+            padding:20px;
+            border-radius:12px;
+            background: var(--card-bg);
+            border: 1px solid var(--accent-color);
+            transition: 0.25s;
+          ">
+            <h4 style="margin-bottom:10px;">Preview Title</h4>
+            <p style="color: var(--accent-color); margin-bottom:12px;">
+              This is what your theme looks like.
+            </p>
+
+            <button class="btn primary">Primary Button</button>
+            <button class="btn secondary">Secondary Button</button>
+          </div>
+        </section>
+
+        <!-- BACKGROUND + CARD STYLE -->
+        <section class="panel">
+          <h3>Appearance</h3>
 
           <label>Background Style</label>
-          <select id="bg-style">
+          <select id="background-style">
             <option value="solid">Solid</option>
             <option value="image">Image</option>
           </select>
 
-          <div id="bg-image-picker" class="hidden">
-            <label>Background Image URL</label>
-            <input id="bg-image-url" type="text" placeholder="https://example.com/image.png" />
-          </div>
-
           <label>Card Style</label>
           <select id="card-style">
             <option value="rounded">Rounded</option>
-            <option value="square">Square</option>
+            <option value="flat">Flat</option>
             <option value="glass">Glass</option>
+            <option value="neon">Neon</option>
+            <option value="shadowed">Shadowed</option>
           </select>
 
           <label>Font Style</label>
           <select id="font-style">
             <option value="modern">Modern</option>
             <option value="classic">Classic</option>
-            <option value="mono">Monospace</option>
+            <option value="mono">Mono</option>
           </select>
 
           <label>UI Scale</label>
@@ -95,23 +117,147 @@
           </select>
         </section>
 
-        <!-- RESET ALL -->
+        <!-- RESET EVERYTHING -->
         <section class="panel">
           <h3>Reset All Settings</h3>
           <p class="small">Clears theme, colors, background, and UI scale.</p>
-          <button id="reset-all" class="btn danger">Reset Everything</button>
+
+          <button class="btn danger" id="reset-all" style="margin-top:12px;">
+            Reset Everything
+          </button>
         </section>
 
       </div>
     </main>
 
+    <!-- FOOTER -->
     <footer class="footer">
       <p>© 2026 UNDERHEAT Studio</p>
     </footer>
 
   </div>
 
-  <!-- Main script (handles theme + customization logic) -->
-  <script src="index.js?v=1776870060"></script>
+  <!-- SETTINGS LOGIC -->
+  <script>
+    const root = document.documentElement;
+
+    /* ------------------------------
+       APPLY SAVED SETTINGS
+    ------------------------------ */
+    function applySaved() {
+      const vars = ["--primary-color","--secondary-color","--accent-color","--background-color"];
+      vars.forEach(v => {
+        const val = localStorage.getItem(v);
+        if (val) root.style.setProperty(v, val);
+      });
+
+      const bg = localStorage.getItem("bg-style");
+      if (bg) document.body.setAttribute("bg-style", bg);
+
+      const card = localStorage.getItem("card-style");
+      if (card) document.body.setAttribute("card-style", card);
+
+      const font = localStorage.getItem("font-style");
+      if (font) document.body.setAttribute("font-style", font);
+
+      const scale = localStorage.getItem("ui-scale");
+      if (scale) root.style.setProperty("--ui-scale", scale);
+
+      updatePreview();
+    }
+
+    /* ------------------------------
+       UPDATE PREVIEW BOX
+    ------------------------------ */
+    function updatePreview() {
+      const box = document.getElementById("preview-box");
+      if (!box) return;
+
+      box.style.background = getComputedStyle(root).getPropertyValue("--card-bg");
+      box.style.borderColor = getComputedStyle(root).getPropertyValue("--accent-color");
+      box.style.color = getComputedStyle(root).getPropertyValue("--primary-color");
+    }
+
+    /* ------------------------------
+       COLOR PICKERS
+    ------------------------------ */
+    function bindColor(id, variable) {
+      const el = document.getElementById(id);
+      el.value = localStorage.getItem(variable) || "#ff5500";
+
+      el.addEventListener("input", () => {
+        root.style.setProperty(variable, el.value);
+        localStorage.setItem(variable, el.value);
+        updatePreview();
+      });
+    }
+
+    bindColor("primary-color", "--primary-color");
+    bindColor("secondary-color", "--secondary-color");
+    bindColor("accent-color", "--accent-color");
+    bindColor("background-color", "--background-color");
+
+    /* ------------------------------
+       DROPDOWNS
+    ------------------------------ */
+    function bindSelect(id, attr, storageKey) {
+      const el = document.getElementById(id);
+      el.value = localStorage.getItem(storageKey) || el.value;
+
+      el.addEventListener("change", () => {
+        document.body.setAttribute(attr, el.value);
+        localStorage.setItem(storageKey, el.value);
+        updatePreview();
+      });
+    }
+
+    bindSelect("background-style", "bg-style", "bg-style");
+    bindSelect("card-style", "card-style", "card-style");
+    bindSelect("font-style", "font-style", "font-style");
+
+    document.getElementById("ui-scale").addEventListener("change", e => {
+      root.style.setProperty("--ui-scale", e.target.value);
+      localStorage.setItem("ui-scale", e.target.value);
+    });
+
+    /* ------------------------------
+       PRESETS
+    ------------------------------ */
+    document.getElementById("preset-default").onclick = () => {
+      localStorage.setItem("--primary-color", "#ff5500");
+      localStorage.setItem("--secondary-color", "#333333");
+      localStorage.setItem("--accent-color", "#00aaff");
+      localStorage.setItem("--background-color", "#1a1a1a");
+      applySaved();
+    };
+
+    document.getElementById("preset-dark").onclick = () => {
+      localStorage.setItem("--primary-color", "#ffffff");
+      localStorage.setItem("--secondary-color", "#0f0f0f");
+      localStorage.setItem("--accent-color", "#ff0066");
+      localStorage.setItem("--background-color", "#000000");
+      applySaved();
+    };
+
+    /* ------------------------------
+       RESET BUTTONS
+    ------------------------------ */
+    document.getElementById("reset-colors").onclick = () => {
+      ["--primary-color","--secondary-color","--accent-color","--background-color"]
+        .forEach(v => localStorage.removeItem(v));
+      applySaved();
+    };
+
+    document.getElementById("reset-all").onclick = () => {
+      localStorage.clear();
+      location.reload();
+    };
+
+    /* ------------------------------
+       INIT
+    ------------------------------ */
+    applySaved();
+  </script>
+
 </body>
 </html>

@@ -1,6 +1,6 @@
-/* =========================================
-   GLOBAL RESET + BASE
-========================================= */
+/* ============================================================
+   GLOBAL RESET
+============================================================ */
 * {
   margin: 0;
   padding: 0;
@@ -13,59 +13,94 @@ html {
 
 body {
   font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica Neue, Arial;
-  background: var(--background-color, #111);
+  background: var(--background-color);
   color: #e6eef6;
   line-height: 1.5;
-  transition: background 0.3s, color 0.3s;
   transform: scale(var(--ui-scale, 1));
   transform-origin: top center;
+  transition: background 0.25s, color 0.25s;
 }
 
-/* =========================================
-   ROOT VARIABLES (THEME + CUSTOMIZATION)
-========================================= */
+/* ============================================================
+   ROOT VARIABLES — THEME COLORS (USER-CONTROLLED)
+============================================================ */
 :root {
   --primary-color: #ff5500;
   --secondary-color: #333333;
   --accent-color: #00aaff;
   --background-color: #1a1a1a;
 
-  --card-bg: #0f0f0f;
-  --card-border: rgba(255,255,255,0.06);
+  /* Card background is tied to secondary color */
+  --card-bg: var(--secondary-color);
 
-  --radius-rounded: 12px;
-  --radius-square: 0px;
-  --radius-glass: 14px;
+  /* Borders */
+  --card-border: rgba(255,255,255,0.08);
 
-  --glass-bg: rgba(255,255,255,0.06);
-  --glass-border: rgba(255,255,255,0.12);
+  /* Neon glow */
+  --neon-glow: 0 0 12px var(--accent-color);
+
+  /* Shadowed card */
+  --shadow-strong: 0 8px 24px rgba(0,0,0,0.45);
 }
 
-/* Background image mode */
+/* ============================================================
+   BACKGROUND STYLE (solid / image)
+============================================================ */
 body[bg-style="image"] {
   background: var(--background-image) center/cover no-repeat fixed;
 }
 
-/* Card style modes */
+/* ============================================================
+   CARD STYLE SYSTEM (ADVANCED)
+============================================================ */
+
+/* Rounded */
 body[card-style="rounded"] .panel,
 body[card-style="rounded"] .game-card {
-  border-radius: var(--radius-rounded);
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
 }
 
-body[card-style="square"] .panel,
-body[card-style="square"] .game-card {
-  border-radius: var(--radius-square);
+/* Flat */
+body[card-style="flat"] .panel,
+body[card-style="flat"] .game-card {
+  border-radius: 0px;
+  background: var(--card-bg);
+  border: none;
+  box-shadow: none;
 }
 
+/* Glass */
 body[card-style="glass"] .panel,
 body[card-style="glass"] .game-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  border-radius: var(--radius-glass);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
 }
 
-/* Font style modes */
+/* Neon */
+body[card-style="neon"] .panel,
+body[card-style="neon"] .game-card {
+  border-radius: 12px;
+  background: #0a0a0a;
+  border: 1px solid var(--accent-color);
+  box-shadow: var(--neon-glow);
+}
+
+/* Shadowed */
+body[card-style="shadowed"] .panel,
+body[card-style="shadowed"] .game-card {
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-strong);
+}
+
+/* ============================================================
+   FONT STYLE SYSTEM
+============================================================ */
 body[font-style="modern"] {
   font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica Neue, Arial;
 }
@@ -78,9 +113,9 @@ body[font-style="mono"] {
   font-family: "Fira Code", "Courier New", monospace;
 }
 
-/* =========================================
+/* ============================================================
    LAYOUT
-========================================= */
+============================================================ */
 .page {
   max-width: 1200px;
   margin: auto;
@@ -94,35 +129,18 @@ body[font-style="mono"] {
   margin-bottom: 24px;
 }
 
-.logo-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .logo {
   height: 48px;
 }
 
-.pride-logo {
-  height: 48px;
-  display: none;
-}
-
 .nav {
   display: flex;
-  align-items: center;
   gap: 12px;
 }
 
-.user-indicator {
-  font-size: 14px;
-  color: #9aa3ad;
-}
-
-/* =========================================
+/* ============================================================
    BUTTONS
-========================================= */
+============================================================ */
 .btn {
   padding: 8px 14px;
   border-radius: 8px;
@@ -157,16 +175,16 @@ body[font-style="mono"] {
   opacity: 0.85;
 }
 
-/* =========================================
+/* ============================================================
    PANELS + CARDS
-========================================= */
+============================================================ */
 .panel,
 .game-card {
-  background: var(--card-bg);
   padding: 16px;
   border-radius: 12px;
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  transition: 0.25s;
 }
 
 .section-title {
@@ -174,119 +192,12 @@ body[font-style="mono"] {
   margin-bottom: 16px;
 }
 
-.section {
-  margin-bottom: 40px;
-}
-
-/* =========================================
-   GAMES GRID
-========================================= */
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.game-thumb img {
-  width: 100%;
-  border-radius: 8px;
-}
-
-.game-info h3 {
-  margin-top: 10px;
-  font-size: 18px;
-}
-
-.game-info p {
-  font-size: 14px;
-  color: #9aa3ad;
-}
-
-/* =========================================
-   AUTH MODAL
-========================================= */
-.auth-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 50;
-}
-
-.auth-card {
-  background: var(--card-bg);
-  padding: 24px;
-  border-radius: 12px;
-  width: 320px;
-  border: 1px solid var(--card-border);
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group label {
-  font-size: 14px;
-  color: #9aa3ad;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: 1px solid var(--card-border);
-  background: #0b0b0b;
-  color: #fff;
-}
-
-.auth-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.auth-message {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #ef4444;
-}
-
-/* =========================================
-   DEBUG PANEL
-========================================= */
-.debug-panel {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 360px;
-  max-height: 60vh;
-  overflow-y: auto;
-  background: rgba(0,0,0,0.75);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 12px;
-  font-size: 12px;
-  z-index: 100;
-  color: #cfe8ff;
-}
-
-/* =========================================
-   WEBAMP CONTAINER
-========================================= */
-.webamp-embedded {
-  margin-top: 12px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-/* =========================================
-   SETTINGS + ADMIN GRID
-========================================= */
+/* ============================================================
+   GRID SYSTEM
+============================================================ */
 .settings-grid,
-.admin-grid {
+.admin-grid,
+.games-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 20px;
@@ -307,9 +218,49 @@ body[font-style="mono"] {
   display: none !important;
 }
 
-/* =========================================
+/* ============================================================
+   AUTH MODAL
+============================================================ */
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.auth-card {
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: 12px;
+  width: 320px;
+  border: 1px solid var(--card-border);
+}
+
+/* ============================================================
+   DEBUG PANEL
+============================================================ */
+.debug-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 360px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+  z-index: 100;
+  color: #cfe8ff;
+}
+
+/* ============================================================
    FOOTER
-========================================= */
+============================================================ */
 .footer {
   margin-top: 40px;
   text-align: center;
