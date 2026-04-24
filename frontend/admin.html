@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — UNDERHEAT Studio</title>
+
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css?v=1776870060" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo-container">
+        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
+      </div>
+
+      <nav class="nav">
+        <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
+        <button class="btn ghost" onclick="location.href='settings.html'">Settings</button>
+      </nav>
+    </header>
+
+    <main class="main">
+      <h2 class="section-title">Admin Panel</h2>
+
+      <div class="admin-grid">
+
+        <!-- AUTH -->
+        <section class="panel" id="auth-card">
+          <h3>Admin Authentication</h3>
+
+          <label>Admin Username</label>
+          <input id="admin-username" autocomplete="username" placeholder="Admin username">
+
+          <label>Admin Password</label>
+          <input id="admin-password" type="password" autocomplete="current-password" placeholder="Password">
+
+          <div class="row">
+            <button id="admin-auth" class="btn primary">Authenticate</button>
+            <button id="admin-logout" class="btn ghost" style="display:none;">Clear</button>
+          </div>
+
+          <p id="admin-auth-msg" class="small muted">Authenticate to enable admin tools.</p>
+        </section>
+
+        <!-- ADMIN TOOLS -->
+        <section class="panel hidden" id="tools-card">
+          <h3>Admin Utilities</h3>
+
+          <button id="list-users" class="btn secondary">List Users</button>
+          <p class="small muted">Fetches all KV user keys.</p>
+
+          <label>Delete User</label>
+          <input id="delete-username" placeholder="username">
+          <button id="delete-user" class="btn ghost">Delete</button>
+          <p id="delete-msg" class="small muted"></p>
+
+          <label>Set User Password</label>
+          <input id="setpass-username" placeholder="username">
+          <input id="setpass-password" type="password" placeholder="new password">
+          <button id="setpass-btn" class="btn ghost">Set Password</button>
+          <p id="setpass-msg" class="small muted"></p>
+        </section>
+
+        <!-- USERS OUTPUT -->
+        <section class="panel">
+          <h3>Users Output</h3>
+          <pre id="users-list">No data</pre>
+        </section>
+
+        <!-- SUBMISSIONS -->
+        <section class="panel">
+          <h3>Local Submissions</h3>
+          <p class="small muted">Stored in browser localStorage for testing.</p>
+
+          <pre id="submissions-list">No submissions</pre>
+
+          <div class="row">
+            <button id="clear-submissions" class="btn ghost">Clear</button>
+            <button id="refresh-submissions" class="btn secondary">Refresh</button>
+          </div>
+        </section>
+
+        <!-- DEBUG PANEL CONTROLS -->
+        <section class="panel">
+          <h3>Debug Panel Controls</h3>
+          <p class="small muted">Controls the site-wide debug panel on all pages.</p>
+
+          <label>Visibility</label>
+          <div class="row">
+            <button id="debug-show" class="btn secondary">Show Debug Panel</button>
+            <button id="debug-hide" class="btn ghost">Hide Debug Panel</button>
+          </div>
+          <p id="debug-visibility-msg" class="small muted"></p>
+
+          <label>Append Debug Message</label>
+          <input id="debug-message-input" placeholder="Short debug message">
+
+          <div class="row">
+            <button id="debug-append" class="btn secondary">Append</button>
+            <button id="debug-clear" class="btn ghost">Clear Log</button>
+          </div>
+
+          <h4 style="margin-top:12px;">Current Debug Log</h4>
+          <pre id="debug-log">(empty)</pre>
+        </section>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>© 2026 UNDERHEAT Studio</p>
+    </footer>
+
+  </div>
+
+  <!-- Admin logic -->
+  <script src="admin.js?v=1776870060"></script>
+</body>
+</html>

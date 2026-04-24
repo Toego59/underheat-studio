@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — UNDERHEAT Studio</title>
+
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css?v=1776870060" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo-container">
+        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
+      </div>
+
+      <nav class="nav">
+        <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
+        <button id="logoutBtn" class="btn ghost" style="display:none;">Logout</button>
+      </nav>
+    </header>
+
+    <main class="main">
+      <h2 class="section-title">Site Settings</h2>
+
+      <div class="settings-grid">
+
+        <!-- THEME PRESETS -->
+        <section class="panel">
+          <h3>Theme Presets</h3>
+          <div class="row">
+            <button class="btn secondary theme-btn" data-theme="default">Default</button>
+            <button class="btn secondary theme-btn" data-theme="dark">Dark</button>
+          </div>
+          <p class="small">Quick presets saved to localStorage.</p>
+        </section>
+
+        <!-- COLOR PICKERS -->
+        <section class="panel">
+          <h3>Custom Colors</h3>
+
+          <label>Primary Color</label>
+          <input id="primary-color" type="color" />
+
+          <label>Secondary Color</label>
+          <input id="secondary-color" type="color" />
+
+          <label>Accent Color</label>
+          <input id="accent-color" type="color" />
+
+          <label>Background Color</label>
+          <input id="bg-color" type="color" />
+
+          <button id="reset-custom" class="btn ghost">Reset Custom Colors</button>
+        </section>
+
+        <!-- BACKGROUND STYLE -->
+        <section class="panel">
+          <h3>Background</h3>
+
+          <label>Background Style</label>
+          <select id="bg-style">
+            <option value="solid">Solid</option>
+            <option value="image">Image</option>
+          </select>
+
+          <div id="bg-image-picker" class="hidden">
+            <label>Background Image URL</label>
+            <input id="bg-image-url" type="text" placeholder="https://example.com/image.png" />
+          </div>
+
+          <label>Card Style</label>
+          <select id="card-style">
+            <option value="rounded">Rounded</option>
+            <option value="square">Square</option>
+            <option value="glass">Glass</option>
+          </select>
+
+          <label>Font Style</label>
+          <select id="font-style">
+            <option value="modern">Modern</option>
+            <option value="classic">Classic</option>
+            <option value="mono">Monospace</option>
+          </select>
+
+          <label>UI Scale</label>
+          <select id="ui-scale">
+            <option value="1">100%</option>
+            <option value="1.1">110%</option>
+            <option value="1.2">120%</option>
+            <option value="1.3">130%</option>
+          </select>
+        </section>
+
+        <!-- RESET ALL -->
+        <section class="panel">
+          <h3>Reset All Settings</h3>
+          <p class="small">Clears theme, colors, background, and UI scale.</p>
+          <button id="reset-all" class="btn danger">Reset Everything</button>
+        </section>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>© 2026 UNDERHEAT Studio</p>
+    </footer>
+
+  </div>
+
+  <!-- Main script (handles theme + customization logic) -->
+  <script src="index.js?v=1776870060"></script>
+</body>
+</html>
