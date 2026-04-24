@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel — UNDERHEAT Studio</title>
 
-  <link rel="icon" href="favicon.ico" />
-  <link rel="stylesheet" href="style.css?v=1776870060" />
+  <link rel="stylesheet" href="style.css?v=1776870060">
+  <script src="theme.js"></script>
 </head>
 <body>
   <div class="page">
@@ -19,105 +19,181 @@
 
       <nav class="nav">
         <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
-        <button class="btn ghost" onclick="location.href='settings.html'">Settings</button>
       </nav>
     </header>
 
+    <!-- MAIN -->
     <main class="main">
-      <h2 class="section-title">Admin Panel</h2>
 
-      <div class="admin-grid">
+      <section class="panel">
+        <h2>Admin Panel</h2>
+        <p class="small">Restricted area — admin accounts only.</p>
 
-        <!-- AUTH -->
-        <section class="panel" id="auth-card">
-          <h3>Admin Authentication</h3>
+        <!-- ADMIN CONTENT -->
+        <div id="admin-content" class="hidden">
 
-          <label>Admin Username</label>
-          <input id="admin-username" autocomplete="username" placeholder="Admin username">
+          <!-- USER ROLE MANAGER -->
+          <section class="panel" style="margin-top:20px;">
+            <h3>User Role Manager</h3>
+            <p class="small">Promote or demote users.</p>
 
-          <label>Admin Password</label>
-          <input id="admin-password" type="password" autocomplete="current-password" placeholder="Password">
+            <label>Username</label>
+            <input id="role-username" type="text" placeholder="Enter username">
 
-          <div class="row">
-            <button id="admin-auth" class="btn primary">Authenticate</button>
-            <button id="admin-logout" class="btn ghost" style="display:none;">Clear</button>
-          </div>
+            <div style="margin-top:10px;">
+              <button id="promote-admin" class="btn secondary">Promote to Admin</button>
+              <button id="demote-user" class="btn ghost">Demote to User</button>
+            </div>
 
-          <p id="admin-auth-msg" class="small muted">Authenticate to enable admin tools.</p>
-        </section>
+            <p id="role-message" class="small" style="margin-top:10px;"></p>
+          </section>
 
-        <!-- ADMIN TOOLS -->
-        <section class="panel hidden" id="tools-card">
-          <h3>Admin Utilities</h3>
+          <!-- FEEDBACK VIEWER -->
+          <section class="panel" style="margin-top:20px;">
+            <h3>Feedback Submissions</h3>
+            <p class="small">Encrypted feedback — emails are never stored.</p>
 
-          <button id="list-users" class="btn secondary">List Users</button>
-          <p class="small muted">Fetches all KV user keys.</p>
+            <div id="feedback-list" style="margin-top:10px;"></div>
 
-          <label>Delete User</label>
-          <input id="delete-username" placeholder="username">
-          <button id="delete-user" class="btn ghost">Delete</button>
-          <p id="delete-msg" class="small muted"></p>
+            <button id="clear-feedback" class="btn danger" style="margin-top:12px;">
+              Clear All Feedback
+            </button>
+          </section>
 
-          <label>Set User Password</label>
-          <input id="setpass-username" placeholder="username">
-          <input id="setpass-password" type="password" placeholder="new password">
-          <button id="setpass-btn" class="btn ghost">Set Password</button>
-          <p id="setpass-msg" class="small muted"></p>
-        </section>
+        </div>
 
-        <!-- USERS OUTPUT -->
-        <section class="panel">
-          <h3>Users Output</h3>
-          <pre id="users-list">No data</pre>
-        </section>
+        <!-- WARNING -->
+        <div id="admin-warning" class="hidden">
+          <p>You do not have permission to view this page.</p>
+        </div>
+      </section>
 
-        <!-- SUBMISSIONS -->
-        <section class="panel">
-          <h3>Local Submissions</h3>
-          <p class="small muted">Stored in browser localStorage for testing.</p>
-
-          <pre id="submissions-list">No submissions</pre>
-
-          <div class="row">
-            <button id="clear-submissions" class="btn ghost">Clear</button>
-            <button id="refresh-submissions" class="btn secondary">Refresh</button>
-          </div>
-        </section>
-
-        <!-- DEBUG PANEL CONTROLS -->
-        <section class="panel">
-          <h3>Debug Panel Controls</h3>
-          <p class="small muted">Controls the site-wide debug panel on all pages.</p>
-
-          <label>Visibility</label>
-          <div class="row">
-            <button id="debug-show" class="btn secondary">Show Debug Panel</button>
-            <button id="debug-hide" class="btn ghost">Hide Debug Panel</button>
-          </div>
-          <p id="debug-visibility-msg" class="small muted"></p>
-
-          <label>Append Debug Message</label>
-          <input id="debug-message-input" placeholder="Short debug message">
-
-          <div class="row">
-            <button id="debug-append" class="btn secondary">Append</button>
-            <button id="debug-clear" class="btn ghost">Clear Log</button>
-          </div>
-
-          <h4 style="margin-top:12px;">Current Debug Log</h4>
-          <pre id="debug-log">(empty)</pre>
-        </section>
-
-      </div>
     </main>
 
+    <!-- FOOTER -->
     <footer class="footer">
       <p>© 2026 UNDERHEAT Studio</p>
     </footer>
 
   </div>
 
-  <!-- Admin logic -->
-  <script src="admin.js?v=1776870060"></script>
+  <!-- ADMIN LOGIC -->
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+    const users = JSON.parse(localStorage.getItem("users") || "{}");
+
+    const adminContent = document.getElementById("admin-content");
+    const adminWarning = document.getElementById("admin-warning");
+
+    // ACCESS CONTROL
+    if (currentUser && currentUser.role === "admin") {
+      adminContent.classList.remove("hidden");
+    } else {
+      adminWarning.classList.remove("hidden");
+    }
+
+    // ROLE MANAGER
+    const roleInput = document.getElementById("role-username");
+    const roleMessage = document.getElementById("role-message");
+
+    document.getElementById("promote-admin").onclick = () => {
+      const name = roleInput.value.trim();
+      if (!users[name]) {
+        roleMessage.textContent = "User not found.";
+        return;
+      }
+      users[name].role = "admin";
+      localStorage.setItem("users", JSON.stringify(users));
+      roleMessage.textContent = `${name} is now an admin.`;
+    };
+
+    document.getElementById("demote-user").onclick = () => {
+      const name = roleInput.value.trim();
+      if (!users[name]) {
+        roleMessage.textContent = "User not found.";
+        return;
+      }
+      users[name].role = "user";
+      localStorage.setItem("users", JSON.stringify(users));
+      roleMessage.textContent = `${name} is now a normal user.`;
+    };
+
+    // ============================================================
+    // FEEDBACK VIEWER — DECRYPT ENTRIES
+    // ============================================================
+
+    const feedbackList = document.getElementById("feedback-list");
+    let feedback = JSON.parse(localStorage.getItem("feedback") || "[]");
+
+    async function getKey() {
+      let keyData = localStorage.getItem("fb-key");
+      if (!keyData) return null;
+
+      const raw = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+      return crypto.subtle.importKey("raw", raw, "AES-GCM", true, ["encrypt", "decrypt"]);
+    }
+
+    async function decryptEntry(entry) {
+      try {
+        const key = await getKey();
+        if (!key) return null;
+
+        const iv = Uint8Array.from(atob(entry.iv), c => c.charCodeAt(0));
+        const data = Uint8Array.from(atob(entry.data), c => c.charCodeAt(0));
+
+        const decrypted = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv },
+          key,
+          data
+        );
+
+        return JSON.parse(new TextDecoder().decode(decrypted));
+      } catch (err) {
+        return null;
+      }
+    }
+
+    async function renderFeedback() {
+      if (feedback.length === 0) {
+        feedbackList.innerHTML = "<p class='small'>No feedback submitted yet.</p>";
+        return;
+      }
+
+      let html = "";
+
+      for (let i = 0; i < feedback.length; i++) {
+        const decrypted = await decryptEntry(feedback[i]);
+        if (!decrypted) continue;
+
+        html += `
+          <div class="panel" style="margin-bottom:10px;">
+            <p><strong>${decrypted.name || "Anonymous"}</strong></p>
+            <p>${decrypted.message}</p>
+            <p class="small">
+              ${decrypted.type} • ${decrypted.time || ""} • ${decrypted.verified ? "Verified" : ""}
+            </p>
+            <button class="btn ghost" onclick="window._deleteFeedback(${i})">Delete</button>
+          </div>
+        `;
+      }
+
+      feedbackList.innerHTML = html;
+    }
+
+    window._deleteFeedback = function (idx) {
+      feedback.splice(idx, 1);
+      localStorage.setItem("feedback", JSON.stringify(feedback));
+      renderFeedback();
+    };
+
+    renderFeedback();
+
+    document.getElementById("clear-feedback").onclick = () => {
+      localStorage.removeItem("feedback");
+      feedback = [];
+      feedbackList.innerHTML = "<p class='small'>All feedback cleared.</p>";
+    };
+  </script>
+
 </body>
 </html>

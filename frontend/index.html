@@ -8,7 +8,7 @@
   <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="style.css?v=1776870060">
 
-  <!-- Webamp -->
+  <script src="theme.js"></script>
   <script src="https://unpkg.com/webamp@2.2.0/built/webamp.bundle.min.js"></script>
 </head>
 <body>
@@ -18,23 +18,29 @@
     <header class="header">
       <div class="logo-container">
         <img src="assets/logo.png" alt="UNDERHEAT" class="logo" id="main-logo">
-        <img src="assets/pride-logo.png" alt="UNDERHEAT PRIDE" class="pride-logo" id="pride-logo">
+        <img src="assets/pride-logo.png" alt="UNDERHEAT PRIDE" class="pride-logo hidden" id="pride-logo">
       </div>
 
-      <nav class="nav">
+      <nav class="nav" style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
         <span id="user-indicator" class="user-indicator"></span>
 
-        <button id="settingsBtn" class="btn secondary" style="display:none;">Settings</button>
-        <button id="adminBtn" class="btn secondary" style="display:none;">Admin Panel</button>
+        <div>
+          <button id="settingsBtn" class="btn ghost" style="display:none;">Settings</button>
+          <button id="adminBtn" class="btn ghost" style="display:none;">Admin Panel</button>
+        </div>
 
-        <button id="logoutBtn" class="btn ghost" style="display:none;">Logout</button>
-        <button id="loginBtn" class="btn primary">Login</button>
+        <button id="feedbackBtn" class="btn ghost">Feedback / Contact</button>
+
+        <div>
+          <button id="logoutBtn" class="btn ghost" style="display:none;">Logout</button>
+          <button id="loginBtn" class="btn primary">Login</button>
+        </div>
       </nav>
     </header>
 
     <!-- AUTH MODAL -->
     <section id="auth" class="auth-modal hidden">
-      <div class="auth-card">
+      <div class="auth-card panel">
         <h2 id="auth-title">Login</h2>
 
         <div class="form-group">
@@ -67,26 +73,22 @@
         <div class="games-grid">
 
           <!-- Ashes Till Tomorrow -->
-          <article class="game-card">
-            <a href="att.html" class="game-thumb">
-              <img src="assets/placeholder.png" alt="Ashes Till Tomorrow">
-            </a>
+          <a href="att.html" class="game-card panel">
+            <img src="assets/placeholder.png" alt="Ashes Till Tomorrow" class="game-image">
             <div class="game-info">
-              <h3><a href="att.html">Ashes Till Tomorrow</a></h3>
+              <h3>Ashes Till Tomorrow</h3>
               <p>A narrative-driven atmospheric game featuring original music and environmental storytelling.</p>
             </div>
-          </article>
+          </a>
 
           <!-- Critter Land -->
-          <article class="game-card">
-            <a href="ct.html" class="game-thumb">
-              <img src="assets/cl.png" alt="Critter Land">
-            </a>
+          <a href="ct.html" class="game-card panel">
+            <img src="assets/cl.png" alt="Critter Land" class="game-image">
             <div class="game-info">
-              <h3><a href="ct.html">Critter Land</a></h3>
+              <h3>Critter Land</h3>
               <p>An energetic action-adventure with memorable soundtrack and vibrant pixel art.</p>
             </div>
-          </article>
+          </a>
 
         </div>
       </section>
@@ -109,7 +111,7 @@
       </section>
     </main>
 
-    <!-- DEBUG PANEL (admin-controlled) -->
+    <!-- DEBUG PANEL -->
     <div id="debug-panel" class="debug-panel hidden"></div>
 
     <!-- FOOTER -->
@@ -119,6 +121,7 @@
       <div class="footer-links-row">
         <a href="tos.html">Terms of Service</a>
         <a href="privacy.html">Privacy Policy</a>
+        <a href="feedback.html">Feedback</a>
       </div>
 
       <div class="footer-links">
@@ -131,7 +134,18 @@
 
   </div>
 
-  <!-- MAIN SCRIPT -->
+  <!-- PRIDE MONTH LOGIC -->
+  <script>
+    const month = new Date().getMonth();
+    const mainLogo = document.getElementById("main-logo");
+    const prideLogo = document.getElementById("pride-logo");
+
+    if (month === 5) {
+      mainLogo.classList.add("hidden");
+      prideLogo.classList.remove("hidden");
+    }
+  </script>
+
   <script src="index.js?v=1776870060"></script>
 </body>
 </html>

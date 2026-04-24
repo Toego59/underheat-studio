@@ -22,47 +22,37 @@ body {
 }
 
 /* ============================================================
-   ROOT VARIABLES — THEME COLORS (USER-CONTROLLED)
+   ROOT VARIABLES — THEME COLORS
 ============================================================ */
 :root {
   --primary-color: #ff5500;
   --secondary-color: #333333;
-  --accent-color: #00aaff;
+  --accent-color: #ff5500;
   --background-color: #1a1a1a;
 
-  /* Card background is tied to secondary color */
-  --card-bg: var(--secondary-color);
+  --neon-color: #00ffff;
 
-  /* Borders */
+  --card-bg: var(--secondary-color);
   --card-border: rgba(255,255,255,0.08);
 
-  /* Neon glow */
-  --neon-glow: 0 0 12px var(--accent-color);
-
-  /* Shadowed card */
+  --neon-glow: 0 0 12px var(--neon-color);
   --shadow-strong: 0 8px 24px rgba(0,0,0,0.45);
 }
 
 /* ============================================================
-   BACKGROUND STYLE (solid / image)
-============================================================ */
-body[bg-style="image"] {
-  background: var(--background-image) center/cover no-repeat fixed;
-}
-
-/* ============================================================
-   CARD STYLE SYSTEM (ADVANCED)
+   CARD STYLE SYSTEM
 ============================================================ */
 
-/* Rounded */
-body[card-style="rounded"] .panel,
-body[card-style="rounded"] .game-card {
-  border-radius: 14px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
+/* GLASS (DEFAULT) */
+body[card-style="glass"] .panel,
+body[card-style="glass"] .game-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
 }
 
-/* Flat */
+/* FLAT */
 body[card-style="flat"] .panel,
 body[card-style="flat"] .game-card {
   border-radius: 0px;
@@ -71,25 +61,16 @@ body[card-style="flat"] .game-card {
   box-shadow: none;
 }
 
-/* Glass */
-body[card-style="glass"] .panel,
-body[card-style="glass"] .game-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(12px);
-  border-radius: 14px;
-}
-
-/* Neon */
+/* NEON */
 body[card-style="neon"] .panel,
 body[card-style="neon"] .game-card {
   border-radius: 12px;
   background: #0a0a0a;
-  border: 1px solid var(--accent-color);
+  border: 1px solid var(--neon-color);
   box-shadow: var(--neon-glow);
 }
 
-/* Shadowed */
+/* SHADOWED */
 body[card-style="shadowed"] .panel,
 body[card-style="shadowed"] .game-card {
   border-radius: 12px;
@@ -130,12 +111,11 @@ body[font-style="mono"] {
 }
 
 .logo {
-  height: 48px;
+  height: 64px;
 }
 
-.nav {
-  display: flex;
-  gap: 12px;
+.hidden {
+  display: none !important;
 }
 
 /* ============================================================
@@ -181,10 +161,42 @@ body[font-style="mono"] {
 .panel,
 .game-card {
   padding: 16px;
-  border-radius: 12px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   transition: 0.25s;
+}
+
+/* ============================================================
+   GAME CARDS — FIXED CLICK + NO BLUE LINK
+============================================================ */
+
+.game-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  opacity: 0.9;
+}
+
+/* SCALE DOWN GAME IMAGES */
+.game-image {
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+  display: block;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   GRID SYSTEM
+============================================================ */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
 }
 
 .section-title {
@@ -192,30 +204,9 @@ body[font-style="mono"] {
   margin-bottom: 16px;
 }
 
-/* ============================================================
-   GRID SYSTEM
-============================================================ */
-.settings-grid,
-.admin-grid,
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
 .small {
   font-size: 13px;
   color: #9aa3ad;
-}
-
-.hidden {
-  display: none !important;
 }
 
 /* ============================================================
@@ -266,4 +257,25 @@ body[font-style="mono"] {
   text-align: center;
   color: #9aa3ad;
   font-size: 14px;
+}
+
+.footer-links-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.footer-links {
+  margin-top: 20px;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links a {
+  color: var(--accent-color);
+  text-decoration: none;
 }

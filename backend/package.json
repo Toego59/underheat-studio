@@ -6,14 +6,14 @@
     "node": "18.x"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "sqlite3": "^5.1.6",
     "bcryptjs": "^2.4.3",
     "body-parser": "^2.2.0",
-    "dotenv": "^16.4.5",
-    "nodemailer": "^7.0.5",
-    "fuzzyset": "^1.0.7"
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "fuzzyset": "^1.0.7",
+    "nodemailer": "^7.0.13",
+    "sqlite3": "^5.1.6"
   },
   "scripts": {
     "start": "node server.js",

@@ -1,151 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Critter Land — UNDERHEAT Studio</title>
-  <link rel="icon" href="favicon.ico" />
-  <style>
-    :root {
-      --primary-color: #ff5500;
-      --secondary-color: #333333;
-      --accent-color: #00aaff;
-      --text-color: #ffffff;
-      --background-color: #1a1a1a;
-    }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      line-height: 1.6;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-bottom: 2px solid var(--primary-color);
-      backdrop-filter: blur(10px);
-      margin-bottom: 2rem;
-    }
-
-    header a { color: var(--accent-color); text-decoration: none; font-weight: 600; transition: color 0.3s ease; }
-    header a:hover { color: var(--primary-color); }
-
-    main {
-      background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.5));
-      border: 1px solid var(--primary-color);
-      border-radius: 12px;
-      padding: 3rem;
-      min-height: 60vh;
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      gap: 28px;
-      align-items: start;
-    }
-
-    .content h1 {
-      color: var(--primary-color);
-      font-size: 2.5rem;
-      margin-bottom: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .content p { color: #ccc; font-size: 1.1rem; line-height: 1.8; max-width: 800px; }
-
-    .media {
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15));
-      border-radius: 10px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .media img {
-      width: 100%;
-      height: auto;
-      border-radius: 8px;
-      display: block;
-      object-fit: cover;
-      border: 1px solid rgba(255,255,255,0.04);
-      background: #0b0b0b;
-    }
-
-    .media .caption { color: #bfcbdc; font-size: 13px; text-align: center; }
-
-    @media (max-width: 900px) {
-      main { grid-template-columns: 1fr; padding: 1.5rem; }
-      .media { order: -1; }
-      .content h1 { font-size: 1.8rem; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css?v=1776870060">
+  <script src="theme.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <a href="index.html">← Back to Home</a>
-      <h2 style="color: var(--accent-color);">UNDERHEAT Studio</h2>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo-container">
+        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
+      </div>
+
+      <nav class="nav">
+        <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
+      </nav>
     </header>
 
-    <main>
-      <section class="content">
-        <h1>Critter Land</h1>
-        <p>An energetic action-adventure with a memorable soundtrack and vibrant pixel art. Critter Land blends fast-paced platforming, collectible critters, and a synth-driven score to create a nostalgic yet fresh experience.</p>
+    <!-- MAIN -->
+    <main class="main">
+      <section class="panel">
+        <h2>Critter Land</h2>
+        <p>An energetic action-adventure with memorable soundtrack and vibrant pixel art.</p>
 
-        <p style="margin-top: 2rem; color: #999;">
-          This is the Critter Land game page. Add description, screenshots, trailers, gameplay details, download links, and more information about the game here.
-        </p>
-
-        <h3 style="margin-top:1.6rem; color:var(--accent-color);">Quick Info</h3>
-        <p style="color:#cfcfcf; margin-top:8px;">
-          Genre: Action / Platformer<br/>
-          Platforms: Web / Desktop (TBD)<br/>
-          Soundtrack: Original synth + chiptune hybrid
-        </p>
+        <img src="assets/cl.png" alt="Critter Land" class="game-image" style="margin-top:16px;">
       </section>
-
-      <aside class="media" aria-labelledby="media-heading">
-        <div id="media-heading" class="caption" style="font-weight:600; color:var(--primary-color);">Official Critterland Image</div>
-        <!-- cl.png placed at project root; using absolute path so it resolves from site root -->
-        <img src="/cl.png" alt="Critterland artwork" />
-        <div class="caption">Critterland — concept art / promotional image</div>
-      </aside>
     </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <p>© 2026 UNDERHEAT Studio</p>
+    </footer>
+
   </div>
-
-  <script>
-    // Load and apply theme colors from main site
-    function loadThemeColors() {
-      const root = document.documentElement;
-      const primaryColor = localStorage.getItem('--primary-color') || '#ff5500';
-      const secondaryColor = localStorage.getItem('--secondary-color') || '#333333';
-      const accentColor = localStorage.getItem('--accent-color') || '#00aaff';
-      const backgroundColor = localStorage.getItem('--background-color') || '#1a1a1a';
-      root.style.setProperty('--primary-color', primaryColor);
-      root.style.setProperty('--secondary-color', secondaryColor);
-      root.style.setProperty('--accent-color', accentColor);
-      root.style.setProperty('--background-color', backgroundColor);
-    }
-
-    // Load theme on page load
-    loadThemeColors();
-
-    // Listen for storage changes (if user changes theme on another tab)
-    window.addEventListener('storage', loadThemeColors);
-  </script>
 </body>
 </html>

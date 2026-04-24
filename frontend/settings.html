@@ -6,6 +6,7 @@
   <title>Site Settings — UNDERHEAT Studio</title>
 
   <link rel="stylesheet" href="style.css?v=1776870060" />
+  <script src="theme.js"></script>
 </head>
 <body>
   <div class="page">
@@ -35,6 +36,8 @@
           <div class="row" style="margin-top:10px;">
             <button class="btn primary" id="preset-default">Default</button>
             <button class="btn secondary" id="preset-dark">Dark</button>
+            <button class="btn secondary" id="preset-green">Green</button>
+            <button class="btn secondary" id="preset-pink">Pink</button>
           </div>
         </section>
 
@@ -53,6 +56,9 @@
 
           <label>Background Color</label>
           <input type="color" id="background-color" />
+
+          <label>Neon Color</label>
+          <input type="color" id="neon-color" />
 
           <button class="btn ghost" id="reset-colors" style="margin-top:12px;">
             Reset Custom Colors
@@ -82,21 +88,14 @@
           </div>
         </section>
 
-        <!-- BACKGROUND + CARD STYLE -->
+        <!-- APPEARANCE -->
         <section class="panel">
           <h3>Appearance</h3>
 
-          <label>Background Style</label>
-          <select id="background-style">
-            <option value="solid">Solid</option>
-            <option value="image">Image</option>
-          </select>
-
           <label>Card Style</label>
           <select id="card-style">
-            <option value="rounded">Rounded</option>
+            <option value="glass">Glass (Default)</option>
             <option value="flat">Flat</option>
-            <option value="glass">Glass</option>
             <option value="neon">Neon</option>
             <option value="shadowed">Shadowed</option>
           </select>
@@ -110,6 +109,8 @@
 
           <label>UI Scale</label>
           <select id="ui-scale">
+            <option value="0.8">80%</option>
+            <option value="0.9">90%</option>
             <option value="1">100%</option>
             <option value="1.1">110%</option>
             <option value="1.2">120%</option>
@@ -120,7 +121,7 @@
         <!-- RESET EVERYTHING -->
         <section class="panel">
           <h3>Reset All Settings</h3>
-          <p class="small">Clears theme, colors, background, and UI scale.</p>
+          <p class="small">Clears theme, colors, card style, font, and UI scale.</p>
 
           <button class="btn danger" id="reset-all" style="margin-top:12px;">
             Reset Everything
@@ -138,126 +139,7 @@
   </div>
 
   <!-- SETTINGS LOGIC -->
-  <script>
-    const root = document.documentElement;
-
-    /* ------------------------------
-       APPLY SAVED SETTINGS
-    ------------------------------ */
-    function applySaved() {
-      const vars = ["--primary-color","--secondary-color","--accent-color","--background-color"];
-      vars.forEach(v => {
-        const val = localStorage.getItem(v);
-        if (val) root.style.setProperty(v, val);
-      });
-
-      const bg = localStorage.getItem("bg-style");
-      if (bg) document.body.setAttribute("bg-style", bg);
-
-      const card = localStorage.getItem("card-style");
-      if (card) document.body.setAttribute("card-style", card);
-
-      const font = localStorage.getItem("font-style");
-      if (font) document.body.setAttribute("font-style", font);
-
-      const scale = localStorage.getItem("ui-scale");
-      if (scale) root.style.setProperty("--ui-scale", scale);
-
-      updatePreview();
-    }
-
-    /* ------------------------------
-       UPDATE PREVIEW BOX
-    ------------------------------ */
-    function updatePreview() {
-      const box = document.getElementById("preview-box");
-      if (!box) return;
-
-      box.style.background = getComputedStyle(root).getPropertyValue("--card-bg");
-      box.style.borderColor = getComputedStyle(root).getPropertyValue("--accent-color");
-      box.style.color = getComputedStyle(root).getPropertyValue("--primary-color");
-    }
-
-    /* ------------------------------
-       COLOR PICKERS
-    ------------------------------ */
-    function bindColor(id, variable) {
-      const el = document.getElementById(id);
-      el.value = localStorage.getItem(variable) || "#ff5500";
-
-      el.addEventListener("input", () => {
-        root.style.setProperty(variable, el.value);
-        localStorage.setItem(variable, el.value);
-        updatePreview();
-      });
-    }
-
-    bindColor("primary-color", "--primary-color");
-    bindColor("secondary-color", "--secondary-color");
-    bindColor("accent-color", "--accent-color");
-    bindColor("background-color", "--background-color");
-
-    /* ------------------------------
-       DROPDOWNS
-    ------------------------------ */
-    function bindSelect(id, attr, storageKey) {
-      const el = document.getElementById(id);
-      el.value = localStorage.getItem(storageKey) || el.value;
-
-      el.addEventListener("change", () => {
-        document.body.setAttribute(attr, el.value);
-        localStorage.setItem(storageKey, el.value);
-        updatePreview();
-      });
-    }
-
-    bindSelect("background-style", "bg-style", "bg-style");
-    bindSelect("card-style", "card-style", "card-style");
-    bindSelect("font-style", "font-style", "font-style");
-
-    document.getElementById("ui-scale").addEventListener("change", e => {
-      root.style.setProperty("--ui-scale", e.target.value);
-      localStorage.setItem("ui-scale", e.target.value);
-    });
-
-    /* ------------------------------
-       PRESETS
-    ------------------------------ */
-    document.getElementById("preset-default").onclick = () => {
-      localStorage.setItem("--primary-color", "#ff5500");
-      localStorage.setItem("--secondary-color", "#333333");
-      localStorage.setItem("--accent-color", "#00aaff");
-      localStorage.setItem("--background-color", "#1a1a1a");
-      applySaved();
-    };
-
-    document.getElementById("preset-dark").onclick = () => {
-      localStorage.setItem("--primary-color", "#ffffff");
-      localStorage.setItem("--secondary-color", "#0f0f0f");
-      localStorage.setItem("--accent-color", "#ff0066");
-      localStorage.setItem("--background-color", "#000000");
-      applySaved();
-    };
-
-    /* ------------------------------
-       RESET BUTTONS
-    ------------------------------ */
-    document.getElementById("reset-colors").onclick = () => {
-      ["--primary-color","--secondary-color","--accent-color","--background-color"]
-        .forEach(v => localStorage.removeItem(v));
-      applySaved();
-    };
-
-    document.getElementById("reset-all").onclick = () => {
-      localStorage.clear();
-      location.reload();
-    };
-
-    /* ------------------------------
-       INIT
-    ------------------------------ */
-    applySaved();
-  </script>
+  <script src="settings.js?v=1776870060"></script>
 
 </body>
 </html>

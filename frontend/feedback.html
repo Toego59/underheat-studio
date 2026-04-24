@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback — UNDERHEAT Studio</title>
+
+  <link rel="stylesheet" href="style.css?v=1776870060">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo-container">
+        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
+      </div>
+
+      <nav class="nav">
+        <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
+      </nav>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <section class="panel">
+        <h2>Feedback / Contact</h2>
+        <p class="small">Your email is used ONLY to send a verification code. It is never stored.</p>
+
+        <label>Your Username (optional)</label>
+        <input id="fb-name" type="text" placeholder="Username">
+
+        <label>Email (required for verification only)</label>
+        <input id="fb-email" type="email" placeholder="you@example.com">
+
+        <label>Type</label>
+        <select id="fb-type">
+          <option value="General Feedback">General Feedback</option>
+          <option value="Bug Report">Bug Report</option>
+          <option value="Feature Request">Feature Request</option>
+        </select>
+
+        <label>Message</label>
+        <textarea id="fb-message" placeholder="Write your message..." rows="5"></textarea>
+
+        <!-- STEP 1 -->
+        <div id="fb-step1">
+          <button id="fb-send-code" class="btn primary" style="margin-top:12px;">
+            Send Verification Code
+          </button>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="fb-step2" class="hidden" style="margin-top:16px;">
+          <label>Verification Code</label>
+          <input id="fb-code" type="text" placeholder="Enter the code from your email">
+
+          <button id="fb-verify-submit" class="btn secondary" style="margin-top:12px;">
+            Verify & Submit Feedback
+          </button>
+        </div>
+
+        <p id="fb-status" class="small" style="margin-top:10px;"></p>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <p>© 2026 UNDERHEAT Studio</p>
+    </footer>
+
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:4000";
+
+    const statusEl = document.getElementById("fb-status");
+    const step1 = document.getElementById("fb-step1");
+    const step2 = document.getElementById("fb-step2");
+
+    // AES KEY (persistent)
+    async function getKey() {
+      let keyData = localStorage.getItem("fb-key");
+      if (!keyData) {
+        const key = await crypto.subtle.generateKey(
+          { name: "AES-GCM", length: 256 },
+          true,
+          ["encrypt", "decrypt"]
+        );
+        const exported = await crypto.subtle.exportKey("raw", key);
+        localStorage.setItem("fb-key", btoa(String.fromCharCode(...new Uint8Array(exported))));
+        return key;
+      }
+      const raw = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+      return crypto.subtle.importKey("raw", raw, "AES-GCM", true, ["encrypt", "decrypt"]);
+    }
+
+    async function encrypt(text) {
+      const key = await getKey();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encoded = new TextEncoder().encode(text);
+      const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
+      return {
+        iv: btoa(String.fromCharCode(...iv)),
+        data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+      };
+    }
+
+    // -------------------------------
+    // STEP 1 — SEND CODE
+    // -------------------------------
+    document.getElementById("fb-send-code").onclick = async () => {
+      const email = document.getElementById("fb-email").value.trim();
+      const message = document.getElementById("fb-message").value.trim();
+
+      if (!email) {
+        statusEl.textContent = "Please enter your email.";
+        return;
+      }
+      if (!message) {
+        statusEl.textContent = "Please enter a message.";
+        return;
+      }
+
+      statusEl.textContent = "Sending verification code...";
+
+      try {
+        const res = await fetch(API_BASE + "/send-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+
+        if (!res.ok) {
+          statusEl.textContent = "Failed to send code. Try again.";
+          return;
+        }
+
+        statusEl.textContent = "Code sent! Check your email.";
+        step1.classList.add("hidden");
+        step2.classList.remove("hidden");
+
+      } catch (err) {
+        statusEl.textContent = "Network error. Try again.";
+      }
+    };
+
+    // -------------------------------
+    // STEP 2 — VERIFY & SUBMIT
+    // -------------------------------
+    document.getElementById("fb-verify-submit").onclick = async () => {
+      const name = document.getElementById("fb-name").value.trim();
+      const email = document.getElementById("fb-email").value.trim();
+      const type = document.getElementById("fb-type").value;
+      const message = document.getElementById("fb-message").value.trim();
+      const code = document.getElementById("fb-code").value.trim();
+
+      if (!code) {
+        statusEl.textContent = "Enter the verification code.";
+        return;
+      }
+
+      statusEl.textContent = "Verifying code...";
+
+      try {
+        const res = await fetch(API_BASE + "/verify-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          statusEl.textContent = data.message || "Verification failed.";
+          return;
+        }
+
+        // Encrypt feedback
+        const encrypted = await encrypt(JSON.stringify({
+          name,
+          type,
+          message,
+          verified: true,
+          time: new Date().toLocaleString()
+        }));
+
+        const feedback = JSON.parse(localStorage.getItem("feedback") || "[]");
+        feedback.push(encrypted);
+        localStorage.setItem("feedback", JSON.stringify(feedback));
+
+        statusEl.textContent = "Thank you! Your feedback has been submitted.";
+
+        document.getElementById("fb-message").value = "";
+        document.getElementById("fb-code").value = "";
+
+      } catch (err) {
+        statusEl.textContent = "Network error. Try again.";
+      }
+    };
+  </script>
+
+</body>
+</html>

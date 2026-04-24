@@ -1,106 +1,98 @@
 // backend/server.js
-require('dotenv').config();
-const path = require('path');
-const fs = require('fs');
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcryptjs');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const nodemailer = require("nodemailer");
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 
-// Ensure data folder exists
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+const PORT = process.env.PORT || 4000;
 
-// DB path and open
-const dbPath = path.join(dataDir, 'users.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Failed to open DB', err);
-    process.exit(1);
-  } else {
-    console.log('Connected to SQLite DB at', dbPath);
+// In-memory store for verification codes
+// Structure: { email: { code, expires } }
+const codes = {};
+
+// ---------------------------------------------
+// EMAIL TRANSPORT (REAL EMAIL SENDING)
+// ---------------------------------------------
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,      // e.g. smtp.gmail.com
+  port: Number(process.env.EMAIL_PORT) || 587,
+  secure: process.env.EMAIL_SECURE === "true", // true for 465
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
-// Initialize users table if missing
-db.serialize(() => {
-  db.run(
-    `CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT,
-      isAdmin INTEGER DEFAULT 0
-    )`,
-    (err) => {
-      if (err) console.error('Failed to create users table', err);
-    }
-  );
+// ---------------------------------------------
+// SEND VERIFICATION CODE
+// ---------------------------------------------
+app.post("/send-code", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: "Email required" });
+  }
+
+  // Generate 6-digit code
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  codes[email] = { code, expires };
+
+  try {
+    await transporter.sendMail({
+      from: process.env.FROM_EMAIL || process.env.EMAIL_USER,
+      to: email,
+      subject: "UNDERHEAT Studio — Verification Code",
+      text: `Your verification code is: ${code}\n\nThis code expires in 10 minutes.`
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Email sending error:", err);
+    res.status(500).json({ success: false, message: "Failed to send email" });
+  }
 });
 
-// Health route
-app.get('/api/health', (req, res) => res.json({ ok: true }));
+// ---------------------------------------------
+// VERIFY CODE
+// ---------------------------------------------
+app.post("/verify-code", (req, res) => {
+  const { email, code } = req.body;
 
-// Register
-app.post('/api/register', (req, res) => {
-  const { username, password } = req.body || {};
-  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
+  if (!email || !code) {
+    return res.status(400).json({ success: false, message: "Email and code required" });
+  }
 
-  const hashed = bcrypt.hashSync(password, 10);
-  const stmt = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)');
-  stmt.run(username, hashed, function (err) {
-    if (err) {
-      if (err.code === 'SQLITE_CONSTRAINT') return res.status(409).json({ error: 'User exists' });
-      console.error(err);
-      return res.status(500).json({ error: 'DB error' });
-    }
-    res.json({ ok: true, id: this.lastID });
-  });
-  stmt.finalize();
+  const entry = codes[email];
+  if (!entry) {
+    return res.status(400).json({ success: false, message: "No code found for this email" });
+  }
+
+  if (Date.now() > entry.expires) {
+    delete codes[email];
+    return res.status(400).json({ success: false, message: "Code expired" });
+  }
+
+  if (entry.code !== code) {
+    return res.status(400).json({ success: false, message: "Invalid code" });
+  }
+
+  // Valid code — remove it
+  delete codes[email];
+
+  // We do NOT store email or message — privacy by design
+  res.json({ success: true });
 });
 
-// Login
-app.post('/api/login', (req, res) => {
-  const { username, password } = req.body || {};
-  if (!username || !password) return res.status(400).json({ error: 'Missing username or password' });
-
-  db.get('SELECT id, username, password, isAdmin FROM users WHERE username = ?', [username], (err, row) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'DB error' });
-    }
-    if (!row) return res.status(401).json({ error: 'Invalid credentials' });
-
-    const match = bcrypt.compareSync(password, row.password);
-    if (!match) return res.status(401).json({ error: 'Invalid credentials' });
-
-    // Minimal session token placeholder (replace with real auth if needed)
-    res.json({ ok: true, user: { id: row.id, username: row.username, isAdmin: !!row.isAdmin } });
-  });
-});
-
-// Example admin toggle route (adjust to your app)
-app.post('/api/admin/toggle', (req, res) => {
-  const { username, makeAdmin } = req.body || {};
-  if (!username) return res.status(400).json({ error: 'Missing username' });
-
-  db.run('UPDATE users SET isAdmin = ? WHERE username = ?', [makeAdmin ? 1 : 0, username], function (err) {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'DB error' });
-    }
-    if (this.changes === 0) return res.status(404).json({ error: 'User not found' });
-    res.json({ ok: true });
-  });
-});
-
-// Use environment port or default 3000
-const PORT = process.env.PORT || 3000;
+// ---------------------------------------------
+// START SERVER
+// ---------------------------------------------
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`Email verification server running at http://localhost:${PORT}`);
 });

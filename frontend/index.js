@@ -1,274 +1,201 @@
-// =======================================
-//  AUTO BACKEND URL DETECTION
-// =======================================
-const API_BASE =
-  location.hostname === "127.0.0.1" || location.hostname === "localhost"
-    ? "http://127.0.0.1:3000/api"
-    : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
+// ============================================================
+// AUTH + USER SYSTEM
+// ============================================================
 
-const API_LOGIN = `${API_BASE}/login`;
-const API_REGISTER = `${API_BASE}/register`;
+let users = JSON.parse(localStorage.getItem("users") || "{}");
+let currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
-// =======================================
-//  DOM ELEMENTS
-// =======================================
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const adminBtn = document.getElementById("adminBtn");
-
-const authSection = document.getElementById("auth");
-const gatedContent = document.getElementById("gated-content");
-const webampContainer = document.getElementById("webamp-container");
-const debugPanel = document.getElementById("debug-panel");
 const userIndicator = document.getElementById("user-indicator");
+const feedbackBtn = document.getElementById("feedbackBtn"); // NEW
 
-let isAuthenticated = false;
-let currentUser = null;
-let currentIsAdmin = false;
-let webampInstance = null;
+const authModal = document.getElementById("auth");
+const authTitle = document.getElementById("auth-title");
+const authAction = document.getElementById("auth-action");
+const authToggle = document.getElementById("auth-toggle");
+const authCancel = document.getElementById("auth-cancel");
+const authMessage = document.getElementById("auth-message");
 
-// =======================================
-//  DEBUG PANEL (Admin Controls Only)
-// =======================================
-function appendDebug(msg) {
-  const ts = new Date().toLocaleTimeString();
-  const log = `[${ts}] ${msg}`;
+let isRegistering = false;
 
-  // Store in localStorage so admin.html can read it
-  const arr = JSON.parse(localStorage.getItem("debug_log") || "[]");
-  arr.push(log);
-  localStorage.setItem("debug_log", JSON.stringify(arr));
+// ============================================================
+// OPEN AUTH MODAL
+// ============================================================
 
-  // If visible, update panel
-  if (debugPanel && !debugPanel.classList.contains("hidden")) {
-    debugPanel.innerHTML += log + "<br>";
-    debugPanel.scrollTop = debugPanel.scrollHeight;
+loginBtn.onclick = () => {
+  authModal.classList.remove("hidden");
+  isRegistering = false;
+  authTitle.textContent = "Login";
+  authAction.textContent = "Login";
+  authToggle.textContent = "Switch to Register";
+};
+
+// ============================================================
+// CLOSE AUTH MODAL
+// ============================================================
+
+authCancel.onclick = () => {
+  authModal.classList.add("hidden");
+  authMessage.textContent = "";
+};
+
+// ============================================================
+// SWITCH LOGIN / REGISTER
+// ============================================================
+
+authToggle.onclick = () => {
+  isRegistering = !isRegistering;
+
+  if (isRegistering) {
+    authTitle.textContent = "Register";
+    authAction.textContent = "Create Account";
+    authToggle.textContent = "Switch to Login";
+  } else {
+    authTitle.textContent = "Login";
+    authAction.textContent = "Login";
+    authToggle.textContent = "Switch to Register";
   }
 
-  console.log(log);
-}
+  authMessage.textContent = "";
+};
 
-function renderDebugPanel() {
-  const visible = localStorage.getItem("debug_visible") === "1";
-  if (!visible || !currentIsAdmin) {
-    debugPanel.classList.add("hidden");
+// ============================================================
+// LOGIN / REGISTER ACTION
+// ============================================================
+
+authAction.onclick = () => {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if (!username || !password) {
+    authMessage.textContent = "Please fill out all fields.";
     return;
   }
 
-  debugPanel.classList.remove("hidden");
+  if (isRegistering) {
+    if (users[username]) {
+      authMessage.textContent = "User already exists.";
+      return;
+    }
 
-  const logs = JSON.parse(localStorage.getItem("debug_log") || "[]");
-  debugPanel.innerHTML = logs.join("<br>");
-  debugPanel.scrollTop = debugPanel.scrollHeight;
-}
+    users[username] = {
+      password,
+      role: "user"
+    };
 
-// Listen for admin.html updates
-window.addEventListener("storage", () => renderDebugPanel());
+    localStorage.setItem("users", JSON.stringify(users));
 
-// =======================================
-//  AUTH STATE
-// =======================================
-function setAuthState(auth, username = null, isAdmin = false) {
-  isAuthenticated = auth;
-  currentUser = username;
-  currentIsAdmin = isAdmin;
+    authMessage.textContent = "Account created! You can now log in.";
+    return;
+  }
 
-  if (auth) {
-    gatedContent.classList.remove("hidden");
+  if (!users[username] || users[username].password !== password) {
+    authMessage.textContent = "Invalid username or password.";
+    return;
+  }
+
+  currentUser = { username, role: users[username].role };
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+  updateUI();
+  authModal.classList.add("hidden");
+};
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
+logoutBtn.onclick = () => {
+  currentUser = null;
+  localStorage.removeItem("currentUser");
+  updateUI();
+};
+
+// ============================================================
+// FEEDBACK BUTTON
+// ============================================================
+
+feedbackBtn.onclick = () => {
+  window.location.href = "feedback.html";
+};
+
+// ============================================================
+// UPDATE UI BASED ON USER
+// ============================================================
+
+function updateUI() {
+  if (currentUser) {
+    userIndicator.textContent = `Logged in as ${currentUser.username}`;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "inline-block";
     settingsBtn.style.display = "inline-block";
 
-    userIndicator.textContent = `Logged in as ${username}${isAdmin ? " (Admin)" : ""}`;
+    if (currentUser.role === "admin") {
+      adminBtn.style.display = "inline-block";
+    } else {
+      adminBtn.style.display = "none";
+    }
 
-    adminBtn.style.display = isAdmin ? "inline-block" : "none";
-
-    localStorage.setItem("isAuthenticated", "true");
-    localStorage.setItem("username", username);
-    localStorage.setItem("isAdmin", isAdmin ? "true" : "false");
+    document.getElementById("gated-content").classList.remove("hidden");
   } else {
-    gatedContent.classList.add("hidden");
+    userIndicator.textContent = "";
     loginBtn.style.display = "inline-block";
     logoutBtn.style.display = "none";
     settingsBtn.style.display = "none";
     adminBtn.style.display = "none";
-    userIndicator.textContent = "";
 
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("username");
-    localStorage.removeItem("isAdmin");
-  }
-
-  renderDebugPanel();
-}
-
-// =======================================
-//  AUTH MODAL
-// =======================================
-function openAuthModal() {
-  authSection.classList.remove("hidden");
-}
-
-function closeAuthModal() {
-  authSection.classList.add("hidden");
-  document.getElementById("auth-message").textContent = "";
-  document.getElementById("password").value = "";
-}
-
-// =======================================
-//  API LOGIN / REGISTER
-// =======================================
-async function loginViaApi() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
-  const msgEl = document.getElementById("auth-message");
-
-  if (!username || !password) {
-    msgEl.textContent = "Username and password required";
-    return;
-  }
-
-  try {
-    const res = await fetch(API_LOGIN, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-
-    const data = await res.json();
-
-    if (!data.success) {
-      msgEl.textContent = data.message || "Login failed";
-      appendDebug("Login failed: " + data.message);
-      return;
-    }
-
-    setAuthState(true, data.username, data.isAdmin);
-    closeAuthModal();
-    appendDebug(`User logged in: ${data.username}`);
-  } catch {
-    msgEl.textContent = "Network error";
+    document.getElementById("gated-content").classList.add("hidden");
   }
 }
 
-async function registerViaApi() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
-  const msgEl = document.getElementById("auth-message");
+updateUI();
 
-  if (!username || !password) {
-    msgEl.textContent = "Username and password required";
-    return;
-  }
+// ============================================================
+// WEBAMP — FIXED VERSION
+// ============================================================
 
-  try {
-    const res = await fetch(API_REGISTER, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+const webampToggle = document.getElementById("webamp-toggle");
+const webampContainer = document.getElementById("webamp-container");
 
-    const data = await res.json();
+let webampInstance = null;
 
-    if (!data.success) {
-      msgEl.textContent = data.message || "Registration failed";
-      appendDebug("Registration failed: " + data.message);
-      return;
-    }
-
-    msgEl.textContent = "Registered — you can now login";
-    appendDebug("User registered: " + username);
-  } catch {
-    msgEl.textContent = "Network error";
-  }
-}
-
-// =======================================
-//  WEBAMP (Admin Only)
-// =======================================
-async function toggleWebamp() {
-  if (!currentIsAdmin) {
-    alert("Webamp is admin-only");
-    return;
-  }
-
-  const container = webampContainer;
-  const button = document.getElementById("webamp-toggle");
-
-  if (container.classList.contains("hidden")) {
-    container.classList.remove("hidden");
-    button.textContent = "Hide Webamp Player";
-  } else {
-    container.classList.add("hidden");
-    button.textContent = "Show Webamp Player";
-    return;
-  }
-
-  if (!webampInstance) {
-    try {
-      webampInstance = new Webamp({
-        initialTracks: [
-          {
-            url: "./assets/thatsall.mp4",
-            metaData: { title: "That's All", artist: "UNDERHEAT Studio" },
-          },
-        ],
-      });
-
-      await webampInstance.renderWhenReady(container);
-      appendDebug("Webamp loaded");
-    } catch {
-      appendDebug("Webamp failed to load");
-    }
-  }
-}
-
-// =======================================
-//  SESSION RESTORE
-// =======================================
-function restoreSession() {
-  const savedAuth = localStorage.getItem("isAuthenticated") === "true";
-  const savedUser = localStorage.getItem("username");
-  const savedAdmin = localStorage.getItem("isAdmin") === "true";
-
-  if (savedAuth && savedUser) {
-    setAuthState(true, savedUser, savedAdmin);
-  }
-}
-
-// =======================================
-//  UI WIRING
-// =======================================
-window.addEventListener("load", () => {
-  restoreSession();
-
-  loginBtn.addEventListener("click", openAuthModal);
-  logoutBtn.addEventListener("click", () => setAuthState(false));
-  settingsBtn.addEventListener("click", () => (location.href = "settings.html"));
-  adminBtn.addEventListener("click", () => (location.href = "admin.html"));
-
-  const authAction = document.getElementById("auth-action");
-  const authToggle = document.getElementById("auth-toggle");
-  const authCancel = document.getElementById("auth-cancel");
-
-  let registerMode = false;
-
-  authAction.addEventListener("click", () => {
-    registerMode ? registerViaApi() : loginViaApi();
+function createWebamp() {
+  webampInstance = new Webamp({
+    initialTracks: [
+      {
+        metaData: { title: "Shout" },
+        url: "assets/shout.mp3"
+      }
+    ],
+    availableSkins: [
+      { url: "assets/skin.wsz" }
+    ]
   });
 
-  authToggle.addEventListener("click", () => {
-    registerMode = !registerMode;
-    document.getElementById("auth-title").textContent = registerMode ? "Register" : "Login";
-    authAction.textContent = registerMode ? "Register" : "Login";
-    authToggle.textContent = registerMode ? "Switch to Login" : "Switch to Register";
+  webampInstance.renderWhenReady(webampContainer);
+
+  webampInstance.onClose(() => {
+    webampInstance = null;
+    webampContainer.classList.add("hidden");
   });
+}
 
-  authCancel.addEventListener("click", closeAuthModal);
+webampToggle.onclick = () => {
+  if (webampInstance) {
+    webampInstance.dispose();
+    webampInstance = null;
+    webampContainer.classList.add("hidden");
+    return;
+  }
 
-  const webampToggleBtn = document.getElementById("webamp-toggle");
-  if (webampToggleBtn) webampToggleBtn.addEventListener("click", toggleWebamp);
+  createWebamp();
+  webampContainer.classList.remove("hidden");
+};
 
-  renderDebugPanel();
-});
+// ============================================================
+// GAME CARDS — JS CLICK REMOVED (ANCHOR-BASED NOW)
+// ============================================================
+// (Intentionally empty — reverted to anchor links)
