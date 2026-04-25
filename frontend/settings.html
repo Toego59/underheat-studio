@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Site Settings — UNDERHEAT Studio</title>
 
+  <link rel="icon" href="favicon.ico" />
   <link rel="stylesheet" href="style.css?v=1776870060" />
   <script src="theme.js"></script>
 </head>
@@ -33,7 +34,7 @@
           <h3>Theme Presets</h3>
           <p class="small">Quick presets saved to localStorage.</p>
 
-          <div class="row" style="margin-top:10px;">
+          <div class="row" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn primary" id="preset-default">Default</button>
             <button class="btn secondary" id="preset-dark">Dark</button>
             <button class="btn secondary" id="preset-green">Green</button>
@@ -74,7 +75,7 @@
             margin-top:14px;
             padding:20px;
             border-radius:12px;
-            background: var(--card-bg);
+            background: var(--panel-bg);
             border: 1px solid var(--accent-color);
             transition: 0.25s;
           ">
@@ -138,8 +139,6 @@
 
   </div>
 
-  <!-- SETTINGS LOGIC -->
   <script src="settings.js?v=1776870060"></script>
-
 </body>
 </html>

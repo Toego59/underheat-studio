@@ -10,7 +10,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const adminBtn = document.getElementById("adminBtn");
 const userIndicator = document.getElementById("user-indicator");
-const feedbackBtn = document.getElementById("feedbackBtn"); // NEW
+const feedbackBtn = document.getElementById("feedbackBtn");
 
 const authModal = document.getElementById("auth");
 const authTitle = document.getElementById("auth-title");
@@ -87,7 +87,6 @@ authAction.onclick = () => {
     };
 
     localStorage.setItem("users", JSON.stringify(users));
-
     authMessage.textContent = "Account created! You can now log in.";
     return;
   }
@@ -115,11 +114,19 @@ logoutBtn.onclick = () => {
 };
 
 // ============================================================
-// FEEDBACK BUTTON
+// NAV BUTTONS
 // ============================================================
 
 feedbackBtn.onclick = () => {
   window.location.href = "feedback.html";
+};
+
+settingsBtn.onclick = () => {
+  window.location.href = "settings.html";
+};
+
+adminBtn.onclick = () => {
+  window.location.href = "admin.html";
 };
 
 // ============================================================
@@ -154,7 +161,7 @@ function updateUI() {
 updateUI();
 
 // ============================================================
-// WEBAMP — FIXED VERSION
+// WEBAMP
 // ============================================================
 
 const webampToggle = document.getElementById("webamp-toggle");
@@ -194,8 +201,3 @@ webampToggle.onclick = () => {
   createWebamp();
   webampContainer.classList.remove("hidden");
 };
-
-// ============================================================
-// GAME CARDS — JS CLICK REMOVED (ANCHOR-BASED NOW)
-// ============================================================
-// (Intentionally empty — reverted to anchor links)

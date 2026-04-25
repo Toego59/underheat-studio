@@ -1,3 +1,7 @@
+// ============================================================
+// SETTINGS — UNDERHEAT STUDIO
+// ============================================================
+
 const root = document.documentElement;
 
 // ============================================================
@@ -18,20 +22,23 @@ function applySaved() {
     if (val) root.style.setProperty(v, val);
   });
 
-  // CARD STYLE (default = glass)
-  const savedCard = localStorage.getItem("card-style");
-  const cardStyle = savedCard || "glass";
+  const cardStyle = localStorage.getItem("card-style") || "glass";
   document.body.setAttribute("card-style", cardStyle);
 
-  // FONT STYLE
-  const savedFont = localStorage.getItem("font-style");
-  const fontStyle = savedFont || "modern";
+  const fontStyle = localStorage.getItem("font-style") || "modern";
   document.body.setAttribute("font-style", fontStyle);
 
-  // UI SCALE
-  const savedScale = localStorage.getItem("ui-scale");
-  const scale = savedScale || "1";
+  const scale = localStorage.getItem("ui-scale") || "1";
   root.style.setProperty("--ui-scale", scale);
+
+  // Sync select elements to saved values
+  const cardEl = document.getElementById("card-style");
+  const fontEl = document.getElementById("font-style");
+  const scaleEl = document.getElementById("ui-scale");
+
+  if (cardEl) cardEl.value = cardStyle;
+  if (fontEl) fontEl.value = fontStyle;
+  if (scaleEl) scaleEl.value = scale;
 
   updatePreview();
 }
@@ -44,10 +51,10 @@ function updatePreview() {
   const box = document.getElementById("preview-box");
   if (!box) return;
 
-  const cardBg = getComputedStyle(root).getPropertyValue("--card-bg");
-  const accent = getComputedStyle(root).getPropertyValue("--accent-color");
+  const panelBg = getComputedStyle(root).getPropertyValue("--panel-bg").trim();
+  const accent = getComputedStyle(root).getPropertyValue("--accent-color").trim();
 
-  box.style.background = cardBg;
+  box.style.background = panelBg;
   box.style.borderColor = accent;
 }
 
@@ -57,6 +64,8 @@ function updatePreview() {
 
 function bindColor(id, variable) {
   const el = document.getElementById(id);
+  if (!el) return;
+
   el.value =
     localStorage.getItem(variable) ||
     getComputedStyle(root).getPropertyValue(variable).trim();
@@ -80,8 +89,9 @@ bindColor("neon-color", "--neon-color");
 
 function bindSelect(id, attr, storageKey, defaultValue) {
   const el = document.getElementById(id);
-  const saved = localStorage.getItem(storageKey);
+  if (!el) return;
 
+  const saved = localStorage.getItem(storageKey);
   el.value = saved || defaultValue;
 
   el.addEventListener("change", () => {
@@ -94,7 +104,6 @@ function bindSelect(id, attr, storageKey, defaultValue) {
 bindSelect("card-style", "card-style", "card-style", "glass");
 bindSelect("font-style", "font-style", "font-style", "modern");
 
-// UI SCALE
 document.getElementById("ui-scale").addEventListener("change", e => {
   root.style.setProperty("--ui-scale", e.target.value);
   localStorage.setItem("ui-scale", e.target.value);
@@ -145,7 +154,7 @@ document.getElementById("preset-pink").onclick = () => {
 // ============================================================
 
 document.getElementById("reset-colors").onclick = () => {
-  ["--primary-color","--secondary-color","--accent-color","--background-color","--neon-color"]
+  ["--primary-color", "--secondary-color", "--accent-color", "--background-color", "--neon-color"]
     .forEach(v => localStorage.removeItem(v));
   applySaved();
 };

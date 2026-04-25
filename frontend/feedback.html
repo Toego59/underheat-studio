@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feedback — UNDERHEAT Studio</title>
 
+  <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="style.css?v=1776870060">
   <script src="theme.js"></script>
 </head>
@@ -73,7 +74,11 @@
   </div>
 
   <script>
-    const API_BASE = "http://localhost:4000";
+    // AUTO-DETECT BACKEND
+    const API_BASE =
+      location.hostname === "127.0.0.1" || location.hostname === "localhost"
+        ? "http://127.0.0.1:3000/api"
+        : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
 
     const statusEl = document.getElementById("fb-status");
     const step1 = document.getElementById("fb-step1");
@@ -177,7 +182,6 @@
           return;
         }
 
-        // Encrypt feedback
         const encrypted = await encrypt(JSON.stringify({
           name,
           type,
@@ -192,8 +196,13 @@
 
         statusEl.textContent = "Thank you! Your feedback has been submitted.";
 
+        document.getElementById("fb-name").value = "";
+        document.getElementById("fb-email").value = "";
         document.getElementById("fb-message").value = "";
         document.getElementById("fb-code").value = "";
+
+        step2.classList.add("hidden");
+        step1.classList.remove("hidden");
 
       } catch (err) {
         statusEl.textContent = "Network error. Try again.";

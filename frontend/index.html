@@ -6,11 +6,12 @@
   <title>UNDERHEAT Studio</title>
 
   <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=1776870060">
+  <link rel="stylesheet" href="style.css">
 
   <script src="theme.js"></script>
   <script src="https://unpkg.com/webamp@2.2.0/built/webamp.bundle.min.js"></script>
 </head>
+
 <body>
   <div class="page">
 
@@ -21,18 +22,18 @@
         <img src="assets/pride-logo.png" alt="UNDERHEAT PRIDE" class="pride-logo hidden" id="pride-logo">
       </div>
 
-      <nav class="nav" style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+      <nav class="nav">
         <span id="user-indicator" class="user-indicator"></span>
 
-        <div>
-          <button id="settingsBtn" class="btn ghost" style="display:none;">Settings</button>
-          <button id="adminBtn" class="btn ghost" style="display:none;">Admin Panel</button>
+        <div class="nav-row">
+          <button id="settingsBtn" class="btn ghost hidden">Settings</button>
+          <button id="adminBtn" class="btn ghost hidden">Admin Panel</button>
         </div>
 
         <button id="feedbackBtn" class="btn ghost">Feedback / Contact</button>
 
-        <div>
-          <button id="logoutBtn" class="btn ghost" style="display:none;">Logout</button>
+        <div class="nav-row">
+          <button id="logoutBtn" class="btn ghost hidden">Logout</button>
           <button id="loginBtn" class="btn primary">Login</button>
         </div>
       </nav>
@@ -97,7 +98,6 @@
       <section id="gated-content" class="section gated hidden">
         <h2 class="section-title">Studio Tools</h2>
 
-        <!-- WEBAMP -->
         <section id="webamp-section" class="panel">
           <div class="panel-header">
             <h3>Webamp Player</h3>
@@ -146,6 +146,6 @@
     }
   </script>
 
-  <script src="index.js?v=1776870060"></script>
+  <script src="index.js"></script>
 </body>
 </html>

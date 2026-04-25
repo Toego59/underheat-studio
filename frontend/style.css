@@ -32,7 +32,8 @@ body {
 
   --neon-color: #00ffff;
 
-  --card-bg: var(--secondary-color);
+  --card-bg: #1a1a1a;
+  --panel-bg: #1a1a1a;
   --card-border: rgba(255,255,255,0.08);
 
   --neon-glow: 0 0 12px var(--neon-color);
@@ -56,7 +57,7 @@ body[card-style="glass"] .game-card {
 body[card-style="flat"] .panel,
 body[card-style="flat"] .game-card {
   border-radius: 0px;
-  background: var(--card-bg);
+  background: var(--panel-bg);
   border: none;
   box-shadow: none;
 }
@@ -74,7 +75,7 @@ body[card-style="neon"] .game-card {
 body[card-style="shadowed"] .panel,
 body[card-style="shadowed"] .game-card {
   border-radius: 12px;
-  background: var(--card-bg);
+  background: var(--panel-bg);
   border: 1px solid var(--card-border);
   box-shadow: var(--shadow-strong);
 }
@@ -156,20 +157,72 @@ body[font-style="mono"] {
 }
 
 /* ============================================================
-   PANELS + CARDS
+   FORM ELEMENTS
+============================================================ */
+label {
+  display: block;
+  font-size: 13px;
+  color: #9aa3ad;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="color"],
+select,
+textarea {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  color: #e6eef6;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+input[type="color"] {
+  padding: 2px 4px;
+  height: 36px;
+  cursor: pointer;
+}
+
+select {
+  cursor: pointer;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ============================================================
+   PANELS + CARDS — BASE STYLES
 ============================================================ */
 .panel,
 .game-card {
   padding: 16px;
-  background: var(--card-bg);
+  background: var(--panel-bg);
   border: 1px solid var(--card-border);
+  border-radius: 12px;
   transition: 0.25s;
 }
 
 /* ============================================================
-   GAME CARDS — FIXED CLICK + NO BLUE LINK
+   GAME CARDS
 ============================================================ */
-
 .game-card {
   display: block;
   color: inherit;
@@ -181,7 +234,6 @@ body[font-style="mono"] {
   opacity: 0.9;
 }
 
-/* SCALE DOWN GAME IMAGES */
 .game-image {
   width: 100%;
   max-width: 220px;
@@ -199,6 +251,12 @@ body[font-style="mono"] {
   gap: 20px;
 }
 
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
 .section-title {
   font-size: 24px;
   margin-bottom: 16px;
@@ -206,6 +264,18 @@ body[font-style="mono"] {
 
 .small {
   font-size: 13px;
+  color: #9aa3ad;
+}
+
+.small.ok {
+  color: #4ade80;
+}
+
+.small.err {
+  color: #f87171;
+}
+
+.small.muted {
   color: #9aa3ad;
 }
 
@@ -223,11 +293,36 @@ body[font-style="mono"] {
 }
 
 .auth-card {
-  background: var(--card-bg);
+  background: var(--panel-bg);
   padding: 24px;
   border-radius: 12px;
   width: 320px;
   border: 1px solid var(--card-border);
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.auth-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.auth-message {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #f87171;
+}
+
+/* ============================================================
+   USER INDICATOR
+============================================================ */
+.user-indicator {
+  font-size: 13px;
+  color: #9aa3ad;
 }
 
 /* ============================================================
@@ -264,6 +359,15 @@ body[font-style="mono"] {
   display: flex;
   justify-content: center;
   gap: 20px;
+}
+
+.footer-links-row a {
+  color: #9aa3ad;
+  text-decoration: none;
+}
+
+.footer-links-row a:hover {
+  color: var(--accent-color);
 }
 
 .footer-links {
