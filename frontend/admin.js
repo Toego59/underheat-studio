@@ -3,7 +3,7 @@
 // =======================================
 const API_BASE =
   location.hostname === "127.0.0.1" || location.hostname === "localhost"
-    ? "http://127.0.0.1:3000/api"
+    ? "http://127.0.0.1:4000/api"
     : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
 
 // =======================================
@@ -23,6 +23,12 @@ const deleteMsg = document.getElementById("delete-msg");
 const setpassBtn = document.getElementById("setpass-btn");
 const setpassMsg = document.getElementById("setpass-msg");
 
+const promoteBtn = document.getElementById("promote-btn");
+const promoteMsg = document.getElementById("promote-msg");
+
+const demoteBtn = document.getElementById("demote-btn");
+const demoteMsg = document.getElementById("demote-msg");
+
 const submissionsList = document.getElementById("submissions-list");
 const clearSubBtn = document.getElementById("clear-submissions");
 const refreshSubBtn = document.getElementById("refresh-submissions");
@@ -39,7 +45,19 @@ const debugVisibilityMsg = document.getElementById("debug-visibility-msg");
 // =======================================
 //  ADMIN AUTH STATE (LOCAL ONLY)
 // =======================================
-let adminCreds = null;
+let adminCreds = (function() {
+  const saved = JSON.parse(localStorage.getItem("currentUser") || "null");
+  if (saved && (saved.role === "admin" || saved.role === "founder")) {
+    // Auto-unlock if user is already an admin
+    setTimeout(() => {
+      toolsCard.classList.remove("hidden");
+      adminLogoutBtn.style.display = "inline-block";
+      adminMsg.textContent = `Authenticated as ${saved.username} (${saved.role})`;
+    }, 100);
+    return { adminUsername: saved.username, adminPassword: saved.password };
+  }
+  return null;
+})();
 
 function showMsg(el, text, ok = true) {
   el.textContent = text;
@@ -100,49 +118,83 @@ listUsersBtn.addEventListener("click", async () => {
 });
 
 deleteBtn.addEventListener("click", async () => {
-  if (!adminCreds) return alert("Authenticate first");
-
-  const username = document.getElementById("delete-username").value.trim();
-  if (!username) return showMsg(deleteMsg, "Enter username", false);
-
-  showMsg(deleteMsg, "Deleting...");
+  const targetUsername = document.getElementById("delete-username").value.trim();
+  if (!targetUsername) return showMsg(deleteMsg, "Enter username", false);
 
   try {
     const res = await fetch(`${API_BASE}/admin/delete`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...adminCreds, username }),
+      body: JSON.stringify({ ...adminCreds, targetUsername }),
     });
 
     const data = await res.json();
     showMsg(deleteMsg, data.message || "Done", data.success);
+    if (data.success) document.getElementById("delete-username").value = "";
   } catch {
     showMsg(deleteMsg, "Network error", false);
   }
 });
 
 setpassBtn.addEventListener("click", async () => {
-  if (!adminCreds) return alert("Authenticate first");
-
-  const username = document.getElementById("setpass-username").value.trim();
+  const targetUsername = document.getElementById("setpass-username").value.trim();
   const newPassword = document.getElementById("setpass-password").value;
 
-  if (!username || !newPassword)
-    return showMsg(setpassMsg, "Enter username + new password", false);
-
-  showMsg(setpassMsg, "Updating...");
+  if (!targetUsername || !newPassword) return showMsg(setpassMsg, "Fill all fields", false);
 
   try {
-    const res = await fetch(`${API_BASE}/admin/setpass`, {
+    const res = await fetch(`${API_BASE}/admin/set-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...adminCreds, username, newPassword }),
+      body: JSON.stringify({ ...adminCreds, targetUsername, newPassword }),
     });
 
     const data = await res.json();
     showMsg(setpassMsg, data.message || "Done", data.success);
+    if (data.success) {
+      document.getElementById("setpass-username").value = "";
+      document.getElementById("setpass-password").value = "";
+    }
   } catch {
     showMsg(setpassMsg, "Network error", false);
+  }
+});
+
+promoteBtn.addEventListener("click", async () => {
+  const targetUsername = document.getElementById("promote-username").value.trim();
+  if (!targetUsername) return showMsg(promoteMsg, "Enter username", false);
+
+  try {
+    const res = await fetch(`${API_BASE}/promote-admin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...adminCreds, targetUsername }),
+    });
+
+    const data = await res.json();
+    showMsg(promoteMsg, data.message || "Done", data.success);
+    if (data.success) document.getElementById("promote-username").value = "";
+  } catch {
+    showMsg(promoteMsg, "Network error", false);
+  }
+});
+
+demoteBtn.addEventListener("click", async () => {
+  const targetUsername = document.getElementById("demote-username").value.trim();
+  if (!targetUsername) return showMsg(demoteMsg, "Enter username", false);
+
+  try {
+    const res = await fetch(`${API_BASE}/demote-admin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...adminCreds, targetUsername }),
+    });
+
+    const data = await res.json();
+    showMsg(demoteMsg, data.message || "Done", data.success);
+    if (data.success) document.getElementById("demote-username").value = "";
+  } catch {
+    showMsg(demoteMsg, "Network error", false);
   }
 });
 

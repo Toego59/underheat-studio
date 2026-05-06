@@ -1,8 +1,14 @@
 // ============================================================
+// API CONFIGURATION
+// ============================================================
+const API_BASE = location.hostname === "localhost" || location.hostname === "127.0.0.1"
+  ? "http://localhost:4000/api"
+  : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
+
+// ============================================================
 // AUTH + USER SYSTEM
 // ============================================================
 
-let users = JSON.parse(localStorage.getItem("users") || "{}");
 let currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
 const loginBtn = document.getElementById("loginBtn");
@@ -66,7 +72,7 @@ authToggle.onclick = () => {
 // LOGIN / REGISTER ACTION
 // ============================================================
 
-authAction.onclick = () => {
+authAction.onclick = async () => {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
 
@@ -75,32 +81,45 @@ authAction.onclick = () => {
     return;
   }
 
-  if (isRegistering) {
-    if (users[username]) {
-      authMessage.textContent = "User already exists.";
+  authMessage.textContent = isRegistering ? "Creating account..." : "Logging in...";
+  const endpoint = isRegistering ? "/register" : "/login";
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      authMessage.textContent = data.message || "An error occurred.";
       return;
     }
 
-    users[username] = {
-      password,
-      role: "user"
-    };
-
-    localStorage.setItem("users", JSON.stringify(users));
+  if (isRegistering) {
     authMessage.textContent = "Account created! You can now log in.";
+      isRegistering = false;
+      authTitle.textContent = "Login";
+      authAction.textContent = "Login";
+      authToggle.textContent = "Switch to Register";
     return;
   }
 
-  if (!users[username] || users[username].password !== password) {
-    authMessage.textContent = "Invalid username or password.";
-    return;
-  }
-
-  currentUser = { username, role: users[username].role };
+    // Login success - store user info + password for API requests
+    currentUser = { 
+      username: data.username, 
+      role: data.role,
+      password: password // Saved locally to authorize admin requests
+    };
   localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
   updateUI();
   authModal.classList.add("hidden");
+  } catch (err) {
+    authMessage.textContent = "Network error. Is the backend running?";
+  }
 };
 
 // ============================================================
@@ -140,7 +159,7 @@ function updateUI() {
     logoutBtn.style.display = "inline-block";
     settingsBtn.style.display = "inline-block";
 
-    if (currentUser.role === "admin") {
+    if (currentUser.role === "admin" || currentUser.role === "founder") {
       adminBtn.style.display = "inline-block";
     } else {
       adminBtn.style.display = "none";
