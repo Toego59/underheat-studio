@@ -8,7 +8,6 @@ const API_BASE = location.hostname === "localhost" || location.hostname === "127
 // ============================================================
 // AUTH + USER SYSTEM
 // ============================================================
-
 let currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
 const loginBtn = document.getElementById("loginBtn");
@@ -30,7 +29,6 @@ let isRegistering = false;
 // ============================================================
 // OPEN AUTH MODAL
 // ============================================================
-
 loginBtn.onclick = () => {
   authModal.classList.remove("hidden");
   isRegistering = false;
@@ -42,7 +40,6 @@ loginBtn.onclick = () => {
 // ============================================================
 // CLOSE AUTH MODAL
 // ============================================================
-
 authCancel.onclick = () => {
   authModal.classList.add("hidden");
   authMessage.textContent = "";
@@ -51,7 +48,6 @@ authCancel.onclick = () => {
 // ============================================================
 // SWITCH LOGIN / REGISTER
 // ============================================================
-
 authToggle.onclick = () => {
   isRegistering = !isRegistering;
 
@@ -71,7 +67,6 @@ authToggle.onclick = () => {
 // ============================================================
 // LOGIN / REGISTER ACTION
 // ============================================================
-
 authAction.onclick = async () => {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -98,25 +93,27 @@ authAction.onclick = async () => {
       return;
     }
 
-  if (isRegistering) {
-    authMessage.textContent = "Account created! You can now log in.";
+    if (isRegistering) {
+      authMessage.textContent = "Account created! You can now log in.";
       isRegistering = false;
       authTitle.textContent = "Login";
       authAction.textContent = "Login";
       authToggle.textContent = "Switch to Register";
-    return;
-  }
+      return;
+    }
 
-    // Login success - store user info + password for API requests
+    // Login success
     currentUser = { 
       username: data.username, 
       role: data.role,
-      password: password // Saved locally to authorize admin requests
+      password: password
     };
-  localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
-  updateUI();
-  authModal.classList.add("hidden");
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+    updateUI();
+    authModal.classList.add("hidden");
+
   } catch (err) {
     authMessage.textContent = "Network error. Is the backend running?";
   }
@@ -125,7 +122,6 @@ authAction.onclick = async () => {
 // ============================================================
 // LOGOUT
 // ============================================================
-
 logoutBtn.onclick = () => {
   currentUser = null;
   localStorage.removeItem("currentUser");
@@ -135,7 +131,6 @@ logoutBtn.onclick = () => {
 // ============================================================
 // NAV BUTTONS
 // ============================================================
-
 feedbackBtn.onclick = () => {
   window.location.href = "feedback.html";
 };
@@ -149,31 +144,45 @@ adminBtn.onclick = () => {
 };
 
 // ============================================================
-// UPDATE UI BASED ON USER
+// FIXED UPDATE UI — BUTTONS NOW SHOW CORRECTLY
 // ============================================================
-
 function updateUI() {
+  const gated = document.getElementById("gated-content");
+
   if (currentUser) {
     userIndicator.textContent = `Logged in as ${currentUser.username}`;
+
     loginBtn.style.display = "none";
     logoutBtn.style.display = "inline-block";
+
+    // SETTINGS BUTTON FIX
+    settingsBtn.classList.remove("hidden");
     settingsBtn.style.display = "inline-block";
 
+    // ADMIN BUTTON FIX
     if (currentUser.role === "admin" || currentUser.role === "founder") {
+      adminBtn.classList.remove("hidden");
       adminBtn.style.display = "inline-block";
     } else {
+      adminBtn.classList.add("hidden");
       adminBtn.style.display = "none";
     }
 
-    document.getElementById("gated-content").classList.remove("hidden");
+    gated.classList.remove("hidden");
+
   } else {
     userIndicator.textContent = "";
+
     loginBtn.style.display = "inline-block";
     logoutBtn.style.display = "none";
+
+    settingsBtn.classList.add("hidden");
+    adminBtn.classList.add("hidden");
+
     settingsBtn.style.display = "none";
     adminBtn.style.display = "none";
 
-    document.getElementById("gated-content").classList.add("hidden");
+    gated.classList.add("hidden");
   }
 }
 
@@ -182,7 +191,6 @@ updateUI();
 // ============================================================
 // WEBAMP
 // ============================================================
-
 const webampToggle = document.getElementById("webamp-toggle");
 const webampContainer = document.getElementById("webamp-container");
 

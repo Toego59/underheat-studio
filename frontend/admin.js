@@ -17,23 +17,11 @@ const toolsCard = document.getElementById("tools-card");
 const listUsersBtn = document.getElementById("list-users");
 const usersListEl = document.getElementById("users-list");
 
-const deleteBtn = document.getElementById("delete-user");
-const deleteMsg = document.getElementById("delete-msg");
-
-const setpassBtn = document.getElementById("setpass-btn");
-const setpassMsg = document.getElementById("setpass-msg");
-
-const promoteBtn = document.getElementById("promote-btn");
-const promoteMsg = document.getElementById("promote-msg");
-
-const demoteBtn = document.getElementById("demote-btn");
-const demoteMsg = document.getElementById("demote-msg");
-
+// Debug + submissions
 const submissionsList = document.getElementById("submissions-list");
 const clearSubBtn = document.getElementById("clear-submissions");
 const refreshSubBtn = document.getElementById("refresh-submissions");
 
-// Debug controls
 const debugShowBtn = document.getElementById("debug-show");
 const debugHideBtn = document.getElementById("debug-hide");
 const debugAppendBtn = document.getElementById("debug-append");
@@ -45,10 +33,9 @@ const debugVisibilityMsg = document.getElementById("debug-visibility-msg");
 // =======================================
 //  ADMIN AUTH STATE (LOCAL ONLY)
 // =======================================
-let adminCreds = (function() {
+let adminCreds = (function () {
   const saved = JSON.parse(localStorage.getItem("currentUser") || "null");
   if (saved && (saved.role === "admin" || saved.role === "founder")) {
-    // Auto-unlock if user is already an admin
     setTimeout(() => {
       toolsCard.classList.remove("hidden");
       adminLogoutBtn.style.display = "inline-block";
@@ -69,34 +56,68 @@ function showMsg(el, text, ok = true) {
 }
 
 // =======================================
-//  AUTHENTICATION
+//  REAL ADMIN AUTH (WORKER VALIDATION)
 // =======================================
-adminAuthBtn.addEventListener("click", () => {
+adminAuthBtn.addEventListener("click", async () => {
   const u = document.getElementById("admin-username").value.trim();
   const p = document.getElementById("admin-password").value;
 
   if (!u || !p) {
     adminMsg.textContent = "Enter admin username and password";
+    adminMsg.className = "small err";
     return;
   }
 
+  adminMsg.textContent = "Checking…";
+  adminMsg.className = "small muted";
+
+  const res = await fetch(`${API_BASE}/admin/list`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUsername: u,
+      adminPassword: p
+    })
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    adminMsg.textContent = data.message || "Invalid admin credentials.";
+    adminMsg.className = "small err";
+    return;
+  }
+
+  // SUCCESS
   adminCreds = { adminUsername: u, adminPassword: p };
-  adminMsg.textContent = "Authenticated locally. Admin tools unlocked.";
+
+  localStorage.setItem(
+    "currentUser",
+    JSON.stringify({ username: u, role: "admin", password: p })
+  );
+
+  adminMsg.textContent = `Authenticated as ${u} (admin)`;
+  adminMsg.className = "small ok";
+
   toolsCard.classList.remove("hidden");
   adminLogoutBtn.style.display = "inline-block";
 
   document.getElementById("admin-password").value = "";
 });
 
+// =======================================
+//  LOGOUT
+// =======================================
 adminLogoutBtn.addEventListener("click", () => {
   adminCreds = null;
+  localStorage.removeItem("currentUser");
   toolsCard.classList.add("hidden");
-  adminMsg.textContent = "Cleared credentials.";
+  adminMsg.textContent = "Logged out.";
   adminLogoutBtn.style.display = "none";
 });
 
 // =======================================
-//  ADMIN API CALLS
+//  LIST USERS (ONLY TOOL REMAINING)
 // =======================================
 listUsersBtn.addEventListener("click", async () => {
   if (!adminCreds) return alert("Authenticate first");
@@ -114,87 +135,6 @@ listUsersBtn.addEventListener("click", async () => {
     usersListEl.textContent = JSON.stringify(data, null, 2);
   } catch {
     usersListEl.textContent = "Network error";
-  }
-});
-
-deleteBtn.addEventListener("click", async () => {
-  const targetUsername = document.getElementById("delete-username").value.trim();
-  if (!targetUsername) return showMsg(deleteMsg, "Enter username", false);
-
-  try {
-    const res = await fetch(`${API_BASE}/admin/delete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...adminCreds, targetUsername }),
-    });
-
-    const data = await res.json();
-    showMsg(deleteMsg, data.message || "Done", data.success);
-    if (data.success) document.getElementById("delete-username").value = "";
-  } catch {
-    showMsg(deleteMsg, "Network error", false);
-  }
-});
-
-setpassBtn.addEventListener("click", async () => {
-  const targetUsername = document.getElementById("setpass-username").value.trim();
-  const newPassword = document.getElementById("setpass-password").value;
-
-  if (!targetUsername || !newPassword) return showMsg(setpassMsg, "Fill all fields", false);
-
-  try {
-    const res = await fetch(`${API_BASE}/admin/set-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...adminCreds, targetUsername, newPassword }),
-    });
-
-    const data = await res.json();
-    showMsg(setpassMsg, data.message || "Done", data.success);
-    if (data.success) {
-      document.getElementById("setpass-username").value = "";
-      document.getElementById("setpass-password").value = "";
-    }
-  } catch {
-    showMsg(setpassMsg, "Network error", false);
-  }
-});
-
-promoteBtn.addEventListener("click", async () => {
-  const targetUsername = document.getElementById("promote-username").value.trim();
-  if (!targetUsername) return showMsg(promoteMsg, "Enter username", false);
-
-  try {
-    const res = await fetch(`${API_BASE}/promote-admin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...adminCreds, targetUsername }),
-    });
-
-    const data = await res.json();
-    showMsg(promoteMsg, data.message || "Done", data.success);
-    if (data.success) document.getElementById("promote-username").value = "";
-  } catch {
-    showMsg(promoteMsg, "Network error", false);
-  }
-});
-
-demoteBtn.addEventListener("click", async () => {
-  const targetUsername = document.getElementById("demote-username").value.trim();
-  if (!targetUsername) return showMsg(demoteMsg, "Enter username", false);
-
-  try {
-    const res = await fetch(`${API_BASE}/demote-admin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...adminCreds, targetUsername }),
-    });
-
-    const data = await res.json();
-    showMsg(demoteMsg, data.message || "Done", data.success);
-    if (data.success) document.getElementById("demote-username").value = "";
-  } catch {
-    showMsg(demoteMsg, "Network error", false);
   }
 });
 
@@ -216,7 +156,7 @@ clearSubBtn.addEventListener("click", () => {
 refreshSubBtn.addEventListener("click", loadLocalSubmissions);
 
 // =======================================
-//  DEBUG PANEL CONTROLS (SITE-WIDE)
+//  DEBUG PANEL CONTROLS
 // =======================================
 function readDebugLog() {
   try {
