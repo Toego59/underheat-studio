@@ -6,119 +6,137 @@
   <title>Admin Panel — UNDERHEAT Studio</title>
 
   <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=1776870060">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Theme loads BEFORE render -->
   <script src="theme.js"></script>
 </head>
+
 <body>
   <div class="page">
 
     <!-- HEADER -->
     <header class="header">
       <div class="logo-container">
-        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
+        <img src="assets/logo.png" alt="UNDERHEAT" class="logo" id="main-logo">
+        <img src="assets/pride-logo.png" alt="UNDERHEAT PRIDE" class="pride-logo hidden" id="pride-logo">
       </div>
 
       <nav class="nav">
-        <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
+        <span id="user-indicator" class="user-indicator"></span>
+
+        <div class="nav-row">
+          <button onclick="window.location.href='index.html'" class="btn ghost">Home</button>
+          <button onclick="window.location.href='settings.html'" class="btn ghost">Settings</button>
+        </div>
+
+        <button onclick="window.location.href='feedback.html'" class="btn ghost">Feedback / Contact</button>
+
+        <div class="nav-row">
+          <button id="logoutBtn" class="btn ghost hidden">Logout</button>
+        </div>
       </nav>
     </header>
 
-    <!-- MAIN -->
-    <main class="main">
-      <h2 class="section-title">Admin Panel</h2>
+    <!-- ADMIN AUTH -->
+    <section id="admin-auth-section" class="section">
+      <div class="panel" style="max-width:400px;margin:auto;">
+        <h2>Admin Login</h2>
 
-      <!-- AUTH -->
-      <section class="panel" style="margin-bottom:20px;">
-        <h3>Admin Authentication</h3>
-        <p class="small">Credentials are never stored — session only.</p>
-
-        <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px; max-width:320px;">
-          <input id="admin-username" type="text" placeholder="Admin username">
-          <input id="admin-password" type="password" placeholder="Admin password">
-
-          <div style="display:flex; gap:8px;">
-            <button id="admin-auth" class="btn primary">Authenticate</button>
-            <button id="admin-logout" class="btn ghost" style="display:none;">Clear Session</button>
-          </div>
+        <div class="form-group">
+          <label>Admin Username</label>
+          <input id="admin-username" type="text">
         </div>
 
-        <p id="admin-auth-msg" class="small" style="margin-top:8px;"></p>
+        <div class="form-group">
+          <label>Admin Password</label>
+          <input id="admin-password" type="password">
+        </div>
+
+        <button id="admin-auth" class="btn primary">Authenticate</button>
+
+        <div id="admin-auth-msg" class="small err"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN TOOLS -->
+    <main id="tools-card" class="main hidden">
+
+      <h2 class="section-title">Admin Tools</h2>
+
+      <!-- LIST USERS -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>User Management</h3>
+        </div>
+
+        <button id="list-users" class="btn secondary">List All Users</button>
+
+        <pre id="users-list" class="panel" style="margin-top:15px;white-space:pre-wrap;"></pre>
       </section>
 
-      <!-- TOOLS — hidden until authenticated -->
-      <div id="tools-card" class="hidden">
+      <!-- LOCAL SUBMISSIONS -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Local Feedback Submissions</h3>
+          <span class="panel-note">(Stored in browser)</span>
+        </div>
 
-        <!-- USER MANAGEMENT -->
-        <section class="panel" style="margin-bottom:20px;">
-          <h3>User Management</h3>
+        <button id="refresh-submissions" class="btn secondary">Refresh</button>
+        <button id="clear-submissions" class="btn ghost" style="margin-left:10px;">Clear All</button>
 
-          <button id="list-users" class="btn secondary" style="margin-top:10px;">List All Users</button>
-          <pre id="users-list" class="small" style="margin-top:10px; white-space:pre-wrap;"></pre>
+        <pre id="submissions-list" class="panel" style="margin-top:15px;white-space:pre-wrap;"></pre>
+      </section>
 
-          <hr style="margin:16px 0; border-color: var(--card-border);">
+      <!-- DEBUG PANEL CONTROLS -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Debug Panel Controls</h3>
+        </div>
 
-          <h4>Delete User</h4>
-          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <input id="delete-username" type="text" placeholder="Username to delete">
-            <button id="delete-user" class="btn danger">Delete</button>
-          </div>
-          <p id="delete-msg" class="small" style="margin-top:6px;"></p>
+        <button id="debug-show" class="btn secondary">Show Debug Panel</button>
+        <button id="debug-hide" class="btn ghost">Hide Debug Panel</button>
 
-          <hr style="margin:16px 0; border-color: var(--card-border);">
+        <div class="form-group" style="margin-top:15px;">
+          <label>Append Debug Message</label>
+          <input id="debug-message-input" type="text" placeholder="Message">
+        </div>
 
-          <h4>Set Password</h4>
-          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <input id="setpass-username" type="text" placeholder="Username">
-            <input id="setpass-password" type="password" placeholder="New password">
-            <button id="setpass-btn" class="btn secondary">Set Password</button>
-          </div>
-          <p id="setpass-msg" class="small" style="margin-top:6px;"></p>
-        </section>
+        <button id="debug-append" class="btn primary">Add Message</button>
+        <button id="debug-clear" class="btn ghost" style="margin-left:10px;">Clear Log</button>
 
-        <!-- LOCAL SUBMISSIONS -->
-        <section class="panel" style="margin-bottom:20px;">
-          <h3>Local Submissions</h3>
-          <p class="small">Feedback stored in this browser's localStorage.</p>
+        <div id="debug-visibility-msg" class="small muted" style="margin-top:10px;"></div>
 
-          <div style="display:flex; gap:8px; margin-top:10px;">
-            <button id="refresh-submissions" class="btn ghost">Refresh</button>
-            <button id="clear-submissions" class="btn danger">Clear All</button>
-          </div>
+        <pre id="debug-log" class="panel" style="margin-top:15px;white-space:pre-wrap;"></pre>
+      </section>
 
-          <pre id="submissions-list" class="small" style="margin-top:10px; white-space:pre-wrap;"></pre>
-        </section>
-
-        <!-- DEBUG PANEL CONTROLS -->
-        <section class="panel">
-          <h3>Debug Panel</h3>
-          <p class="small">Control the site-wide debug overlay.</p>
-
-          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-            <button id="debug-show" class="btn secondary">Show Debug Panel</button>
-            <button id="debug-hide" class="btn ghost">Hide Debug Panel</button>
-          </div>
-
-          <p id="debug-visibility-msg" class="small" style="margin-top:8px;"></p>
-
-          <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
-            <input id="debug-message-input" type="text" placeholder="Append a debug message..." style="flex:1;">
-            <button id="debug-append" class="btn secondary">Append</button>
-            <button id="debug-clear" class="btn danger">Clear Log</button>
-          </div>
-
-          <pre id="debug-log" class="small" style="margin-top:10px; white-space:pre-wrap;"></pre>
-        </section>
-
-      </div>
     </main>
+
+    <!-- DEBUG PANEL (GLOBAL) -->
+    <div id="debug-panel" class="debug-panel hidden"></div>
 
     <!-- FOOTER -->
     <footer class="footer">
-      <p>© 2026 UNDERHEAT Studio</p>
+      <p>© 2026 UNDERHEAT Studio. All rights reserved.</p>
+
+      <div class="footer-links-row">
+        <a href="tos.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="feedback.html">Feedback</a>
+      </div>
     </footer>
 
   </div>
 
-  <script src="admin.js?v=1776870060"></script>
+  <!-- PRIDE MONTH LOGIC -->
+  <script>
+    const month = new Date().getMonth();
+    if (month === 5) {
+      document.getElementById("main-logo").classList.add("hidden");
+      document.getElementById("pride-logo").classList.remove("hidden");
+    }
+  </script>
+
+  <script src="admin.js"></script>
 </body>
 </html>

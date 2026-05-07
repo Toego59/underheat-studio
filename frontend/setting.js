@@ -1,50 +1,63 @@
 // ============================================================
-// SETTINGS — UNDERHEAT STUDIO
+// UNDERHEAT STUDIO — SETTINGS SYSTEM
 // ============================================================
 
 const root = document.documentElement;
 
+// Default fallback values
+const DEFAULTS = {
+  primary: "#ff5500",
+  secondary: "#333333",
+  accent: "#ff5500",
+  background: "#1a1a1a",
+  neon: "#00ffff",
+  cardStyle: "glass",
+  fontStyle: "modern",
+  uiScale: "1"
+};
+
 // ============================================================
-// APPLY SAVED SETTINGS
+// LOAD + SAVE SETTINGS
 // ============================================================
 
-function applySaved() {
-  const vars = [
-    "--primary-color",
-    "--secondary-color",
-    "--accent-color",
-    "--background-color",
-    "--neon-color"
-  ];
+function loadSettings() {
+  const saved = JSON.parse(localStorage.getItem("uh_settings") || "{}");
+  return { ...DEFAULTS, ...saved };
+}
 
-  vars.forEach(v => {
-    const val = localStorage.getItem(v);
-    if (val) root.style.setProperty(v, val);
-  });
+function saveSettings(settings) {
+  localStorage.setItem("uh_settings", JSON.stringify(settings));
 
-  const cardStyle = localStorage.getItem("card-style") || "glass";
-  document.body.setAttribute("card-style", cardStyle);
+  // Sync across tabs/pages
+  localStorage.setItem("uh_settings_updated", Date.now().toString());
 
-  const fontStyle = localStorage.getItem("font-style") || "modern";
-  document.body.setAttribute("font-style", fontStyle);
+  applySettings(settings);
+}
 
-  const scale = localStorage.getItem("ui-scale") || "1";
-  root.style.setProperty("--ui-scale", scale);
+// ============================================================
+// APPLY SETTINGS TO PAGE
+// ============================================================
 
-  // Sync select elements to saved values
-  const cardEl = document.getElementById("card-style");
-  const fontEl = document.getElementById("font-style");
-  const scaleEl = document.getElementById("ui-scale");
+function applySettings(s) {
+  // Colors
+  root.style.setProperty("--primary-color", s.primary);
+  root.style.setProperty("--secondary-color", s.secondary);
+  root.style.setProperty("--accent-color", s.accent);
+  root.style.setProperty("--background-color", s.background);
+  root.style.setProperty("--neon-color", s.neon);
 
-  if (cardEl) cardEl.value = cardStyle;
-  if (fontEl) fontEl.value = fontStyle;
-  if (scaleEl) scaleEl.value = scale;
+  // UI scale
+  root.style.setProperty("--ui-scale", s.uiScale);
+
+  // Card + font styles
+  document.body.setAttribute("card-style", s.cardStyle);
+  document.body.setAttribute("font-style", s.fontStyle);
 
   updatePreview();
 }
 
 // ============================================================
-// LIVE PREVIEW BOX
+// PREVIEW BOX
 // ============================================================
 
 function updatePreview() {
@@ -59,113 +72,143 @@ function updatePreview() {
 }
 
 // ============================================================
-// COLOR BINDING
+// BIND COLOR PICKERS
 // ============================================================
 
-function bindColor(id, variable) {
+function bindColor(id, key) {
   const el = document.getElementById(id);
   if (!el) return;
 
-  el.value =
-    localStorage.getItem(variable) ||
-    getComputedStyle(root).getPropertyValue(variable).trim();
+  const settings = loadSettings();
+  el.value = settings[key];
 
   el.addEventListener("input", () => {
-    root.style.setProperty(variable, el.value);
-    localStorage.setItem(variable, el.value);
-    updatePreview();
+    const s = loadSettings();
+    s[key] = el.value;
+    saveSettings(s);
   });
 }
 
-bindColor("primary-color", "--primary-color");
-bindColor("secondary-color", "--secondary-color");
-bindColor("accent-color", "--accent-color");
-bindColor("background-color", "--background-color");
-bindColor("neon-color", "--neon-color");
+bindColor("primary-color", "primary");
+bindColor("secondary-color", "secondary");
+bindColor("accent-color", "accent");
+bindColor("background-color", "background");
+bindColor("neon-color", "neon");
 
 // ============================================================
-// SELECT BINDING
+// BIND SELECTS
 // ============================================================
 
-function bindSelect(id, attr, storageKey, defaultValue) {
+function bindSelect(id, key) {
   const el = document.getElementById(id);
   if (!el) return;
 
-  const saved = localStorage.getItem(storageKey);
-  el.value = saved || defaultValue;
+  const settings = loadSettings();
+  el.value = settings[key];
 
   el.addEventListener("change", () => {
-    document.body.setAttribute(attr, el.value);
-    localStorage.setItem(storageKey, el.value);
-    updatePreview();
+    const s = loadSettings();
+    s[key] = el.value;
+    saveSettings(s);
   });
 }
 
-bindSelect("card-style", "card-style", "card-style", "glass");
-bindSelect("font-style", "font-style", "font-style", "modern");
+bindSelect("card-style", "cardStyle");
+bindSelect("font-style", "fontStyle");
 
-document.getElementById("ui-scale").addEventListener("change", e => {
-  root.style.setProperty("--ui-scale", e.target.value);
-  localStorage.setItem("ui-scale", e.target.value);
-});
+// ============================================================
+// UI SCALE
+// ============================================================
+
+const scaleEl = document.getElementById("ui-scale");
+if (scaleEl) {
+  const settings = loadSettings();
+  scaleEl.value = settings.uiScale;
+
+  scaleEl.addEventListener("input", (e) => {
+    const s = loadSettings();
+    s.uiScale = e.target.value;
+    saveSettings(s);
+  });
+}
 
 // ============================================================
 // PRESETS
 // ============================================================
 
-document.getElementById("preset-default").onclick = () => {
-  localStorage.setItem("--primary-color", "#ff5500");
-  localStorage.setItem("--secondary-color", "#333333");
-  localStorage.setItem("--accent-color", "#ff5500");
-  localStorage.setItem("--background-color", "#1a1a1a");
-  localStorage.setItem("--neon-color", "#00ffff");
-  applySaved();
-};
+function applyPreset(values) {
+  const s = loadSettings();
+  Object.assign(s, values);
+  saveSettings(s);
+}
 
-document.getElementById("preset-dark").onclick = () => {
-  localStorage.setItem("--primary-color", "#ffffff");
-  localStorage.setItem("--secondary-color", "#0f0f0f");
-  localStorage.setItem("--accent-color", "#ff0066");
-  localStorage.setItem("--background-color", "#000000");
-  localStorage.setItem("--neon-color", "#00ffff");
-  applySaved();
-};
+document.getElementById("preset-default").onclick = () =>
+  applyPreset({
+    primary: "#ff5500",
+    secondary: "#333333",
+    accent: "#ff5500",
+    background: "#1a1a1a",
+    neon: "#00ffff"
+  });
 
-document.getElementById("preset-green").onclick = () => {
-  localStorage.setItem("--primary-color", "#00ff88");
-  localStorage.setItem("--secondary-color", "#0d1f0d");
-  localStorage.setItem("--accent-color", "#00cc66");
-  localStorage.setItem("--background-color", "#071407");
-  localStorage.setItem("--neon-color", "#00ffaa");
-  applySaved();
-};
+document.getElementById("preset-dark").onclick = () =>
+  applyPreset({
+    primary: "#ffffff",
+    secondary: "#0f0f0f",
+    accent: "#ff0066",
+    background: "#000000",
+    neon: "#00ffff"
+  });
 
-document.getElementById("preset-pink").onclick = () => {
-  localStorage.setItem("--primary-color", "#ff71ce");
-  localStorage.setItem("--secondary-color", "#2d1b3d");
-  localStorage.setItem("--accent-color", "#ff4fa3");
-  localStorage.setItem("--background-color", "#1a0f2e");
-  localStorage.setItem("--neon-color", "#ff99ff");
-  applySaved();
-};
+document.getElementById("preset-green").onclick = () =>
+  applyPreset({
+    primary: "#00ff88",
+    secondary: "#0d1f0d",
+    accent: "#00cc66",
+    background: "#071407",
+    neon: "#00ffaa"
+  });
+
+document.getElementById("preset-pink").onclick = () =>
+  applyPreset({
+    primary: "#ff71ce",
+    secondary: "#2d1b3d",
+    accent: "#ff4fa3",
+    background: "#1a0f2e",
+    neon: "#ff99ff"
+  });
 
 // ============================================================
 // RESET BUTTONS
 // ============================================================
 
 document.getElementById("reset-colors").onclick = () => {
-  ["--primary-color", "--secondary-color", "--accent-color", "--background-color", "--neon-color"]
-    .forEach(v => localStorage.removeItem(v));
-  applySaved();
+  const s = loadSettings();
+  s.primary = DEFAULTS.primary;
+  s.secondary = DEFAULTS.secondary;
+  s.accent = DEFAULTS.accent;
+  s.background = DEFAULTS.background;
+  s.neon = DEFAULTS.neon;
+  saveSettings(s);
 };
 
 document.getElementById("reset-all").onclick = () => {
-  localStorage.clear();
+  localStorage.removeItem("uh_settings");
   location.reload();
 };
+
+// ============================================================
+// SYNC ACROSS TABS
+// ============================================================
+
+window.addEventListener("storage", () => {
+  if (localStorage.getItem("uh_settings_updated")) {
+    applySettings(loadSettings());
+  }
+});
 
 // ============================================================
 // INIT
 // ============================================================
 
-applySaved();
+applySettings(loadSettings());

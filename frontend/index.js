@@ -1,21 +1,19 @@
 // ============================================================
-// API CONFIGURATION
+// UNDERHEAT STUDIO — INDEX PAGE LOGIC
 // ============================================================
-const API_BASE = location.hostname === "localhost" || location.hostname === "127.0.0.1"
-  ? "http://localhost:4000/api"
-  : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
 
-// ============================================================
-// AUTH + USER SYSTEM
-// ============================================================
-let currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+// Auto backend detection
+const API_BASE =
+  location.hostname === "127.0.0.1" || location.hostname === "localhost"
+    ? "http://127.0.0.1:4000/api"
+    : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
 
+// DOM elements
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const adminBtn = document.getElementById("adminBtn");
 const userIndicator = document.getElementById("user-indicator");
-const feedbackBtn = document.getElementById("feedbackBtn");
 
 const authModal = document.getElementById("auth");
 const authTitle = document.getElementById("auth-title");
@@ -24,179 +22,196 @@ const authToggle = document.getElementById("auth-toggle");
 const authCancel = document.getElementById("auth-cancel");
 const authMessage = document.getElementById("auth-message");
 
-let isRegistering = false;
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+
+const gatedContent = document.getElementById("gated-content");
+
+// Webamp
+const webampToggle = document.getElementById("webamp-toggle");
+const webampContainer = document.getElementById("webamp-container");
+let webampInstance = null;
 
 // ============================================================
-// OPEN AUTH MODAL
+// USER STATE
 // ============================================================
-loginBtn.onclick = () => {
-  authModal.classList.remove("hidden");
-  isRegistering = false;
-  authTitle.textContent = "Login";
-  authAction.textContent = "Login";
-  authToggle.textContent = "Switch to Register";
-};
 
-// ============================================================
-// CLOSE AUTH MODAL
-// ============================================================
-authCancel.onclick = () => {
-  authModal.classList.add("hidden");
-  authMessage.textContent = "";
-};
-
-// ============================================================
-// SWITCH LOGIN / REGISTER
-// ============================================================
-authToggle.onclick = () => {
-  isRegistering = !isRegistering;
-
-  if (isRegistering) {
-    authTitle.textContent = "Register";
-    authAction.textContent = "Create Account";
-    authToggle.textContent = "Switch to Login";
-  } else {
-    authTitle.textContent = "Login";
-    authAction.textContent = "Login";
-    authToggle.textContent = "Switch to Register";
-  }
-
-  authMessage.textContent = "";
-};
-
-// ============================================================
-// LOGIN / REGISTER ACTION
-// ============================================================
-authAction.onclick = async () => {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  if (!username || !password) {
-    authMessage.textContent = "Please fill out all fields.";
-    return;
-  }
-
-  authMessage.textContent = isRegistering ? "Creating account..." : "Logging in...";
-  const endpoint = isRegistering ? "/register" : "/login";
-
-  try {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
-
-    const data = await res.json();
-
-    if (!data.success) {
-      authMessage.textContent = data.message || "An error occurred.";
-      return;
-    }
-
-    if (isRegistering) {
-      authMessage.textContent = "Account created! You can now log in.";
-      isRegistering = false;
-      authTitle.textContent = "Login";
-      authAction.textContent = "Login";
-      authToggle.textContent = "Switch to Register";
-      return;
-    }
-
-    // Login success
-    currentUser = { 
-      username: data.username, 
-      role: data.role,
-      password: password
-    };
-
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-
-    updateUI();
-    authModal.classList.add("hidden");
-
-  } catch (err) {
-    authMessage.textContent = "Network error. Is the backend running?";
-  }
-};
-
-// ============================================================
-// LOGOUT
-// ============================================================
-logoutBtn.onclick = () => {
+let currentUser = null;
+try {
+  currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+} catch {
   currentUser = null;
-  localStorage.removeItem("currentUser");
-  updateUI();
-};
+}
 
 // ============================================================
-// NAV BUTTONS
+// USERNAME VALIDATION (letters, numbers, ' only)
 // ============================================================
-feedbackBtn.onclick = () => {
-  window.location.href = "feedback.html";
-};
 
-settingsBtn.onclick = () => {
-  window.location.href = "settings.html";
-};
-
-adminBtn.onclick = () => {
-  window.location.href = "admin.html";
-};
+function isValidUsername(name) {
+  return /^[A-Za-z0-9']+$/.test(name);
+}
 
 // ============================================================
-// FIXED UPDATE UI — BUTTONS NOW SHOW CORRECTLY
+// UPDATE UI BASED ON LOGIN STATE
 // ============================================================
+
 function updateUI() {
-  const gated = document.getElementById("gated-content");
-
   if (currentUser) {
     userIndicator.textContent = `Logged in as ${currentUser.username}`;
+    if (loginBtn) loginBtn.classList.add("hidden");
+    if (logoutBtn) logoutBtn.classList.remove("hidden");
+    if (settingsBtn) settingsBtn.classList.remove("hidden");
+    if (gatedContent) gatedContent.classList.remove("hidden");
 
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-
-    // SETTINGS BUTTON FIX
-    settingsBtn.classList.remove("hidden");
-    settingsBtn.style.display = "inline-block";
-
-    // ADMIN BUTTON FIX
-    if (currentUser.role === "admin" || currentUser.role === "founder") {
-      adminBtn.classList.remove("hidden");
-      adminBtn.style.display = "inline-block";
-    } else {
-      adminBtn.classList.add("hidden");
-      adminBtn.style.display = "none";
+    if (adminBtn) {
+      if (currentUser.role === "admin" || currentUser.role === "founder") {
+        adminBtn.classList.remove("hidden");
+      } else {
+        adminBtn.classList.add("hidden");
+      }
     }
-
-    gated.classList.remove("hidden");
-
   } else {
     userIndicator.textContent = "";
-
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-
-    settingsBtn.classList.add("hidden");
-    adminBtn.classList.add("hidden");
-
-    settingsBtn.style.display = "none";
-    adminBtn.style.display = "none";
-
-    gated.classList.add("hidden");
+    if (loginBtn) loginBtn.classList.remove("hidden");
+    if (logoutBtn) logoutBtn.classList.add("hidden");
+    if (settingsBtn) settingsBtn.classList.add("hidden");
+    if (adminBtn) adminBtn.classList.add("hidden");
+    if (gatedContent) gatedContent.classList.add("hidden");
   }
 }
 
 updateUI();
 
 // ============================================================
-// WEBAMP
+// AUTH MODAL OPEN/CLOSE
 // ============================================================
-const webampToggle = document.getElementById("webamp-toggle");
-const webampContainer = document.getElementById("webamp-container");
 
-let webampInstance = null;
+if (loginBtn) {
+  loginBtn.onclick = () => {
+    if (!authModal) return;
+    authModal.classList.remove("hidden");
+    authTitle.textContent = "Login";
+    authAction.textContent = "Login";
+    authToggle.textContent = "Switch to Register";
+    authMessage.textContent = "";
+  };
+}
+
+if (authCancel) {
+  authCancel.onclick = () => {
+    authModal.classList.add("hidden");
+    authMessage.textContent = "";
+  };
+}
+
+// ============================================================
+// LOGIN / REGISTER TOGGLE
+// ============================================================
+
+let isRegistering = false;
+
+if (authToggle) {
+  authToggle.onclick = () => {
+    isRegistering = !isRegistering;
+
+    if (isRegistering) {
+      authTitle.textContent = "Register";
+      authAction.textContent = "Create Account";
+      authToggle.textContent = "Switch to Login";
+    } else {
+      authTitle.textContent = "Login";
+      authAction.textContent = "Login";
+      authToggle.textContent = "Switch to Register";
+    }
+
+    authMessage.textContent = "";
+  };
+}
+
+// ============================================================
+// LOGIN / REGISTER ACTION
+// ============================================================
+
+if (authAction) {
+  authAction.onclick = async () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!username || !password) {
+      authMessage.textContent = "Fill out all fields.";
+      authMessage.className = "small err";
+      return;
+    }
+
+    if (isRegistering && !isValidUsername(username)) {
+      authMessage.textContent = "Username can only contain letters, numbers, and '";
+      authMessage.className = "small err";
+      return;
+    }
+
+    authMessage.textContent = "Processing...";
+    authMessage.className = "small muted";
+
+    try {
+      const endpoint = isRegistering ? "/register" : "/login";
+
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        authMessage.textContent = data.message || "Authentication failed.";
+        authMessage.className = "small err";
+        return;
+      }
+
+      currentUser = {
+        username: data.username,
+        role: data.role,
+        password
+      };
+
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+      authModal.classList.add("hidden");
+      usernameInput.value = "";
+      passwordInput.value = "";
+
+      updateUI();
+
+    } catch (err) {
+      authMessage.textContent = "Network error.";
+      authMessage.className = "small err";
+    }
+  };
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
+if (logoutBtn) {
+  logoutBtn.onclick = () => {
+    localStorage.removeItem("currentUser");
+    currentUser = null;
+    updateUI();
+  };
+}
+
+// ============================================================
+// WEBAMP PLAYER (WITH YOUR SKIN)
+// ============================================================
 
 function createWebamp() {
+  if (typeof Webamp === "undefined") {
+    console.warn("Webamp bundle not loaded.");
+    return;
+  }
+
   webampInstance = new Webamp({
     initialTracks: [
       {
@@ -204,27 +219,66 @@ function createWebamp() {
         url: "assets/shout.mp3"
       }
     ],
-    availableSkins: [
-      { url: "assets/skin.wsz" }
-    ]
+    initialSkin: {
+      // your actual skin file
+      url: "assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
+      // if Cloudflare/host blocks .wsz, rename to .zip and use:
+      // url: "assets/Fallout_Pip-Boy_3000_Amber_v4.zip"
+    }
   });
 
   webampInstance.renderWhenReady(webampContainer);
 
   webampInstance.onClose(() => {
     webampInstance = null;
-    webampContainer.classList.add("hidden");
+    if (webampContainer) webampContainer.classList.add("hidden");
+    if (webampToggle) webampToggle.textContent = "Show Webamp Player";
   });
 }
 
-webampToggle.onclick = () => {
-  if (webampInstance) {
-    webampInstance.dispose();
-    webampInstance = null;
-    webampContainer.classList.add("hidden");
-    return;
+if (webampToggle && webampContainer) {
+  webampToggle.onclick = () => {
+    if (webampInstance) {
+      webampInstance.dispose();
+      webampInstance = null;
+      webampContainer.classList.add("hidden");
+      webampToggle.textContent = "Show Webamp Player";
+      return;
+    }
+
+    createWebamp();
+    if (webampInstance) {
+      webampContainer.classList.remove("hidden");
+      webampToggle.textContent = "Hide Webamp Player";
+    }
+  };
+}
+
+// ============================================================
+// GLOBAL DEBUG PANEL SYNC
+// ============================================================
+
+(function () {
+  const panel = document.getElementById("debug-panel");
+  if (!panel) return;
+
+  function readDebugLog() {
+    try {
+      return JSON.parse(localStorage.getItem("debug_log") || "[]");
+    } catch {
+      return [];
+    }
   }
 
-  createWebamp();
-  webampContainer.classList.remove("hidden");
-};
+  function renderDebugPanel() {
+    const visible = localStorage.getItem("debug_visible") === "1";
+    panel.classList.toggle("hidden", !visible);
+    if (!visible) return;
+
+    const arr = readDebugLog();
+    panel.textContent = arr.length ? arr.join("\n") : "(debug empty)";
+  }
+
+  window.addEventListener("storage", renderDebugPanel);
+  renderDebugPanel();
+})();

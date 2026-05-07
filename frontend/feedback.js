@@ -1,122 +1,122 @@
 // ============================================================
-// FEEDBACK SYSTEM — UNDERHEAT STUDIO
-// Handles:
-// 1. Sending verification code
-// 2. Verifying code
-// 3. Submitting feedback locally
+// UNDERHEAT STUDIO — FEEDBACK / FORM SYSTEM
 // ============================================================
 
-// Your backend URL (Codespaces)
-const API_BASE = "https://verbose-lamp-jjq7xwgjw4p73qq7q-4000.app.github.dev";
+// Auto backend detection
+const API_BASE =
+  location.hostname === "127.0.0.1" || location.hostname === "localhost"
+    ? "http://127.0.0.1:4000/api"
+    : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
 
-// UI elements
-const step1 = document.getElementById("fb-step1");
-const step2 = document.getElementById("fb-step2");
-const statusBox = document.getElementById("fb-status");
+// DOM elements
+const fbForm = document.getElementById("feedback-form");
+const fbUsernameGroup = document.getElementById("fb-username-group");
+const fbUsername = document.getElementById("fb-username");
+const fbEmail = document.getElementById("fb-email");
+const fbMessage = document.getElementById("fb-message");
+const fbMsg = document.getElementById("fb-msg");
 
-const nameInput = document.getElementById("fb-name");
-const emailInput = document.getElementById("fb-email");
-const typeInput = document.getElementById("fb-type");
-const messageInput = document.getElementById("fb-message");
-const codeInput = document.getElementById("fb-code");
-
-const sendCodeBtn = document.getElementById("fb-send-code");
-const verifySubmitBtn = document.getElementById("fb-verify-submit");
+// Load current user
+let currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
 // ============================================================
-// SEND VERIFICATION CODE
+// LOGGED-IN BEHAVIOR
 // ============================================================
 
-sendCodeBtn.onclick = async () => {
-  const email = emailInput.value.trim();
+if (currentUser && currentUser.username) {
+  fbUsernameGroup.classList.add("hidden");
+}
 
-  if (!email) {
-    statusBox.textContent = "Please enter an email.";
+// ============================================================
+// USERNAME VALIDATION
+// Allowed: A–Z, a–z, 0–9, '
+// ============================================================
+
+function isValidUsername(name) {
+  return /^[A-Za-z0-9']+$/.test(name);
+}
+
+// ============================================================
+// MESSAGE SANITIZATION
+// (Prevents HTML injection, keeps text safe)
+// ============================================================
+
+function sanitizeMessage(msg) {
+  return msg.replace(/[<>]/g, "");
+}
+
+// ============================================================
+// SUBMIT FEEDBACK
+// ============================================================
+
+fbForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const username = currentUser && currentUser.username
+    ? currentUser.username
+    : fbUsername.value.trim();
+
+  const email = fbEmail.value.trim();
+  const message = sanitizeMessage(fbMessage.value.trim());
+
+  // Required fields
+  if (!username || !email || !message) {
+    fbMsg.textContent = "Please fill out all fields.";
+    fbMsg.className = "small err";
     return;
   }
 
-  statusBox.textContent = "Sending verification code...";
+  // Username rules
+  if (!isValidUsername(username)) {
+    fbMsg.textContent = "Username can only contain letters, numbers, and '";
+    fbMsg.className = "small err";
+    return;
+  }
+
+  fbMsg.textContent = "Sending...";
+  fbMsg.className = "small muted";
 
   try {
-    const res = await fetch(`${API_BASE}/send-code`, {
+    const res = await fetch(`${API_BASE}/feedback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      statusBox.textContent = "Verification code sent!";
-      step1.classList.add("hidden");
-      step2.classList.remove("hidden");
-    } else {
-      statusBox.textContent = data.message || "Failed to send code.";
-    }
-
-  } catch (err) {
-    statusBox.textContent = "Network error. Try again.";
-  }
-};
-
-// ============================================================
-// VERIFY CODE + SUBMIT FEEDBACK
-// ============================================================
-
-verifySubmitBtn.onclick = async () => {
-  const email = emailInput.value.trim();
-  const code = codeInput.value.trim();
-  const name = nameInput.value.trim();
-  const type = typeInput.value;
-  const message = messageInput.value.trim();
-
-  if (!code) {
-    statusBox.textContent = "Enter your verification code.";
-    return;
-  }
-
-  if (!message) {
-    statusBox.textContent = "Please enter a message.";
-    return;
-  }
-
-  statusBox.textContent = "Verifying code...";
-
-  try {
-    const res = await fetch(`${API_BASE}/verify-code`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code })
+      body: JSON.stringify({ username, email, message })
     });
 
     const data = await res.json();
 
     if (!data.success) {
-      statusBox.textContent = data.message || "Invalid code.";
+      fbMsg.textContent = data.message || "Failed to send feedback.";
+      fbMsg.className = "small err";
       return;
     }
 
-    // Save feedback locally for Admin Panel
-    const entry = {
-      name,
+    // ============================================================
+    // LOCAL SUBMISSIONS (for admin viewer)
+    // ============================================================
+
+    const subs = JSON.parse(localStorage.getItem("submissions") || "[]");
+
+    subs.push({
+      username,
       email,
-      type,
       message,
-      date: new Date().toISOString()
-    };
+      timestamp: Date.now()
+    });
 
-    const stored = JSON.parse(localStorage.getItem("feedback") || "[]");
-    stored.push(entry);
-    localStorage.setItem("feedback", JSON.stringify(stored));
+    localStorage.setItem("submissions", JSON.stringify(subs));
 
-    statusBox.textContent = "Feedback submitted! Thank you.";
-    step2.classList.add("hidden");
+    fbMsg.textContent = "Feedback sent. Thank you.";
+    fbMsg.className = "small ok";
 
-    // Clear fields
-    messageInput.value = "";
-    codeInput.value = "";
+    // Clear message field
+    fbMessage.value = "";
+
+    // Clear username if not logged in
+    if (!currentUser) fbUsername.value = "";
 
   } catch (err) {
-    statusBox.textContent = "Network error. Try again.";
+    fbMsg.textContent = "Network error.";
+    fbMsg.className = "small err";
   }
-};
+});

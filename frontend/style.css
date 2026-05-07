@@ -1,357 +1,304 @@
 /* ============================================================
+   UNDERHEAT STUDIO — GLOBAL THEME SYSTEM
+   ============================================================ */
+
+:root {
+  --primary-color: #ff5500;
+  --secondary-color: #333333;
+  --accent-color: #ff5500;
+  --background-color: #1a1a1a;
+  --neon-color: #00ffff;
+
+  --panel-bg: rgba(255, 255, 255, 0.05);
+  --panel-bg-dark: rgba(0, 0, 0, 0.4);
+  --text-color: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.15);
+
+  --ui-scale: 1;
+}
+
+/* ============================================================
    GLOBAL RESET
-============================================================ */
+   ============================================================ */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html {
-  font-size: 16px;
-}
-
 body {
-  font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica Neue, Arial;
   background: var(--background-color);
-  color: #e6eef6;
-  line-height: 1.5;
-  transform: scale(var(--ui-scale, 1));
-  transform-origin: top center;
-  transition: background 0.25s, color 0.25s;
+  color: var(--text-color);
+  font-family: "Inter", sans-serif;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* ============================================================
-   ROOT VARIABLES — THEME COLORS
-============================================================ */
-:root {
-  --primary-color: #ff5500;
-  --secondary-color: #333333;
-  --accent-color: #ff5500;
-  --background-color: #1a1a1a;
+   LINKS
+   ============================================================ */
 
-  --neon-color: #00ffff;
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
 
-  --card-bg: #1a1a1a;
-  --panel-bg: #1a1a1a;
-  --card-border: rgba(255,255,255,0.08);
-
-  --neon-glow: 0 0 12px var(--neon-color);
-  --shadow-strong: 0 8px 24px rgba(0,0,0,0.45);
+a:hover {
+  text-decoration: underline;
 }
 
 /* ============================================================
-   CARD STYLE SYSTEM
-============================================================ */
+   PAGE LAYOUT
+   ============================================================ */
 
-/* GLASS (DEFAULT) */
-body[card-style="glass"] .panel,
-body[card-style="glass"] .game-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  backdrop-filter: blur(12px);
-  border-radius: 12px;
-}
-
-/* FLAT */
-body[card-style="flat"] .panel,
-body[card-style="flat"] .game-card {
-  border-radius: 0px;
-  background: var(--panel-bg);
-  border: none;
-  box-shadow: none;
-}
-
-/* NEON */
-body[card-style="neon"] .panel,
-body[card-style="neon"] .game-card {
-  border-radius: 12px;
-  background: #0a0a0a;
-  border: 1px solid var(--neon-color);
-  box-shadow: var(--neon-glow);
-}
-
-/* SHADOWED */
-body[card-style="shadowed"] .panel,
-body[card-style="shadowed"] .game-card {
-  border-radius: 12px;
-  background: var(--panel-bg);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--shadow-strong);
-}
-
-/* ============================================================
-   FONT STYLE SYSTEM
-============================================================ */
-body[font-style="modern"] {
-  font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica Neue, Arial;
-}
-
-body[font-style="classic"] {
-  font-family: Georgia, serif;
-}
-
-body[font-style="mono"] {
-  font-family: "Fira Code", "Courier New", monospace;
-}
-
-/* ============================================================
-   LAYOUT
-============================================================ */
 .page {
   max-width: 1200px;
   margin: auto;
   padding: 20px;
 }
 
+/* ============================================================
+   HEADER
+   ============================================================ */
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
-.logo {
-  height: 64px;
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.hidden {
-  display: none !important;
+.logo,
+.pride-logo {
+  height: 60px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.nav-row {
+  display: flex;
+  gap: 10px;
+}
+
+.user-indicator {
+  font-size: 14px;
+  opacity: 0.8;
 }
 
 /* ============================================================
    BUTTONS
-============================================================ */
+   ============================================================ */
+
+button,
 .btn {
-  padding: 8px 14px;
-  border-radius: 8px;
+  background: var(--accent-color);
+  color: #fff;
   border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   transition: 0.2s;
 }
 
-.btn.primary {
-  background: var(--primary-color);
-  color: #fff;
-}
-
-.btn.secondary {
-  background: var(--accent-color);
-  color: #fff;
-}
-
-.btn.ghost {
-  background: transparent;
-  border: 1px solid var(--card-border);
-  color: #9aa3ad;
-}
-
-.btn.danger {
-  background: #ef4444;
-  color: #fff;
-}
-
+button:hover,
 .btn:hover {
   opacity: 0.85;
 }
 
-/* ============================================================
-   FORM ELEMENTS
-============================================================ */
-label {
-  display: block;
-  font-size: 13px;
-  color: #9aa3ad;
-  margin-top: 12px;
-  margin-bottom: 4px;
+.btn.ghost {
+  background: transparent;
+  border: 1px solid var(--accent-color);
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="color"],
+.btn.secondary {
+  background: var(--secondary-color);
+}
+
+/* ============================================================
+   INPUTS + SELECTS
+   ============================================================ */
+
+input,
 select,
 textarea {
-  width: 100%;
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--card-border);
+  background: var(--panel-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
   border-radius: 6px;
-  color: #e6eef6;
-  font-size: 14px;
+  width: 100%;
+  margin-top: 6px;
+  margin-bottom: 12px;
   font-family: inherit;
-  transition: border-color 0.2s;
+  font-size: 14px;
 }
 
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
+select option {
+  background: var(--panel-bg);
+  color: var(--text-color);
+}
+
+input:focus,
 select:focus,
 textarea:focus {
-  outline: none;
-  border-color: var(--accent-color);
-}
-
-input[type="color"] {
-  padding: 2px 4px;
-  height: 36px;
-  cursor: pointer;
-}
-
-select {
-  cursor: pointer;
-}
-
-textarea {
-  resize: vertical;
-  min-height: 100px;
+  outline: 2px solid var(--accent-color);
 }
 
 /* ============================================================
-   PANELS + CARDS — BASE STYLES
-============================================================ */
+   PANELS + CARDS
+   ============================================================ */
+
 .panel,
-.game-card {
-  padding: 16px;
+.card {
   background: var(--panel-bg);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  transition: 0.25s;
+  padding: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(12px);
+}
+
+body[card-style="solid"] .panel,
+body[card-style="solid"] .card {
+  background: var(--secondary-color);
+}
+
+body[card-style="rounded"] .panel,
+body[card-style="rounded"] .card {
+  border-radius: 20px;
 }
 
 /* ============================================================
-   GAME CARDS
-============================================================ */
+   MAIN / SECTIONS
+   ============================================================ */
+
+.main {
+  margin-bottom: 40px;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+/* ============================================================
+   GAME GRID
+   ============================================================ */
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
 .game-card {
   display: block;
-  color: inherit;
   text-decoration: none;
-  cursor: pointer;
-}
-
-.game-card:hover {
-  opacity: 0.9;
+  color: var(--text-color);
+  max-width: 400px;
 }
 
 .game-image {
   width: 100%;
-  max-width: 220px;
-  margin: 0 auto;
-  display: block;
+  height: auto;
+  object-fit: cover;
   border-radius: 8px;
+  display: block;
+}
+
+.game-info {
+  margin-top: 10px;
 }
 
 /* ============================================================
-   GRID SYSTEM
-============================================================ */
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
+   PREVIEW BOX (SETTINGS)
+   ============================================================ */
 
-.settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.section-title {
-  font-size: 24px;
-  margin-bottom: 16px;
-}
-
-.small {
-  font-size: 13px;
-  color: #9aa3ad;
-}
-
-.small.ok {
-  color: #4ade80;
-}
-
-.small.err {
-  color: #f87171;
-}
-
-.small.muted {
-  color: #9aa3ad;
+#preview-box {
+  width: 100%;
+  height: 120px;
+  border: 2px solid var(--accent-color);
+  border-radius: 12px;
+  background: var(--panel-bg);
+  margin-top: 20px;
+  transition: 0.2s ease;
 }
 
 /* ============================================================
    AUTH MODAL
-============================================================ */
+   ============================================================ */
+
 .auth-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 50;
 }
 
 .auth-card {
-  background: var(--panel-bg);
-  padding: 24px;
-  border-radius: 12px;
-  width: 320px;
-  border: 1px solid var(--card-border);
-}
-
-.form-group {
-  margin-bottom: 12px;
-}
-
-.auth-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.auth-message {
-  margin-top: 10px;
-  font-size: 13px;
-  color: #f87171;
+  width: 100%;
+  max-width: 400px;
 }
 
 /* ============================================================
-   USER INDICATOR
-============================================================ */
-.user-indicator {
-  font-size: 13px;
-  color: #9aa3ad;
+   FORM GROUPS
+   ============================================================ */
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  font-size: 14px;
+  opacity: 0.85;
 }
 
 /* ============================================================
    DEBUG PANEL
-============================================================ */
+   ============================================================ */
+
 .debug-panel {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 360px;
-  max-height: 60vh;
+  bottom: 0;
+  right: 0;
+  width: 320px;
+  height: 200px;
+  background: var(--panel-bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 12px 12px 0 0;
+  padding: 10px;
   overflow-y: auto;
-  background: rgba(0,0,0,0.75);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 12px;
-  font-size: 12px;
-  z-index: 100;
-  color: #cfe8ff;
+  color: var(--text-color);
+  font-size: 13px;
+  white-space: pre-wrap;
 }
 
 /* ============================================================
    FOOTER
-============================================================ */
+   ============================================================ */
+
 .footer {
   margin-top: 40px;
   text-align: center;
-  color: #9aa3ad;
-  font-size: 14px;
+  opacity: 0.7;
 }
 
 .footer-links-row {
@@ -361,25 +308,30 @@ textarea {
   gap: 20px;
 }
 
-.footer-links-row a {
-  color: #9aa3ad;
-  text-decoration: none;
-}
-
-.footer-links-row a:hover {
-  color: var(--accent-color);
-}
-
 .footer-links {
   margin-top: 20px;
 }
 
-.footer-links ul {
-  list-style: none;
-  padding: 0;
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+
+.hidden {
+  display: none !important;
 }
 
-.footer-links a {
-  color: var(--accent-color);
-  text-decoration: none;
+.small {
+  font-size: 13px;
+}
+
+.small.ok {
+  color: #00ff99;
+}
+
+.small.err {
+  color: #ff4444;
+}
+
+.small.muted {
+  opacity: 0.6;
 }
