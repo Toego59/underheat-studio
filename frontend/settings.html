@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Settings — UNDERHEAT Studio</title>
 
-  <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="style.css">
-
-  <!-- Theme loads BEFORE render -->
   <script src="theme.js"></script>
 </head>
 
@@ -18,172 +15,92 @@
     <!-- HEADER -->
     <header class="header">
       <div class="logo-container">
-        <img src="assets/logo.png" alt="UNDERHEAT" class="logo" id="main-logo">
-        <img src="assets/pride-logo.png" alt="UNDERHEAT PRIDE" class="pride-logo hidden" id="pride-logo">
+        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
       </div>
 
       <nav class="nav">
-        <span id="user-indicator" class="user-indicator"></span>
-
-        <div class="nav-row">
-          <button onclick="window.location.href='index.html'" class="btn ghost">Home</button>
-          <button onclick="window.location.href='admin.html'" id="adminBtn" class="btn ghost hidden">Admin</button>
-        </div>
-
-        <div class="nav-row">
-          <button id="logoutBtn" class="btn ghost hidden">Logout</button>
-          <button id="loginBtn" class="btn primary">Login</button>
-        </div>
+        <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
       </nav>
     </header>
 
-    <!-- AUTH MODAL -->
-    <section id="auth" class="auth-modal hidden">
-      <div class="auth-card panel">
-        <h2 id="auth-title">Login</h2>
-
-        <div class="form-group">
-          <label>Username</label>
-          <input id="username" type="text" placeholder="Username">
-        </div>
-
-        <div class="form-group">
-          <label>Password</label>
-          <input id="password" type="password" placeholder="Password">
-        </div>
-
-        <div class="auth-actions">
-          <button id="auth-action" class="btn primary">Login</button>
-          <button id="auth-toggle" class="btn ghost">Switch to Register</button>
-          <button id="auth-cancel" class="btn ghost">Cancel</button>
-        </div>
-
-        <div id="auth-message" class="auth-message"></div>
-      </div>
-    </section>
-
-    <!-- SETTINGS PAGE -->
+    <!-- MAIN -->
     <main class="main">
 
-      <!-- COLORS -->
       <section class="panel">
-        <h2>Colors</h2>
+        <h2>Site Customization</h2>
+        <p class="small muted">Your theme applies across the entire site</p>
+
+        <!-- COLOR SETTINGS -->
+        <h3 class="section-title">Colors</h3>
 
         <div class="form-group">
-          <label>Primary Color</label>
-          <input type="color" id="primary-color">
-        </div>
-
-        <div class="form-group">
-          <label>Secondary Color</label>
-          <input type="color" id="secondary-color">
-        </div>
-
-        <div class="form-group">
-          <label>Accent Color</label>
+          <label for="accent-color">Accent Color</label>
           <input type="color" id="accent-color">
         </div>
 
         <div class="form-group">
-          <label>Background Color</label>
+          <label for="background-color">Background Color</label>
           <input type="color" id="background-color">
         </div>
 
         <div class="form-group">
-          <label>Neon Color</label>
-          <input type="color" id="neon-color">
+          <label for="text-color">Text Color</label>
+          <input type="color" id="text-color">
         </div>
 
-        <button id="reset-colors" class="btn secondary">Reset Colors</button>
-      </section>
-
-      <!-- STYLES -->
-      <section class="panel">
-        <h2>Styles</h2>
+        <!-- CARD STYLE -->
+        <h3 class="section-title">Card Style</h3>
 
         <div class="form-group">
-          <label>Card Style</label>
+          <label for="card-style">Choose Card Style</label>
           <select id="card-style">
-            <option value="glass">Glass</option>
+            <option value="default">Default</option>
             <option value="solid">Solid</option>
             <option value="rounded">Rounded</option>
           </select>
         </div>
 
+        <!-- FONT STYLE -->
+        <h3 class="section-title">Font Style</h3>
+
         <div class="form-group">
-          <label>Font Style</label>
+          <label for="font-style">Choose Font Style</label>
           <select id="font-style">
-            <option value="modern">Modern</option>
-            <option value="retro">Retro</option>
-            <option value="serif">Serif</option>
+            <option value="modern">Modern (Inter)</option>
+            <option value="retro">Retro (Courier)</option>
+            <option value="serif">Serif (Georgia)</option>
           </select>
         </div>
 
+        <!-- UI SCALE -->
+        <h3 class="section-title">UI Scale</h3>
+
         <div class="form-group">
-          <label>UI Scale</label>
-          <input type="range" id="ui-scale" min="0.7" max="1.5" step="0.01">
+          <label for="ui-scale">Scale (0.8 – 1.4)</label>
+          <input type="range" id="ui-scale" min="0.8" max="1.4" step="0.01">
         </div>
-      </section>
 
-      <!-- PREVIEW -->
-      <section class="panel">
-        <h2>Preview</h2>
+        <!-- PREVIEW -->
+        <h3 class="section-title">Preview</h3>
         <div id="preview-box"></div>
-      </section>
 
-      <!-- PRESETS -->
-      <section class="panel">
-        <h2>Presets</h2>
-
-        <div class="nav-row">
-          <button id="preset-default" class="btn secondary">Default</button>
-          <button id="preset-dark" class="btn secondary">Dark Mode</button>
-          <button id="preset-green" class="btn secondary">Green Tech</button>
-          <button id="preset-pink" class="btn secondary">Pink Neon</button>
+        <!-- ACTIONS -->
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+          <button id="save-settings" class="btn primary">Save Settings</button>
+          <button id="reset-settings" class="btn ghost">Reset to Default</button>
         </div>
-      </section>
 
-      <!-- RESET ALL -->
-      <section class="panel">
-        <h2>Reset Everything</h2>
-        <button id="reset-all" class="btn ghost" style="border-color:#ff4444;color:#ff4444;">Reset All Settings</button>
       </section>
 
     </main>
 
-    <!-- DEBUG PANEL -->
-    <div id="debug-panel" class="debug-panel hidden"></div>
-
     <!-- FOOTER -->
     <footer class="footer">
-      <p>© 2026 UNDERHEAT Studio. All rights reserved.</p>
-
-      <div class="footer-links-row">
-        <a href="tos.html">Terms of Service</a>
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="feedback.html">Feedback</a>
-      </div>
-
-      <div class="footer-links">
-        <h3>Net Neighbors</h3>
-        <ul>
-          <li><a href="https://webamp.org/" target="_blank" rel="noreferrer noopener">Webamp</a></li>
-        </ul>
-      </div>
+      <p>© 2026 UNDERHEAT Studio</p>
     </footer>
 
   </div>
 
-  <!-- PRIDE MONTH LOGIC -->
-  <script>
-    const month = new Date().getMonth();
-    if (month === 5) {
-      document.getElementById("main-logo").classList.add("hidden");
-      document.getElementById("pride-logo").classList.remove("hidden");
-    }
-  </script>
-
-  <script src="index.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>

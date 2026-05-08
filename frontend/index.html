@@ -12,7 +12,7 @@
   <script src="theme.js"></script>
 
   <!-- Webamp -->
-  <script src="https://unpkg.com/webamp@2.2.0/built/webamp.bundle.min.js"></script>
+ <script src="https://unpkg.com/webamp@1.4.0/built/webamp.bundle.min.js"></script>
 </head>
 
 <body>
@@ -144,11 +144,12 @@
     const prideLogo = document.getElementById("pride-logo");
 
     if (month === 5) {
-      mainLogo.classList.add("hidden");
-      prideLogo.classList.remove("hidden");
+      if (mainLogo) mainLogo.classList.add("hidden");
+      if (prideLogo) prideLogo.classList.remove("hidden");
     }
   </script>
 
+  <!-- MAIN SITE LOGIC -->
   <script src="index.js"></script>
 </body>
 </html>

@@ -1,284 +1,273 @@
-// ============================================================
-// UNDERHEAT STUDIO — INDEX PAGE LOGIC
-// ============================================================
+// UNDERHEAT Studio — Full Auth + Role System + Founder-Only Webamp
 
-// Auto backend detection
-const API_BASE =
-  location.hostname === "127.0.0.1" || location.hostname === "localhost"
-    ? "http://127.0.0.1:4000/api"
-    : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("INDEX.JS: Loaded");
 
-// DOM elements
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const settingsBtn = document.getElementById("settingsBtn");
-const adminBtn = document.getElementById("adminBtn");
-const userIndicator = document.getElementById("user-indicator");
+  // -----------------------------
+  // ELEMENTS
+  // -----------------------------
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const adminBtn = document.getElementById("adminBtn");
+  const feedbackBtn = document.getElementById("feedbackBtn");
+  const userIndicator = document.getElementById("user-indicator");
 
-const authModal = document.getElementById("auth");
-const authTitle = document.getElementById("auth-title");
-const authAction = document.getElementById("auth-action");
-const authToggle = document.getElementById("auth-toggle");
-const authCancel = document.getElementById("auth-cancel");
-const authMessage = document.getElementById("auth-message");
+  const auth = document.getElementById("auth");
+  const authTitle = document.getElementById("auth-title");
+  const authAction = document.getElementById("auth-action");
+  const authToggle = document.getElementById("auth-toggle");
+  const authCancel = document.getElementById("auth-cancel");
+  const authMessage = document.getElementById("auth-message");
 
-const usernameInput = document.getElementById("username");
-const passwordInput = document.getElementById("password");
+  const username = document.getElementById("username");
+  const password = document.getElementById("password");
 
-const gatedContent = document.getElementById("gated-content");
+  const gated = document.getElementById("gated-content");
+  const debug = document.getElementById("debug-panel");
 
-// Webamp
-const webampToggle = document.getElementById("webamp-toggle");
-const webampContainer = document.getElementById("webamp-container");
-let webampInstance = null;
+  // Webamp
+  const webampToggle = document.getElementById("webamp-toggle");
+  const webampContainer = document.getElementById("webamp-container");
+  let webamp = null;
 
-// ============================================================
-// USER STATE
-// ============================================================
+  // -----------------------------
+  // STATE
+  // -----------------------------
+  let mode = "login";
+  let currentUser = null;
+  let token = localStorage.getItem("token") || null;
 
-let currentUser = null;
-try {
-  currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-} catch {
-  currentUser = null;
-}
+  const API = "/api/auth";
 
-// ============================================================
-// USERNAME VALIDATION (letters, numbers, ' only)
-// ============================================================
-
-function isValidUsername(name) {
-  return /^[A-Za-z0-9']+$/.test(name);
-}
-
-// ============================================================
-// UPDATE UI BASED ON LOGIN STATE
-// ============================================================
-
-function updateUI() {
-  if (currentUser) {
-    userIndicator.textContent = `Logged in as ${currentUser.username}`;
-    if (loginBtn) loginBtn.classList.add("hidden");
-    if (logoutBtn) logoutBtn.classList.remove("hidden");
-    if (settingsBtn) settingsBtn.classList.remove("hidden");
-    if (gatedContent) gatedContent.classList.remove("hidden");
-
-    if (adminBtn) {
-      if (currentUser.role === "admin" || currentUser.role === "founder") {
-        adminBtn.classList.remove("hidden");
-      } else {
-        adminBtn.classList.add("hidden");
-      }
-    }
-  } else {
-    userIndicator.textContent = "";
-    if (loginBtn) loginBtn.classList.remove("hidden");
-    if (logoutBtn) logoutBtn.classList.add("hidden");
-    if (settingsBtn) settingsBtn.classList.add("hidden");
-    if (adminBtn) adminBtn.classList.add("hidden");
-    if (gatedContent) gatedContent.classList.add("hidden");
-  }
-}
-
-updateUI();
-
-// ============================================================
-// AUTH MODAL OPEN/CLOSE
-// ============================================================
-
-if (loginBtn) {
-  loginBtn.onclick = () => {
-    if (!authModal) return;
-    authModal.classList.remove("hidden");
-    authTitle.textContent = "Login";
-    authAction.textContent = "Login";
-    authToggle.textContent = "Switch to Register";
+  // -----------------------------
+  // HELPERS
+  // -----------------------------
+  function showAuth(newMode) {
+    mode = newMode;
+    auth.classList.remove("hidden");
     authMessage.textContent = "";
-  };
-}
+    username.value = "";
+    password.value = "";
 
-if (authCancel) {
-  authCancel.onclick = () => {
-    authModal.classList.add("hidden");
-    authMessage.textContent = "";
-  };
-}
-
-// ============================================================
-// LOGIN / REGISTER TOGGLE
-// ============================================================
-
-let isRegistering = false;
-
-if (authToggle) {
-  authToggle.onclick = () => {
-    isRegistering = !isRegistering;
-
-    if (isRegistering) {
-      authTitle.textContent = "Register";
-      authAction.textContent = "Create Account";
-      authToggle.textContent = "Switch to Login";
-    } else {
+    if (mode === "login") {
       authTitle.textContent = "Login";
       authAction.textContent = "Login";
       authToggle.textContent = "Switch to Register";
+    } else {
+      authTitle.textContent = "Register";
+      authAction.textContent = "Register";
+      authToggle.textContent = "Switch to Login";
     }
-
-    authMessage.textContent = "";
-  };
-}
-
-// ============================================================
-// LOGIN / REGISTER ACTION
-// ============================================================
-
-if (authAction) {
-  authAction.onclick = async () => {
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!username || !password) {
-      authMessage.textContent = "Fill out all fields.";
-      authMessage.className = "small err";
-      return;
-    }
-
-    if (isRegistering && !isValidUsername(username)) {
-      authMessage.textContent = "Username can only contain letters, numbers, and '";
-      authMessage.className = "small err";
-      return;
-    }
-
-    authMessage.textContent = "Processing...";
-    authMessage.className = "small muted";
-
-    try {
-      const endpoint = isRegistering ? "/register" : "/login";
-
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        authMessage.textContent = data.message || "Authentication failed.";
-        authMessage.className = "small err";
-        return;
-      }
-
-      currentUser = {
-        username: data.username,
-        role: data.role,
-        password
-      };
-
-      localStorage.setItem("currentUser", JSON.stringify(currentUser));
-
-      authModal.classList.add("hidden");
-      usernameInput.value = "";
-      passwordInput.value = "";
-
-      updateUI();
-
-    } catch (err) {
-      authMessage.textContent = "Network error.";
-      authMessage.className = "small err";
-    }
-  };
-}
-
-// ============================================================
-// LOGOUT
-// ============================================================
-
-if (logoutBtn) {
-  logoutBtn.onclick = () => {
-    localStorage.removeItem("currentUser");
-    currentUser = null;
-    updateUI();
-  };
-}
-
-// ============================================================
-// WEBAMP PLAYER (WITH YOUR SKIN)
-// ============================================================
-
-function createWebamp() {
-  if (typeof Webamp === "undefined") {
-    console.warn("Webamp bundle not loaded.");
-    return;
   }
 
-  webampInstance = new Webamp({
-    initialTracks: [
-      {
-        metaData: { title: "Shout" },
-        url: "assets/shout.mp3"
+  function hideAuth() {
+    auth.classList.add("hidden");
+  }
+
+  async function api(path, method = "GET", body = null) {
+    const opts = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
       }
-    ],
-    initialSkin: {
-      // your actual skin file
-      url: "assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
-      // if Cloudflare/host blocks .wsz, rename to .zip and use:
-      // url: "assets/Fallout_Pip-Boy_3000_Amber_v4.zip"
+    };
+
+    if (token) {
+      opts.headers["Authorization"] = `Bearer ${token}`;
     }
-  });
 
-  webampInstance.renderWhenReady(webampContainer);
+    if (body) {
+      opts.body = JSON.stringify(body);
+    }
 
-  webampInstance.onClose(() => {
-    webampInstance = null;
-    if (webampContainer) webampContainer.classList.add("hidden");
-    if (webampToggle) webampToggle.textContent = "Show Webamp Player";
-  });
-}
+    const res = await fetch(path, opts);
+    return res.json();
+  }
 
-if (webampToggle && webampContainer) {
-  webampToggle.onclick = () => {
-    if (webampInstance) {
-      webampInstance.dispose();
-      webampInstance = null;
+  // -----------------------------
+  // WEBAMP — Founder Only
+  // -----------------------------
+  function updateWebampVisibility() {
+    if (!currentUser || currentUser.role !== "founder") {
+      webampToggle.classList.add("hidden");
+      webampContainer.classList.add("hidden");
+
+      if (webamp) {
+        webamp.dispose();
+        webamp = null;
+      }
+      return;
+    }
+
+    webampToggle.classList.remove("hidden");
+  }
+
+  async function initWebamp() {
+    if (webamp) {
+      webamp.dispose();
+      webamp = null;
+    }
+
+    webamp = new Webamp({
+      initialTracks: [
+        {
+          url: "assets/shout.mp3",
+          metaData: { title: "Shout" }
+        }
+      ],
+      initialSkin: {
+        url: "assets/skin.wsz"
+      }
+    });
+
+    await webamp.renderWhenReady(webampContainer);
+    webampContainer.classList.remove("hidden");
+  }
+
+  webampToggle.addEventListener("click", () => {
+    if (!currentUser || currentUser.role !== "founder") return;
+
+    if (!webamp) {
+      initWebamp();
+      webampToggle.textContent = "Hide Webamp Player";
+    } else {
+      webamp.dispose();
+      webamp = null;
       webampContainer.classList.add("hidden");
       webampToggle.textContent = "Show Webamp Player";
+    }
+  });
+
+  // -----------------------------
+  // UI UPDATE
+  // -----------------------------
+  function updateUI() {
+    if (!currentUser) {
+      userIndicator.textContent = "";
+      loginBtn.classList.remove("hidden");
+      logoutBtn.classList.add("hidden");
+      settingsBtn.classList.add("hidden");
+      adminBtn.classList.add("hidden");
+      gated.classList.add("hidden");
+      debug.classList.add("hidden");
+      updateWebampVisibility();
       return;
     }
 
-    createWebamp();
-    if (webampInstance) {
-      webampContainer.classList.remove("hidden");
-      webampToggle.textContent = "Hide Webamp Player";
+    userIndicator.textContent = `${currentUser.email} (${currentUser.role})`;
+
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+    settingsBtn.classList.remove("hidden");
+    gated.classList.remove("hidden");
+
+    if (currentUser.role === "founder" || currentUser.role === "admin") {
+      adminBtn.classList.remove("hidden");
+      debug.classList.remove("hidden");
+      debug.textContent = `Admin mode active\nRole: ${currentUser.role}`;
+    } else {
+      adminBtn.classList.add("hidden");
+      debug.classList.add("hidden");
     }
-  };
-}
 
-// ============================================================
-// GLOBAL DEBUG PANEL SYNC
-// ============================================================
+    updateWebampVisibility();
+  }
 
-(function () {
-  const panel = document.getElementById("debug-panel");
-  if (!panel) return;
+  // -----------------------------
+  // AUTH ACTIONS
+  // -----------------------------
+  async function doLogin() {
+    const email = username.value.trim();
+    const pass = password.value.trim();
 
-  function readDebugLog() {
-    try {
-      return JSON.parse(localStorage.getItem("debug_log") || "[]");
-    } catch {
-      return [];
+    if (!email || !pass) {
+      authMessage.textContent = "Enter email and password.";
+      return;
+    }
+
+    const result = await api(`${API}/login`, "POST", {
+      email,
+      password: pass
+    });
+
+    if (!result.success) {
+      authMessage.textContent = result.message || "Login failed.";
+      return;
+    }
+
+    token = result.token;
+    localStorage.setItem("token", token);
+    currentUser = result.user;
+
+    hideAuth();
+    updateUI();
+  }
+
+  async function doRegister() {
+    const email = username.value.trim();
+    const pass = password.value.trim();
+
+    if (!email || !pass) {
+      authMessage.textContent = "Enter email and password.";
+      return;
+    }
+
+    const result = await api(`${API}/register`, "POST", {
+      email,
+      password: pass
+    });
+
+    if (!result.success) {
+      authMessage.textContent = result.message || "Registration failed.";
+      return;
+    }
+
+    token = result.token;
+    localStorage.setItem("token", token);
+    currentUser = result.user;
+
+    hideAuth();
+    updateUI();
+  }
+
+  async function restoreSession() {
+    if (!token) return;
+
+    const result = await api(`${API}/session`);
+    if (result.success) {
+      currentUser = result.user;
+      updateUI();
+    } else {
+      localStorage.removeItem("token");
+      token = null;
     }
   }
 
-  function renderDebugPanel() {
-    const visible = localStorage.getItem("debug_visible") === "1";
-    panel.classList.toggle("hidden", !visible);
-    if (!visible) return;
+  // -----------------------------
+  // EVENT LISTENERS
+  // -----------------------------
+  loginBtn.addEventListener("click", () => showAuth("login"));
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    token = null;
+    currentUser = null;
+    updateUI();
+  });
 
-    const arr = readDebugLog();
-    panel.textContent = arr.length ? arr.join("\n") : "(debug empty)";
-  }
+  authCancel.addEventListener("click", hideAuth);
 
-  window.addEventListener("storage", renderDebugPanel);
-  renderDebugPanel();
-})();
+  authToggle.addEventListener("click", () => {
+    showAuth(mode === "login" ? "register" : "login");
+  });
+
+  authAction.addEventListener("click", () => {
+    if (mode === "login") doLogin();
+    else doRegister();
+  });
+
+  // -----------------------------
+  // INITIAL LOAD
+  // -----------------------------
+  restoreSession();
+});

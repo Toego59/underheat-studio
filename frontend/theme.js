@@ -19,8 +19,12 @@ const DEFAULTS = {
 
 // Load settings from localStorage
 function loadSettings() {
-  const saved = JSON.parse(localStorage.getItem("uh_settings") || "{}");
-  return { ...DEFAULTS, ...saved };
+  try {
+    const saved = JSON.parse(localStorage.getItem("uh_settings") || "{}");
+    return { ...DEFAULTS, ...saved };
+  } catch {
+    return { ...DEFAULTS };
+  }
 }
 
 // Apply settings to the page
@@ -34,7 +38,7 @@ function applyTheme() {
   root.style.setProperty("--background-color", s.background);
   root.style.setProperty("--neon-color", s.neon);
 
-  // UI scale (CSS handles it safely)
+  // UI scale
   root.style.setProperty("--ui-scale", s.uiScale);
 
   // Card + font styles

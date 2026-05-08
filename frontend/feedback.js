@@ -1,122 +1,59 @@
-// ============================================================
-// UNDERHEAT STUDIO — FEEDBACK / FORM SYSTEM
-// ============================================================
+// UNDERHEAT Studio — Feedback System (Local Storage + Clean UI)
 
-// Auto backend detection
-const API_BASE =
-  location.hostname === "127.0.0.1" || location.hostname === "localhost"
-    ? "http://127.0.0.1:4000/api"
-    : "https://cold-cell-aa07.jkmeiihh.workers.dev/api";
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("FEEDBACK.JS: Loaded");
 
-// DOM elements
-const fbForm = document.getElementById("feedback-form");
-const fbUsernameGroup = document.getElementById("fb-username-group");
-const fbUsername = document.getElementById("fb-username");
-const fbEmail = document.getElementById("fb-email");
-const fbMessage = document.getElementById("fb-message");
-const fbMsg = document.getElementById("fb-msg");
+  // -----------------------------
+  // ELEMENTS
+  // -----------------------------
+  const nameInput = document.getElementById("fb-name");
+  const emailInput = document.getElementById("fb-email");
+  const typeSelect = document.getElementById("fb-type");
+  const messageInput = document.getElementById("fb-message");
+  const submitBtn = document.getElementById("fb-submit");
+  const statusBox = document.getElementById("fb-status");
 
-// Load current user
-let currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-
-// ============================================================
-// LOGGED-IN BEHAVIOR
-// ============================================================
-
-if (currentUser && currentUser.username) {
-  fbUsernameGroup.classList.add("hidden");
-}
-
-// ============================================================
-// USERNAME VALIDATION
-// Allowed: A–Z, a–z, 0–9, '
-// ============================================================
-
-function isValidUsername(name) {
-  return /^[A-Za-z0-9']+$/.test(name);
-}
-
-// ============================================================
-// MESSAGE SANITIZATION
-// (Prevents HTML injection, keeps text safe)
-// ============================================================
-
-function sanitizeMessage(msg) {
-  return msg.replace(/[<>]/g, "");
-}
-
-// ============================================================
-// SUBMIT FEEDBACK
-// ============================================================
-
-fbForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const username = currentUser && currentUser.username
-    ? currentUser.username
-    : fbUsername.value.trim();
-
-  const email = fbEmail.value.trim();
-  const message = sanitizeMessage(fbMessage.value.trim());
-
-  // Required fields
-  if (!username || !email || !message) {
-    fbMsg.textContent = "Please fill out all fields.";
-    fbMsg.className = "small err";
-    return;
+  // -----------------------------
+  // SAVE FEEDBACK LOCALLY
+  // -----------------------------
+  function saveFeedback(entry) {
+    const existing = JSON.parse(localStorage.getItem("feedback") || "[]");
+    existing.push(entry);
+    localStorage.setItem("feedback", JSON.stringify(existing));
   }
 
-  // Username rules
-  if (!isValidUsername(username)) {
-    fbMsg.textContent = "Username can only contain letters, numbers, and '";
-    fbMsg.className = "small err";
-    return;
-  }
+  // -----------------------------
+  // SUBMIT HANDLER
+  // -----------------------------
+  submitBtn.addEventListener("click", () => {
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const type = typeSelect.value;
+    const message = messageInput.value.trim();
 
-  fbMsg.textContent = "Sending...";
-  fbMsg.className = "small muted";
-
-  try {
-    const res = await fetch(`${API_BASE}/feedback`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, message })
-    });
-
-    const data = await res.json();
-
-    if (!data.success) {
-      fbMsg.textContent = data.message || "Failed to send feedback.";
-      fbMsg.className = "small err";
+    if (!message) {
+      statusBox.textContent = "Please enter a message.";
+      statusBox.style.color = "var(--accent-color)";
       return;
     }
 
-    // ============================================================
-    // LOCAL SUBMISSIONS (for admin viewer)
-    // ============================================================
-
-    const subs = JSON.parse(localStorage.getItem("submissions") || "[]");
-
-    subs.push({
-      username,
-      email,
+    const entry = {
+      name: name || "Anonymous",
+      email: email || "Not provided",
+      type,
       message,
-      timestamp: Date.now()
-    });
+      date: new Date().toISOString()
+    };
 
-    localStorage.setItem("submissions", JSON.stringify(subs));
+    saveFeedback(entry);
 
-    fbMsg.textContent = "Feedback sent. Thank you.";
-    fbMsg.className = "small ok";
+    statusBox.textContent = "Feedback submitted. Thank you!";
+    statusBox.style.color = "var(--accent-color)";
 
-    // Clear message field
-    fbMessage.value = "";
-
-    // Clear username if not logged in
-    if (!currentUser) fbUsername.value = "";
-
-  } catch (err) {
-    fbMsg.textContent = "Network error.";
-    fbMsg.className = "small err";
-  }
+    // Clear fields
+    nameInput.value = "";
+    emailInput.value = "";
+    messageInput.value = "";
+    typeSelect.value = "General Feedback";
+  });
 });

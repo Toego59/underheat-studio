@@ -1,214 +1,158 @@
-// ============================================================
-// UNDERHEAT STUDIO — SETTINGS SYSTEM
-// ============================================================
+// UNDERHEAT Studio — Full Settings System (Theme, Colors, UI Scale, Fonts, Cards)
 
-const root = document.documentElement;
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("SETTINGS.JS: Loaded");
 
-// Default fallback values
-const DEFAULTS = {
-  primary: "#ff5500",
-  secondary: "#333333",
-  accent: "#ff5500",
-  background: "#1a1a1a",
-  neon: "#00ffff",
-  cardStyle: "glass",
-  fontStyle: "modern",
-  uiScale: "1"
-};
+  // -----------------------------
+  // ELEMENTS
+  // -----------------------------
+  const accentInput = document.getElementById("accent-color");
+  const bgInput = document.getElementById("background-color");
+  const textInput = document.getElementById("text-color");
 
-// ============================================================
-// LOAD + SAVE SETTINGS
-// ============================================================
+  const cardStyleSelect = document.getElementById("card-style");
+  const fontStyleSelect = document.getElementById("font-style");
+  const uiScaleInput = document.getElementById("ui-scale");
 
-function loadSettings() {
-  const saved = JSON.parse(localStorage.getItem("uh_settings") || "{}");
-  return { ...DEFAULTS, ...saved };
-}
+  const preview = document.getElementById("preview-box");
 
-function saveSettings(settings) {
-  localStorage.setItem("uh_settings", JSON.stringify(settings));
+  const saveBtn = document.getElementById("save-settings");
+  const resetBtn = document.getElementById("reset-settings");
 
-  // Sync across tabs/pages
-  localStorage.setItem("uh_settings_updated", Date.now().toString());
-
-  applySettings(settings);
-}
-
-// ============================================================
-// APPLY SETTINGS TO PAGE
-// ============================================================
-
-function applySettings(s) {
-  // Colors
-  root.style.setProperty("--primary-color", s.primary);
-  root.style.setProperty("--secondary-color", s.secondary);
-  root.style.setProperty("--accent-color", s.accent);
-  root.style.setProperty("--background-color", s.background);
-  root.style.setProperty("--neon-color", s.neon);
-
-  // UI scale
-  root.style.setProperty("--ui-scale", s.uiScale);
-
-  // Card + font styles
-  document.body.setAttribute("card-style", s.cardStyle);
-  document.body.setAttribute("font-style", s.fontStyle);
-
-  updatePreview();
-}
-
-// ============================================================
-// PREVIEW BOX
-// ============================================================
-
-function updatePreview() {
-  const box = document.getElementById("preview-box");
-  if (!box) return;
-
-  const panelBg = getComputedStyle(root).getPropertyValue("--panel-bg").trim();
-  const accent = getComputedStyle(root).getPropertyValue("--accent-color").trim();
-
-  box.style.background = panelBg;
-  box.style.borderColor = accent;
-}
-
-// ============================================================
-// BIND COLOR PICKERS
-// ============================================================
-
-function bindColor(id, key) {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  const settings = loadSettings();
-  el.value = settings[key];
-
-  el.addEventListener("input", () => {
-    const s = loadSettings();
-    s[key] = el.value;
-    saveSettings(s);
-  });
-}
-
-bindColor("primary-color", "primary");
-bindColor("secondary-color", "secondary");
-bindColor("accent-color", "accent");
-bindColor("background-color", "background");
-bindColor("neon-color", "neon");
-
-// ============================================================
-// BIND SELECTS
-// ============================================================
-
-function bindSelect(id, key) {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  const settings = loadSettings();
-  el.value = settings[key];
-
-  el.addEventListener("change", () => {
-    const s = loadSettings();
-    s[key] = el.value;
-    saveSettings(s);
-  });
-}
-
-bindSelect("card-style", "cardStyle");
-bindSelect("font-style", "fontStyle");
-
-// ============================================================
-// UI SCALE
-// ============================================================
-
-const scaleEl = document.getElementById("ui-scale");
-if (scaleEl) {
-  const settings = loadSettings();
-  scaleEl.value = settings.uiScale;
-
-  scaleEl.addEventListener("input", (e) => {
-    const s = loadSettings();
-    s.uiScale = e.target.value;
-    saveSettings(s);
-  });
-}
-
-// ============================================================
-// PRESETS
-// ============================================================
-
-function applyPreset(values) {
-  const s = loadSettings();
-  Object.assign(s, values);
-  saveSettings(s);
-}
-
-document.getElementById("preset-default").onclick = () =>
-  applyPreset({
-    primary: "#ff5500",
-    secondary: "#333333",
+  // -----------------------------
+  // DEFAULT SETTINGS
+  // -----------------------------
+  const DEFAULTS = {
     accent: "#ff5500",
     background: "#1a1a1a",
-    neon: "#00ffff"
-  });
+    text: "#ffffff",
+    cardStyle: "default",
+    fontStyle: "modern",
+    uiScale: 1
+  };
 
-document.getElementById("preset-dark").onclick = () =>
-  applyPreset({
-    primary: "#ffffff",
-    secondary: "#0f0f0f",
-    accent: "#ff0066",
-    background: "#000000",
-    neon: "#00ffff"
-  });
-
-document.getElementById("preset-green").onclick = () =>
-  applyPreset({
-    primary: "#00ff88",
-    secondary: "#0d1f0d",
-    accent: "#00cc66",
-    background: "#071407",
-    neon: "#00ffaa"
-  });
-
-document.getElementById("preset-pink").onclick = () =>
-  applyPreset({
-    primary: "#ff71ce",
-    secondary: "#2d1b3d",
-    accent: "#ff4fa3",
-    background: "#1a0f2e",
-    neon: "#ff99ff"
-  });
-
-// ============================================================
-// RESET BUTTONS
-// ============================================================
-
-document.getElementById("reset-colors").onclick = () => {
-  const s = loadSettings();
-  s.primary = DEFAULTS.primary;
-  s.secondary = DEFAULTS.secondary;
-  s.accent = DEFAULTS.accent;
-  s.background = DEFAULTS.background;
-  s.neon = DEFAULTS.neon;
-  saveSettings(s);
-};
-
-document.getElementById("reset-all").onclick = () => {
-  localStorage.removeItem("uh_settings");
-  location.reload();
-};
-
-// ============================================================
-// SYNC ACROSS TABS
-// ============================================================
-
-window.addEventListener("storage", () => {
-  if (localStorage.getItem("uh_settings_updated")) {
-    applySettings(loadSettings());
+  // -----------------------------
+  // LOAD SETTINGS
+  // -----------------------------
+  function loadSettings() {
+    return {
+      accent: localStorage.getItem("accent-color") || DEFAULTS.accent,
+      background: localStorage.getItem("background-color") || DEFAULTS.background,
+      text: localStorage.getItem("text-color") || DEFAULTS.text,
+      cardStyle: localStorage.getItem("card-style") || DEFAULTS.cardStyle,
+      fontStyle: localStorage.getItem("font-style") || DEFAULTS.fontStyle,
+      uiScale: parseFloat(localStorage.getItem("ui-scale")) || DEFAULTS.uiScale
+    };
   }
+
+  // -----------------------------
+  // APPLY SETTINGS TO PAGE
+  // -----------------------------
+  function applySettings(s) {
+    document.documentElement.style.setProperty("--accent-color", s.accent);
+    document.documentElement.style.setProperty("--background-color", s.background);
+    document.documentElement.style.setProperty("--text-color", s.text);
+
+    document.body.setAttribute("card-style", s.cardStyle);
+    document.body.setAttribute("font-style", s.fontStyle);
+
+    document.documentElement.style.setProperty("--ui-scale", s.uiScale);
+
+    updatePreview(s);
+  }
+
+  // -----------------------------
+  // UPDATE PREVIEW BOX
+  // -----------------------------
+  function updatePreview(s) {
+    if (!preview) return;
+
+    preview.style.borderColor = s.accent;
+    preview.style.background = s.background;
+    preview.style.color = s.text;
+  }
+
+  // -----------------------------
+  // SAVE SETTINGS
+  // -----------------------------
+  function saveSettings() {
+    const s = {
+      accent: accentInput.value,
+      background: bgInput.value,
+      text: textInput.value,
+      cardStyle: cardStyleSelect.value,
+      fontStyle: fontStyleSelect.value,
+      uiScale: parseFloat(uiScaleInput.value)
+    };
+
+    localStorage.setItem("accent-color", s.accent);
+    localStorage.setItem("background-color", s.background);
+    localStorage.setItem("text-color", s.text);
+    localStorage.setItem("card-style", s.cardStyle);
+    localStorage.setItem("font-style", s.fontStyle);
+    localStorage.setItem("ui-scale", s.uiScale);
+
+    applySettings(s);
+  }
+
+  // -----------------------------
+  // RESET SETTINGS
+  // -----------------------------
+  function resetSettings() {
+    Object.keys(DEFAULTS).forEach(key => {
+      localStorage.removeItem(key);
+    });
+
+    applySettings(DEFAULTS);
+
+    accentInput.value = DEFAULTS.accent;
+    bgInput.value = DEFAULTS.background;
+    textInput.value = DEFAULTS.text;
+    cardStyleSelect.value = DEFAULTS.cardStyle;
+    fontStyleSelect.value = DEFAULTS.fontStyle;
+    uiScaleInput.value = DEFAULTS.uiScale;
+  }
+
+  // -----------------------------
+  // LIVE PREVIEW
+  // -----------------------------
+  function livePreview() {
+    const s = {
+      accent: accentInput.value,
+      background: bgInput.value,
+      text: textInput.value,
+      cardStyle: cardStyleSelect.value,
+      fontStyle: fontStyleSelect.value,
+      uiScale: parseFloat(uiScaleInput.value)
+    };
+
+    updatePreview(s);
+  }
+
+  // -----------------------------
+  // INITIALIZE
+  // -----------------------------
+  const settings = loadSettings();
+
+  accentInput.value = settings.accent;
+  bgInput.value = settings.background;
+  textInput.value = settings.text;
+  cardStyleSelect.value = settings.cardStyle;
+  fontStyleSelect.value = settings.fontStyle;
+  uiScaleInput.value = settings.uiScale;
+
+  applySettings(settings);
+
+  // -----------------------------
+  // EVENT LISTENERS
+  // -----------------------------
+  accentInput.addEventListener("input", livePreview);
+  bgInput.addEventListener("input", livePreview);
+  textInput.addEventListener("input", livePreview);
+  cardStyleSelect.addEventListener("change", livePreview);
+  fontStyleSelect.addEventListener("change", livePreview);
+  uiScaleInput.addEventListener("input", livePreview);
+
+  saveBtn.addEventListener("click", saveSettings);
+  resetBtn.addEventListener("click", resetSettings);
 });
-
-// ============================================================
-// INIT
-// ============================================================
-
-applySettings(loadSettings());

@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Feedback / Contact — UNDERHEAT Studio</title>
+  <title>Feedback — UNDERHEAT Studio</title>
 
-  <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="style.css">
-
-  <!-- Theme loads BEFORE render -->
   <script src="theme.js"></script>
 </head>
 
@@ -18,115 +15,65 @@
     <!-- HEADER -->
     <header class="header">
       <div class="logo-container">
-        <img src="assets/logo.png" alt="UNDERHEAT" class="logo" id="main-logo">
-        <img src="assets/pride-logo.png" alt="UNDERHEAT PRIDE" class="pride-logo hidden" id="pride-logo">
+        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
       </div>
 
       <nav class="nav">
-        <span id="user-indicator" class="user-indicator"></span>
-
-        <div class="nav-row">
-          <button onclick="window.location.href='index.html'" class="btn ghost">Home</button>
-          <button onclick="window.location.href='settings.html'" class="btn ghost">Settings</button>
-          <button onclick="window.location.href='admin.html'" id="adminBtn" class="btn ghost hidden">Admin</button>
-        </div>
-
-        <div class="nav-row">
-          <button id="logoutBtn" class="btn ghost hidden">Logout</button>
-          <button id="loginBtn" class="btn primary">Login</button>
-        </div>
+        <button class="btn ghost" onclick="location.href='index.html'">← Back</button>
       </nav>
     </header>
 
-    <!-- AUTH MODAL -->
-    <section id="auth" class="auth-modal hidden">
-      <div class="auth-card panel">
-        <h2 id="auth-title">Login</h2>
-
-        <div class="form-group">
-          <label>Username</label>
-          <input id="username" type="text" placeholder="Username">
-        </div>
-
-        <div class="form-group">
-          <label>Password</label>
-          <input id="password" type="password" placeholder="Password">
-        </div>
-
-        <div class="auth-actions">
-          <button id="auth-action" class="btn primary">Login</button>
-          <button id="auth-toggle" class="btn ghost">Switch to Register</button>
-          <button id="auth-cancel" class="btn ghost">Cancel</button>
-        </div>
-
-        <div id="auth-message" class="auth-message"></div>
-      </div>
-    </section>
-
-    <!-- FEEDBACK FORM -->
+    <!-- MAIN -->
     <main class="main">
+
       <section class="panel">
-        <h2>Feedback / Form</h2>
-        <p class="small muted">We appreciate your thoughts, ideas, and bug reports.</p>
+        <h2>Feedback</h2>
+        <p class="small muted">Tell us what you think — bugs, ideas, anything.</p>
 
-        <form id="feedback-form">
+        <!-- NAME -->
+        <div class="form-group">
+          <label for="fb-name">Your Name (optional)</label>
+          <input id="fb-name" type="text" placeholder="Name">
+        </div>
 
-          <!-- Username (hidden if logged in) -->
-          <div class="form-group" id="fb-username-group">
-            <label>Your Name</label>
-            <input id="fb-username" type="text" placeholder="Your name">
-          </div>
+        <!-- EMAIL -->
+        <div class="form-group">
+          <label for="fb-email">Your Email (optional)</label>
+          <input id="fb-email" type="email" placeholder="Email">
+        </div>
 
-          <div class="form-group">
-            <label>Email</label>
-            <input id="fb-email" type="email" placeholder="you@example.com">
-          </div>
+        <!-- TYPE -->
+        <div class="form-group">
+          <label for="fb-type">Type</label>
+          <select id="fb-type">
+            <option value="General Feedback">General Feedback</option>
+            <option value="Bug Report">Bug Report</option>
+            <option value="Feature Request">Feature Request</option>
+          </select>
+        </div>
 
-          <div class="form-group">
-            <label>Message</label>
-            <textarea id="fb-message" placeholder="Write your message..." rows="6"></textarea>
-          </div>
+        <!-- MESSAGE -->
+        <div class="form-group">
+          <label for="fb-message">Message</label>
+          <textarea id="fb-message" rows="5" placeholder="Write your message..."></textarea>
+        </div>
 
-          <button type="submit" class="btn primary">Send Feedback</button>
+        <!-- ACTIONS -->
+        <button id="fb-submit" class="btn primary" style="margin-top: 12px;">Submit Feedback</button>
 
-          <div id="fb-msg" class="small muted" style="margin-top:10px;"></div>
-        </form>
+        <!-- STATUS -->
+        <p id="fb-status" class="small" style="margin-top: 10px;"></p>
       </section>
-    </main>
 
-    <!-- DEBUG PANEL -->
-    <div id="debug-panel" class="debug-panel hidden"></div>
+    </main>
 
     <!-- FOOTER -->
     <footer class="footer">
-      <p>© 2026 UNDERHEAT Studio. All rights reserved.</p>
-
-      <div class="footer-links-row">
-        <a href="tos.html">Terms of Service</a>
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="feedback.html">Feedback</a>
-      </div>
-
-      <div class="footer-links">
-        <h3>Net Neighbors</h3>
-        <ul>
-          <li><a href="https://webamp.org/" target="_blank" rel="noreferrer noopener">Webamp</a></li>
-        </ul>
-      </div>
+      <p>© 2026 UNDERHEAT Studio</p>
     </footer>
 
   </div>
 
-  <!-- PRIDE MONTH LOGIC -->
-  <script>
-    const month = new Date().getMonth();
-    if (month === 5) {
-      document.getElementById("main-logo").classList.add("hidden");
-      document.getElementById("pride-logo").classList.remove("hidden");
-    }
-  </script>
-
-  <script src="index.js"></script>
   <script src="feedback.js"></script>
 </body>
 </html>

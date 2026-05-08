@@ -6,15 +6,17 @@
     "node": "18.x"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^2.2.0",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "fuzzyset": "^1.0.7",
+    "jsonwebtoken": "^9.0.3",
     "nodemailer": "^7.0.13",
-    "resend": "^6.12.2",
-    "sqlite3": "^5.1.6"
+    "resend": "^6.12.3",
+    "sqlite3": "^5.1.7"
   },
   "scripts": {
     "start": "node server.js",
