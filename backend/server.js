@@ -1,274 +1,304 @@
-// backend/server.js
+/* ============================================================
+   UNDERHEAT Studio — Full Backend
+   Auth + Roles + Feedback + Public Posts + Admin Notes
+   Supabase Storage + SQLite + JWT + bcrypt
+   ============================================================ */
+
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { Resend } = require("resend");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+app.use(cors());
 
-const PORT = process.env.PORT || 4000;
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+/* ============================================================
+   DATABASE
+   ============================================================ */
 
-// -------------------------
-// SQLite setup
-// -------------------------
-const db = new sqlite3.Database("./users.db");
+const db = new sqlite3.Database("./underheat.db");
 
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK (role IN ('founder','admin','user'))
+      email TEXT UNIQUE,
+      password TEXT,
+      role TEXT
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS feedback_private (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      email TEXT,
+      type TEXT,
+      message TEXT,
+      date TEXT
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS public_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      author TEXT,
+      message TEXT,
+      image TEXT,
+      sensitive INTEGER,
+      date TEXT
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS admin_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      author TEXT,
+      message TEXT,
+      date TEXT
     )
   `);
 });
 
-// -------------------------
-// Resend setup (email codes)
-// -------------------------
-const resend = new Resend(process.env.RESEND_API_KEY);
-const codes = {}; // in-memory email verification codes
+/* ============================================================
+   SUPABASE STORAGE
+   ============================================================ */
 
-// -------------------------
-// Helpers
-// -------------------------
-function signToken(user) {
-  return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-function authRequired(req, res, next) {
-  const auth = req.headers.authorization || "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+const BUCKET = process.env.SUPABASE_BUCKET;
 
-  if (!token) {
-    return res.status(401).json({ success: false, message: "No token" });
-  }
+/* ============================================================
+   MULTER (IMAGE UPLOAD)
+   ============================================================ */
 
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    req.user = payload;
-    next();
-  } catch (err) {
-    return res.status(401).json({ success: false, message: "Invalid token" });
-  }
-}
-
-function requireRole(...roles) {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: "Forbidden" });
-    }
-    next();
-  };
-}
-
-// -------------------------
-// EMAIL VERIFICATION
-// -------------------------
-app.post("/send-code", async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ success: false, message: "Email required" });
-
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  const expires = Date.now() + 10 * 60 * 1000;
-  codes[email] = { code, expires };
-
-  try {
-    await resend.emails.send({
-      from: "UNDERHEAT <noreply@underheat.dev>",
-      to: email,
-      subject: "UNDERHEAT Studio — Verification Code",
-      text: `Your verification code is: ${code}\n\nThis code expires in 10 minutes.`
-    });
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Resend error:", err);
-    res.status(500).json({ success: false, message: "Failed to send email" });
-  }
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 7.5 * 1024 * 1024 }
 });
 
-app.post("/verify-code", (req, res) => {
-  const { email, code } = req.body;
-  if (!email || !code) {
-    return res.status(400).json({ success: false, message: "Email and code required" });
+/* ============================================================
+   AUTH MIDDLEWARE
+   ============================================================ */
+
+function authMiddleware(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header) return next();
+
+  const token = header.split(" ")[1];
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    req.user = null;
   }
+  next();
+}
 
-  const entry = codes[email];
-  if (!entry) return res.status(400).json({ success: false, message: "No code for this email" });
+app.use(authMiddleware);
 
-  if (Date.now() > entry.expires) {
-    delete codes[email];
-    return res.status(400).json({ success: false, message: "Code expired" });
-  }
+/* ============================================================
+   AUTH ROUTES
+   ============================================================ */
 
-  if (entry.code !== code) {
-    return res.status(400).json({ success: false, message: "Invalid code" });
-  }
-
-  delete codes[email];
-  res.json({ success: true });
-});
-
-// -------------------------
-// AUTH: register / login / session
-// -------------------------
-
-// Register: first user becomes founder, others = user
 app.post("/api/auth/register", async (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password)
-    return res.status(400).json({ success: false, message: "Email and password required" });
+    return res.json({ success: false, message: "Missing fields" });
 
-  const password_hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password, 10);
 
-  db.get("SELECT COUNT(*) AS count FROM users", (err, row) => {
-    if (err) {
-      console.error("DB error:", err);
-      return res.status(500).json({ success: false, message: "DB error" });
+  db.run(
+    `INSERT INTO users (email, password, role) VALUES (?, ?, ?)`,
+    [email, hash, "user"],
+    err => {
+      if (err) return res.json({ success: false, message: "User exists" });
+
+      const token = jwt.sign(
+        { email, role: "user" },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      res.json({
+        success: true,
+        token,
+        user: { email, role: "user" }
+      });
     }
-
-    const isFirstUser = row.count === 0;
-    const role = isFirstUser ? "founder" : "user";
-
-    db.run(
-      "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
-      [email, password_hash, role],
-      function (err2) {
-        if (err2) {
-          if (err2.code === "SQLITE_CONSTRAINT") {
-            return res.status(400).json({ success: false, message: "Email already registered" });
-          }
-          console.error("DB insert error:", err2);
-          return res.status(500).json({ success: false, message: "DB error" });
-        }
-
-        const user = { id: this.lastID, email, role };
-        const token = signToken(user);
-        res.json({ success: true, user, token });
-      }
-    );
-  });
+  );
 });
 
-// Login
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ success: false, message: "Email and password required" });
 
-  db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
-    if (err) {
-      console.error("DB error:", err);
-      return res.status(500).json({ success: false, message: "DB error" });
-    }
-    if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
-    }
+  db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
+    if (!user) return res.json({ success: false, message: "Invalid login" });
 
-    const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
-    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.json({ success: false, message: "Invalid login" });
 
-    const safeUser = { id: user.id, email: user.email, role: user.role };
-    const token = signToken(safeUser);
-    res.json({ success: true, user: safeUser, token });
-  });
-});
+    const token = jwt.sign(
+      { email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-// Session (who am I?)
-app.get("/api/auth/session", authRequired, (req, res) => {
-  db.get("SELECT id, email, role FROM users WHERE id = ?", [req.user.id], (err, user) => {
-    if (err) {
-      console.error("DB error:", err);
-      return res.status(500).json({ success: false, message: "DB error" });
-    }
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-    res.json({ success: true, user });
-  });
-});
-
-// "Logout" is client-side with JWT; endpoint just exists for symmetry
-app.post("/api/auth/logout", (req, res) => {
-  res.json({ success: true });
-});
-
-// -------------------------
-// ADMIN ROUTES (roles)
-// -------------------------
-
-// List users (founder or admin)
-app.get("/api/admin/users", authRequired, requireRole("founder", "admin"), (req, res) => {
-  db.all("SELECT id, email, role FROM users ORDER BY id ASC", (err, rows) => {
-    if (err) {
-      console.error("DB error:", err);
-      return res.status(500).json({ success: false, message: "DB error" });
-    }
-    res.json({ success: true, users: rows });
-  });
-});
-
-// Change user role
-// Rules:
-// - founder can change anyone (except cannot demote self from founder via this route)
-// - admin can change only users (not admins or founder)
-app.post("/api/admin/users/:id/role", authRequired, requireRole("founder", "admin"), (req, res) => {
-  const targetId = parseInt(req.params.id, 10);
-  const { role } = req.body;
-
-  if (!["user", "admin"].includes(role)) {
-    return res.status(400).json({ success: false, message: "Invalid role" });
-  }
-
-  db.get("SELECT id, email, role FROM users WHERE id = ?", [targetId], (err, target) => {
-    if (err) {
-      console.error("DB error:", err);
-      return res.status(500).json({ success: false, message: "DB error" });
-    }
-    if (!target) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    const actor = req.user;
-
-    // Admin cannot modify admins or founder
-    if (actor.role === "admin") {
-      if (target.role === "admin" || target.role === "founder") {
-        return res.status(403).json({ success: false, message: "Admins cannot modify admins or founder" });
-      }
-    }
-
-    // Founder cannot demote self from founder via this route
-    if (actor.role === "founder" && actor.id === target.id && role !== "founder") {
-      return res.status(400).json({ success: false, message: "Use a dedicated flow to change founder role" });
-    }
-
-    db.run("UPDATE users SET role = ? WHERE id = ?", [role, targetId], function (err2) {
-      if (err2) {
-        console.error("DB update error:", err2);
-        return res.status(500).json({ success: false, message: "DB error" });
-      }
-      res.json({ success: true });
+    res.json({
+      success: true,
+      token,
+      user: { email: user.email, role: user.role }
     });
   });
 });
 
-// -------------------------
-// START SERVER
-// -------------------------
-app.listen(PORT, () => {
-  console.log(`Auth + email server running at http://localhost:${PORT}`);
+app.get("/api/auth/session", (req, res) => {
+  if (!req.user) return res.json({ success: false });
+  res.json({ success: true, user: req.user });
+});
+
+/* ============================================================
+   PRIVATE FEEDBACK
+   ============================================================ */
+
+app.post("/api/feedback/private", (req, res) => {
+  const { name, email, type, message } = req.body;
+
+  if (!message)
+    return res.json({ success: false, message: "Message required." });
+
+  db.run(
+    `INSERT INTO feedback_private (name, email, type, message, date)
+     VALUES (?, ?, ?, ?, ?)`,
+    [
+      name || "Anonymous",
+      email || "Not provided",
+      type || "General",
+      message,
+      new Date().toISOString()
+    ],
+    () => res.json({ success: true })
+  );
+});
+
+/* ============================================================
+   PUBLIC POSTS (WITH IMAGE UPLOAD)
+   ============================================================ */
+
+async function isBadImage(buffer) {
+  return false; // placeholder for your detector
+}
+
+app.post("/api/feedback/public", upload.single("image"), async (req, res) => {
+  try {
+    const { author, message, sensitive } = req.body;
+
+    if (!message)
+      return res.json({ success: false, message: "Message required." });
+
+    let finalAuthor =
+      sensitive === "true" ? "Anonymous" : author || "Anonymous";
+
+    let imageUrl = null;
+
+    if (req.file) {
+      const { buffer, mimetype, originalname } = req.file;
+
+      const allowed = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+      if (!allowed.includes(mimetype))
+        return res.json({ success: false, message: "Unsupported image type." });
+
+      const bad = await isBadImage(buffer);
+      if (bad)
+        return res.json({
+          success: false,
+          message: "Image rejected: unsafe content detected."
+        });
+
+      const ext = originalname.split(".").pop();
+      const fileName = `post-${Date.now()}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(fileName, buffer, { contentType: mimetype });
+
+      if (error)
+        return res.json({ success: false, message: "Upload failed." });
+
+      imageUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${fileName}`;
+    }
+
+    db.run(
+      `INSERT INTO public_posts (author, message, image, sensitive, date)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        finalAuthor,
+        message,
+        imageUrl,
+        sensitive === "true" ? 1 : 0,
+        new Date().toISOString()
+      ],
+      () => res.json({ success: true })
+    );
+  } catch (e) {
+    res.json({ success: false, message: "Failed to submit post." });
+  }
+});
+
+app.get("/api/feedback/public", (req, res) => {
+  db.all(`SELECT * FROM public_posts ORDER BY id DESC`, (err, rows) => {
+    res.json({ success: true, items: rows });
+  });
+});
+
+app.delete("/api/feedback/public/:id", (req, res) => {
+  db.run(`DELETE FROM public_posts WHERE id = ?`, [req.params.id], () => {
+    res.json({ success: true });
+  });
+});
+
+/* ============================================================
+   ADMIN NOTES
+   ============================================================ */
+
+app.post("/api/feedback/admin", (req, res) => {
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "founder"))
+    return res.status(403).json({ success: false });
+
+  const { message } = req.body;
+
+  if (!message)
+    return res.json({ success: false, message: "Message required." });
+
+  db.run(
+    `INSERT INTO admin_posts (author, message, date)
+     VALUES (?, ?, ?)`,
+    [req.user.email, message, new Date().toISOString()],
+    () => res.json({ success: true })
+  );
+});
+
+app.get("/api/feedback/admin", (req, res) => {
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "founder"))
+    return res.status(403).json({ success: false });
+
+  db.all(`SELECT * FROM admin_posts ORDER BY id DESC`, (err, rows) => {
+    res.json({ success: true, items: rows });
+  });
+});
+
+/* ============================================================
+   START SERVER
+   ============================================================ */
+
+app.listen(4000, () => {
+  console.log("UNDERHEAT backend running on port 4000");
 });

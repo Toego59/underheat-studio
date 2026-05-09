@@ -12,7 +12,7 @@
   <script src="theme.js"></script>
 
   <!-- Webamp -->
- <script src="https://unpkg.com/webamp@1.4.0/built/webamp.bundle.min.js"></script>
+  <script src="https://unpkg.com/webamp@1.4.0/built/webamp.bundle.min.js"></script>
 </head>
 
 <body>
@@ -48,8 +48,8 @@
         <h2 id="auth-title">Login</h2>
 
         <div class="form-group">
-          <label for="username">Username</label>
-          <input id="username" type="text" placeholder="Username">
+          <label for="username">Email</label>
+          <input id="username" type="text" placeholder="Email">
         </div>
 
         <div class="form-group">
@@ -104,10 +104,10 @@
         <section id="webamp-section" class="panel">
           <div class="panel-header">
             <h3>Webamp Player</h3>
-            <span class="panel-note">(Admin only)</span>
+            <span class="panel-note">(Founder only)</span>
           </div>
 
-          <button id="webamp-toggle" class="btn secondary">Show Webamp Player</button>
+          <button id="webamp-toggle" class="btn secondary hidden">Show Webamp Player</button>
           <div id="webamp-container" class="webamp-embedded hidden"></div>
         </section>
 

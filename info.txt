@@ -4500,3 +4500,16 @@ Interested in universal email integration and provider support (stored 2026‑04
 Interested in privacy/security in web apps (stored 2026‑04‑24 16:00)
 Interested in web development and site customization for UNDERHEAT Studio (stored 2026‑04‑24 16:00)
 Interested in modular UI and asset management (stored 2026‑04‑24 14:00)
+
+Name: Gram
+Occupation: Lead developer/owner for UNDERHEAT Studio web project
+Communication Preferences: Direct, concise, implementation-focused; prefers actionable, incremental instructions and file-by-file delivery; minimal emotional language; values modularity and precise UI placement; prefers plain text with no bolding when requested; appreciates shorter responses when asked
+Preferences Positive: Universal email provider support (ProtonMail, Gmail); Auto-detection of email provider; Stepwise, file-by-file updates; Clean, professional UI; Privacy-focused backend
+Goals: Maintain a modular, scalable, admin-friendly, media-rich web project for UNDERHEAT Studio; Implement universal email provider support with auto-detection by email domain
+Challenges: Waiting for EU.org domain approval; Lacks domain ownership; Constrained to Resend sandbox mode; Out of monthly free GitHub Codespaces quota
+Recent Tasks: Registering underheat.eu.org and underheatstudio.eu.org domains; Recovering uncommitted code from locked GitHub Codespace
+Skills: Web development (HTML, CSS, JS); Backend integration and universal SMTP configuration; Asset management and folder organization; UI/UX customization and modular site architecture; Bash scripting
+Interests: Web development and site customization for UNDERHEAT Studio; Modular UI and asset management; Admin utilities and site management tools; Universal email integration; Privacy/security in web apps; UI/UX customization; TikTok and Instagram
+Additional Interests: Streaming tech, AI, Star Wars, puzzles/games, watercolor art, audio tech, charter schools, online creators, digital assets, music, commuting gear, tech companies, special education
+Explicit Facts: User prefers content focused on natural selection in humans
+Implicit Facts: Multiple details about your UNDERHEAT Studio project, CSS, theme system, memory system, and file-by-file workflow
