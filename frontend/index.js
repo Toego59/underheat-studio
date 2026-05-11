@@ -81,8 +81,17 @@ document.addEventListener("DOMContentLoaded", () => {
       opts.body = JSON.stringify(body);
     }
 
-    const res = await fetch(path, opts);
-    return res.json();
+    try {
+      const res = await fetch(path, opts);
+      const data = await res.json();
+      if (!res.ok && !data.success) {
+        console.error(`API Error (${method} ${path}):`, res.status, data);
+      }
+      return data;
+    } catch (err) {
+      console.error(`API Error (${method} ${path}):`, err.message);
+      return { success: false, message: `Network error: ${err.message}` };
+    }
   }
 
   // -----------------------------
@@ -112,12 +121,16 @@ document.addEventListener("DOMContentLoaded", () => {
     webamp = new Webamp({
       initialTracks: [
         {
-          url: "assets/shout.mp3",
+          url: "assets/shout.mp4",
           metaData: { title: "Shout" }
+        },
+        {
+          url: "assets/thatsall.mp4",
+          metaData: { title: "That's All" }
         }
       ],
       initialSkin: {
-        url: "assets/skin.wsz"
+        url: "assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
       }
     });
 
@@ -155,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    userIndicator.textContent = `${currentUser.email} (${currentUser.role})`;
+    userIndicator.textContent = `${currentUser.username} (${currentUser.role})`;
 
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
@@ -178,16 +191,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // AUTH ACTIONS
   // -----------------------------
   async function doLogin() {
-    const email = username.value.trim();
-    const pass = password.value.trim();
+    const username = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
 
-    if (!email || !pass) {
-      authMessage.textContent = "Enter email and password.";
+    if (!username || !pass) {
+      authMessage.textContent = "Enter username and password.";
       return;
     }
 
     const result = await api(`${API}/login`, "POST", {
-      email,
+      username,
       password: pass
     });
 
@@ -205,16 +218,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function doRegister() {
-    const email = username.value.trim();
-    const pass = password.value.trim();
+    const username = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
 
-    if (!email || !pass) {
-      authMessage.textContent = "Enter email and password.";
+    if (!username || !pass) {
+      authMessage.textContent = "Enter username and password.";
       return;
     }
 
     const result = await api(`${API}/register`, "POST", {
-      email,
+      username,
       password: pass
     });
 
@@ -253,6 +266,18 @@ document.addEventListener("DOMContentLoaded", () => {
     token = null;
     currentUser = null;
     updateUI();
+  });
+
+  feedbackBtn.addEventListener("click", () => {
+    window.location.href = "/feedback.html";
+  });
+
+  settingsBtn.addEventListener("click", () => {
+    window.location.href = "/settings.html";
+  });
+
+  adminBtn.addEventListener("click", () => {
+    window.location.href = "/admin.html";
   });
 
   authCancel.addEventListener("click", hideAuth);

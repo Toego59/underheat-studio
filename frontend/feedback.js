@@ -28,34 +28,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Back button
+  document.getElementById("back-btn").onclick = () => {
+    window.location.href = "/index.html";
+  };
+
   // Logout
   document.getElementById("logout-btn").onclick = () => {
     localStorage.removeItem("token");
-    window.location.href = "/login.html";
+    window.location.href = "/index.html";
   };
 
   // Private feedback
-  fb-submit.onclick = async () => {
+  document.getElementById("fb-submit").onclick = async () => {
     const result = await api("/api/feedback/private", "POST", {
-      name: fb-name.value,
-      email: fb-email.value,
-      type: fb-type.value,
-      message: fb-message.value
+      name: document.getElementById("fb-name").value,
+      email: document.getElementById("fb-email").value,
+      type: document.getElementById("fb-type").value,
+      message: document.getElementById("fb-message").value
     });
-    fb-status.textContent = result.success ? "Sent!" : result.message;
+    document.getElementById("fb-status").textContent = result.success ? "Sent!" : result.message;
+    if (result.success) {
+      document.getElementById("fb-name").value = "";
+      document.getElementById("fb-email").value = "";
+      document.getElementById("fb-message").value = "";
+    }
   };
 
   // Public post
-  pub-submit.onclick = async () => {
+  document.getElementById("pub-submit").onclick = async () => {
     const form = new FormData();
-    form.append("author", pub-author.value);
-    form.append("message", pub-message.value);
-    form.append("sensitive", pub-sensitive.checked);
+    form.append("author", document.getElementById("pub-author").value);
+    form.append("message", document.getElementById("pub-message").value);
+    form.append("sensitive", document.getElementById("pub-anonymous").checked);
 
-    if (pub-image.files[0]) form.append("image", pub-image.files[0]);
+    if (document.getElementById("pub-image").files[0]) {
+      form.append("image", document.getElementById("pub-image").files[0]);
+    }
 
     const result = await api("/api/feedback/public", "POST", form, true);
-    pub-status.textContent = result.success ? "Posted!" : result.message;
+    document.getElementById("pub-status").textContent = result.success ? "Posted!" : result.message;
+    if (result.success) {
+      document.getElementById("pub-author").value = "";
+      document.getElementById("pub-message").value = "";
+      document.getElementById("pub-image").value = "";
+      document.getElementById("pub-anonymous").checked = false;
+    }
     loadPublicPosts();
   };
 
@@ -63,6 +81,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await api("/api/feedback/public");
     const list = document.getElementById("pub-list");
     list.innerHTML = "";
+
+    if (!res.items || res.items.length === 0) {
+      list.innerHTML = "<p class='small muted'>No posts yet</p>";
+      return;
+    }
 
     res.items.forEach(post => {
       const div = document.createElement("div");
@@ -77,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const img = document.createElement("img");
         img.src = post.image;
         img.className = "pub-image";
+        img.style.maxWidth = "100%";
         div.appendChild(img);
       }
 
@@ -95,11 +119,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Admin notes
-  admin-submit.onclick = async () => {
+  document.getElementById("admin-submit").onclick = async () => {
     const result = await api("/api/feedback/admin", "POST", {
-      message: admin-message.value
+      message: document.getElementById("admin-message").value
     });
-    admin-status.textContent = result.success ? "Posted!" : result.message;
+    document.getElementById("admin-status").textContent = result.success ? "Posted!" : result.message;
+    if (result.success) {
+      document.getElementById("admin-message").value = "";
+    }
     loadAdminNotes();
   };
 
@@ -107,6 +134,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await api("/api/feedback/admin");
     const list = document.getElementById("admin-list");
     list.innerHTML = "";
+
+    if (!res.items || res.items.length === 0) {
+      list.innerHTML = "<p class='small muted'>No notes yet</p>";
+      return;
+    }
 
     res.items.forEach(note => {
       const div = document.createElement("div");

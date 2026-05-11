@@ -1,21 +1,20 @@
 // UNDERHEAT Studio — Admin Panel Logic
-// Works with SQLite + JWT backend (founder/admin/user roles)
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("ADMIN.JS: Loaded");
 
   const userList = document.getElementById("admin-user-list");
   const statusBox = document.getElementById("admin-status");
-
   const token = localStorage.getItem("token");
+
+  // Check if user is authenticated
   if (!token) {
-    statusBox.textContent = "Not logged in.";
+    statusBox.textContent = "Not logged in. Redirecting...";
+    setTimeout(() => window.location.href = "/index.html", 2000);
     return;
   }
 
-  // -----------------------------
   // API helper
-  // -----------------------------
   async function api(path, method = "GET", body = null) {
     const opts = {
       method,
@@ -27,94 +26,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (body) opts.body = JSON.stringify(body);
 
-    const res = await fetch(path, opts);
-    return res.json();
+    try {
+      const res = await fetch(path, opts);
+      return await res.json();
+    } catch (err) {
+      console.error("API Error:", err);
+      return { success: false, message: "Network error" };
+    }
   }
 
-  // -----------------------------
-  // Load users
-  // -----------------------------
-  async function loadUsers() {
-    statusBox.textContent = "Loading users...";
+  // Check authorization
+  async function checkAuth() {
+    const res = await api("/api/auth/session");
+    console.log("Session response:", res);
 
-    const result = await api("/api/admin/users");
-    if (!result.success) {
-      statusBox.textContent = result.message || "Failed to load users.";
+    if (!res.success) {
+      statusBox.textContent = "Not authenticated. Redirecting...";
+      return false;
+    }
+
+    if (!["admin", "founder"].includes(res.user.role)) {
+      statusBox.textContent = `Unauthorized. Your role is "${res.user.role}" but admin access requires "admin" or "founder" role.`;
+      return false;
+    }
+
+    return true;
+  }
+
+  // Initialize
+  async function init() {
+    const authorized = await checkAuth();
+    if (!authorized) {
+      setTimeout(() => window.location.href = "/index.html", 3000);
       return;
     }
 
-    statusBox.textContent = "";
-    renderUsers(result.users);
+    statusBox.textContent = "✓ Admin access granted. User management coming soon.";
+    userList.innerHTML = "<p class='small muted'>User management features are being implemented.</p>";
   }
 
-  // -----------------------------
-  // Render user list
-  // -----------------------------
-  function renderUsers(users) {
-    userList.innerHTML = "";
-
-    users.forEach(user => {
-      const row = document.createElement("div");
-      row.className = "admin-user-row panel";
-
-      const email = document.createElement("div");
-      email.textContent = user.email;
-
-      const role = document.createElement("div");
-      role.textContent = `Role: ${user.role}`;
-
-      const controls = document.createElement("div");
-      controls.className = "admin-controls";
-
-      // Founder cannot be changed here
-      if (user.role === "founder") {
-        controls.textContent = "Founder (locked)";
-      } else {
-        // Promote to admin
-        const promoteBtn = document.createElement("button");
-        promoteBtn.className = "btn secondary";
-        promoteBtn.textContent = "Make Admin";
-        promoteBtn.onclick = () => updateRole(user.id, "admin");
-
-        // Demote to user
-        const demoteBtn = document.createElement("button");
-        demoteBtn.className = "btn ghost";
-        demoteBtn.textContent = "Make User";
-        demoteBtn.onclick = () => updateRole(user.id, "user");
-
-        controls.appendChild(promoteBtn);
-        controls.appendChild(demoteBtn);
-      }
-
-      row.appendChild(email);
-      row.appendChild(role);
-      row.appendChild(controls);
-
-      userList.appendChild(row);
+  // Back button
+  const backBtn = document.getElementById("back-btn");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      window.location.href = "/index.html";
     });
   }
 
-  // -----------------------------
-  // Update role
-  // -----------------------------
-  async function updateRole(id, newRole) {
-    statusBox.textContent = "Updating role...";
-
-    const result = await api(`/api/admin/users/${id}/role`, "POST", {
-      role: newRole
+  // Logout button
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "/index.html";
     });
-
-    if (!result.success) {
-      statusBox.textContent = result.message || "Failed to update role.";
-      return;
-    }
-
-    statusBox.textContent = "Role updated.";
-    loadUsers();
   }
 
-  // -----------------------------
-  // Initial load
-  // -----------------------------
-  loadUsers();
+  await init();
 });

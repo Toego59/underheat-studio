@@ -8,9 +8,9 @@ const FRONTEND_DIR = path.join(__dirname);
 // Serve static frontend files
 app.use(express.static(FRONTEND_DIR));
 
-// Proxy /api to local backend on port 3000
+// Proxy /api to local backend on port 4000
 app.use('/api', createProxyMiddleware({
-  target: 'http://127.0.0.1:3000',
+  target: 'http://127.0.0.1:4000',
   changeOrigin: true,
   secure: false,
   logLevel: 'warn'

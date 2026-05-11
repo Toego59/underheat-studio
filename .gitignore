@@ -1,5 +1,6 @@
-# Backend secrets
+# Backend secrets (IMPORTANT: Never commit secrets/credentials)
 backend/.env
+frontend/.env
 backend/data/users.db
 
 # Node modules
@@ -18,3 +19,13 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Credentials and sensitive data
+*.key
+*.pem
+credentials.json
+secrets.json
+
+# Database files
+*.db
+*.sqlite

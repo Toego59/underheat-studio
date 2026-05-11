@@ -9,7 +9,7 @@ const url = require("url");
 const FRONTEND_DIR = __dirname;
 
 const BACKEND_HOST = "127.0.0.1";
-const BACKEND_PORT = 3000;
+const BACKEND_PORT = 4000;
 const PORT = process.env.PORT || 5500;
 
 // Proxy API requests to backend
@@ -30,8 +30,8 @@ function proxyRequest(req, res) {
   });
 
   proxy.on("error", (err) => {
-    res.writeHead(502, { "Content-Type": "text/plain" });
-    res.end("Bad Gateway: " + err.message);
+    res.writeHead(502, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: false, message: "Bad Gateway: " + err.message }));
   });
 
   req.pipe(proxy, { end: true });

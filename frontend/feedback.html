@@ -3,58 +3,111 @@
 <head>
   <title>Feedback — UNDERHEAT Studio</title>
   <link rel="stylesheet" href="/style.css">
+  <style>
+    .feedback-section { margin-bottom: 2rem; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    input[type="text"], input[type="email"], textarea, select { width: 100%; padding: 0.5rem; }
+    .btn-row { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  </style>
 </head>
 <body>
 
 <header class="topbar">
+  <button id="back-btn" class="left">← Back</button>
   <button id="logout-btn" class="right">Logout</button>
 </header>
 
 <main class="main">
 
-  <!-- PRIVATE FEEDBACK -->
-  <section class="panel">
-    <h2>Private Feedback</h2>
-    <p class="small muted">Only visible to founder & admins.</p>
+  <!-- PUBLIC FEEDBACK FORM -->
+  <section class="panel feedback-section">
+    <h2>Share Feedback</h2>
+    <p class="small muted">Post to the community wall (optional file attachment)</p>
 
-    <input id="fb-name" placeholder="Your name (optional)">
-    <input id="fb-email" placeholder="Your email (optional)">
-    <select id="fb-type">
-      <option>General Feedback</option>
-      <option>Bug Report</option>
-      <option>Feature Request</option>
-    </select>
-    <textarea id="fb-message" placeholder="Write your message..."></textarea>
+    <div class="form-group">
+      <label for="pub-author">Name (optional)</label>
+      <input id="pub-author" type="text" placeholder="Your name">
+    </div>
 
-    <button id="fb-submit">Submit Private Feedback</button>
-    <p id="fb-status"></p>
+    <div class="form-group">
+      <label for="pub-message">Message</label>
+      <textarea id="pub-message" placeholder="Share your thoughts..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="pub-image">Attach File (optional)</label>
+      <input id="pub-image" type="file" accept="image/*">
+    </div>
+
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="pub-anonymous">
+        Post anonymously
+      </label>
+    </div>
+
+    <div class="btn-row">
+      <button id="pub-submit" class="btn primary">Post to Wall</button>
+    </div>
+    <p id="pub-status" class="small muted"></p>
   </section>
 
-  <!-- PUBLIC POSTS -->
-  <section class="panel">
+  <!-- COMMUNITY WALL -->
+  <section class="panel feedback-section">
     <h2>Community Wall</h2>
-
-    <input id="pub-author" placeholder="Name (optional)">
-    <textarea id="pub-message" placeholder="Share something..."></textarea>
-    <input id="pub-image" type="file" accept="image/*">
-
-    <label>
-      <input type="checkbox" id="pub-sensitive">
-      Post anonymously
-    </label>
-
-    <button id="pub-submit">Post</button>
-    <p id="pub-status"></p>
-
     <div id="pub-list"></div>
   </section>
 
-  <!-- ADMIN NOTES -->
-  <section class="panel hidden" id="admin-section">
+  <!-- PRIVATE FEEDBACK FORM -->
+  <section class="panel feedback-section">
+    <h2>Private Feedback</h2>
+    <p class="small muted">Only visible to founder & admins</p>
+
+    <div class="form-group">
+      <label for="fb-name">Name (optional)</label>
+      <input id="fb-name" type="text" placeholder="Your name">
+    </div>
+
+    <div class="form-group">
+      <label for="fb-email">Email (optional)</label>
+      <input id="fb-email" type="email" placeholder="Your email">
+    </div>
+
+    <div class="form-group">
+      <label for="fb-type">Feedback Type</label>
+      <select id="fb-type">
+        <option>General Feedback</option>
+        <option>Bug Report</option>
+        <option>Feature Request</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="fb-message">Message</label>
+      <textarea id="fb-message" placeholder="Tell us what you think..."></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button id="fb-submit" class="btn primary">Submit Private Feedback</button>
+    </div>
+    <p id="fb-status" class="small muted"></p>
+  </section>
+
+  <!-- ADMIN NOTES (founder/admin only) -->
+  <section class="panel feedback-section hidden" id="admin-section">
     <h2>Admin Notes</h2>
-    <textarea id="admin-message" placeholder="Internal note..."></textarea>
-    <button id="admin-submit">Post Note</button>
-    <p id="admin-status"></p>
+    <p class="small muted">Internal notes visible only to admins</p>
+
+    <div class="form-group">
+      <label for="admin-message">Note</label>
+      <textarea id="admin-message" placeholder="Internal note..."></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button id="admin-submit" class="btn primary">Post Note</button>
+    </div>
+    <p id="admin-status" class="small muted"></p>
     <div id="admin-list"></div>
   </section>
 
