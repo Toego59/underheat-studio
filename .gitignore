@@ -29,3 +29,10 @@ secrets.json
 # Database files
 *.db
 *.sqlite
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
