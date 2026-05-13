@@ -1,7 +1,6 @@
-// UNDERHEAT Studio — Full Auth + Role System + Founder-Only Webamp
+// UNDERHEAT Studio — Supabase Auth + KV Roles + Founder-Only Webamp
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("INDEX.JS: Loaded");
 
   // -----------------------------
   // ELEMENTS
@@ -13,99 +12,58 @@ document.addEventListener("DOMContentLoaded", () => {
   const feedbackBtn = document.getElementById("feedbackBtn");
   const userIndicator = document.getElementById("user-indicator");
 
-  const auth = document.getElementById("auth");
-  const authTitle = document.getElementById("auth-title");
-  const authAction = document.getElementById("auth-action");
-  const authToggle = document.getElementById("auth-toggle");
-  const authCancel = document.getElementById("auth-cancel");
-  const authMessage = document.getElementById("auth-message");
-
-  const username = document.getElementById("username");
-  const password = document.getElementById("password");
-
   const gated = document.getElementById("gated-content");
   const debug = document.getElementById("debug-panel");
 
-  // Webamp
   const webampToggle = document.getElementById("webamp-toggle");
   const webampContainer = document.getElementById("webamp-container");
   let webamp = null;
 
-  // -----------------------------
-  // STATE
-  // -----------------------------
-  let mode = "login";
+  const authPanel = document.getElementById("auth-panel");
+  const doLogin = document.getElementById("doLogin");
+  const doSignup = document.getElementById("doSignup");
+  const emailInput = document.getElementById("emailInput");
+  const passwordInput = document.getElementById("passwordInput");
+
   let currentUser = null;
-  let token = localStorage.getItem("token") || null;
-
-  const API = "/api/auth";
+  let role = null;
 
   // -----------------------------
-  // HELPERS
+  // GET TOKEN
   // -----------------------------
-  function showAuth(newMode) {
-    mode = newMode;
-    auth.classList.remove("hidden");
-    authMessage.textContent = "";
-    username.value = "";
-    password.value = "";
-
-    if (mode === "login") {
-      authTitle.textContent = "Login";
-      authAction.textContent = "Login";
-      authToggle.textContent = "Switch to Register";
-    } else {
-      authTitle.textContent = "Register";
-      authAction.textContent = "Register";
-      authToggle.textContent = "Switch to Login";
-    }
+  async function getToken() {
+    const session = (await supabase.auth.getSession()).data.session;
+    return session?.access_token || null;
   }
 
-  function hideAuth() {
-    auth.classList.add("hidden");
-  }
-
-  async function api(path, method = "GET", body = null) {
-    const opts = {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      }
-    };
-
-    if (token) {
-      opts.headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    if (body) {
-      opts.body = JSON.stringify(body);
-    }
+  // -----------------------------
+  // FETCH ROLE
+  // -----------------------------
+  async function fetchRole() {
+    const token = await getToken();
+    if (!token) return "guest";
 
     try {
-      const res = await fetch(path, opts);
+      const res = await fetch("/api/role", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       const data = await res.json();
-      if (!res.ok && !data.success) {
-        console.error(`API Error (${method} ${path}):`, res.status, data);
-      }
-      return data;
-    } catch (err) {
-      console.error(`API Error (${method} ${path}):`, err.message);
-      return { success: false, message: `Network error: ${err.message}` };
+      return data.role || "user";
+    } catch {
+      return "user";
     }
   }
 
   // -----------------------------
-  // WEBAMP — Founder Only
+  // WEBAMP
   // -----------------------------
   function updateWebampVisibility() {
-    if (!currentUser || currentUser.role !== "founder") {
+    if (role !== "founder") {
       webampToggle.classList.add("hidden");
       webampContainer.classList.add("hidden");
-
-      if (webamp) {
-        webamp.dispose();
-        webamp = null;
-      }
+      if (webamp) webamp.dispose();
+      webamp = null;
       return;
     }
 
@@ -113,25 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function initWebamp() {
-    if (webamp) {
-      webamp.dispose();
-      webamp = null;
-    }
+    if (webamp) webamp.dispose();
 
     webamp = new Webamp({
       initialTracks: [
-        {
-          url: "assets/shout.mp4",
-          metaData: { title: "Shout" }
-        },
-        {
-          url: "assets/thatsall.mp4",
-          metaData: { title: "That's All" }
-        }
+        { url: "assets/shout.mp4", metaData: { title: "Shout" } },
+        { url: "assets/thatsall.mp4", metaData: { title: "That's All" } }
       ],
-      initialSkin: {
-        url: "assets/Fallout_Pip-Boy_3000_Amber_v4.wsz"
-      }
+      initialSkin: { url: "assets/Fallout_Pip-Boy_3000_Amber_v4.wsz" }
     });
 
     await webamp.renderWhenReady(webampContainer);
@@ -139,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   webampToggle.addEventListener("click", () => {
-    if (!currentUser || currentUser.role !== "founder") return;
+    if (role !== "founder") return;
 
     if (!webamp) {
       initWebamp();
@@ -155,8 +102,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
   // UI UPDATE
   // -----------------------------
-  function updateUI() {
-    if (!currentUser) {
+  async function updateUI() {
+    const session = (await supabase.auth.getSession()).data.session;
+
+    if (!session) {
+      currentUser = null;
+      role = null;
+
       userIndicator.textContent = "";
       loginBtn.classList.remove("hidden");
       logoutBtn.classList.add("hidden");
@@ -164,21 +116,26 @@ document.addEventListener("DOMContentLoaded", () => {
       adminBtn.classList.add("hidden");
       gated.classList.add("hidden");
       debug.classList.add("hidden");
+      authPanel.classList.add("hidden");
+
       updateWebampVisibility();
       return;
     }
 
-    userIndicator.textContent = `${currentUser.username} (${currentUser.role})`;
+    currentUser = session.user;
+    role = await fetchRole();
+
+    userIndicator.textContent = `${currentUser.email} (${role})`;
 
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
     settingsBtn.classList.remove("hidden");
     gated.classList.remove("hidden");
 
-    if (currentUser.role === "founder" || currentUser.role === "admin") {
+    if (role === "founder" || role === "admin") {
       adminBtn.classList.remove("hidden");
       debug.classList.remove("hidden");
-      debug.textContent = `Admin mode active\nRole: ${currentUser.role}`;
+      debug.textContent = `Admin mode active\nRole: ${role}`;
     } else {
       adminBtn.classList.add("hidden");
       debug.classList.add("hidden");
@@ -188,83 +145,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -----------------------------
-  // AUTH ACTIONS
-  // -----------------------------
-  async function doLogin() {
-    const username = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value.trim();
-
-    if (!username || !pass) {
-      authMessage.textContent = "Enter username and password.";
-      return;
-    }
-
-    const result = await api(`${API}/login`, "POST", {
-      username,
-      password: pass
-    });
-
-    if (!result.success) {
-      authMessage.textContent = result.message || "Login failed.";
-      return;
-    }
-
-    token = result.token;
-    localStorage.setItem("token", token);
-    currentUser = result.user;
-
-    hideAuth();
-    updateUI();
-  }
-
-  async function doRegister() {
-    const username = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value.trim();
-
-    if (!username || !pass) {
-      authMessage.textContent = "Enter username and password.";
-      return;
-    }
-
-    const result = await api(`${API}/register`, "POST", {
-      username,
-      password: pass
-    });
-
-    if (!result.success) {
-      authMessage.textContent = result.message || "Registration failed.";
-      return;
-    }
-
-    token = result.token;
-    localStorage.setItem("token", token);
-    currentUser = result.user;
-
-    hideAuth();
-    updateUI();
-  }
-
-  async function restoreSession() {
-    if (!token) return;
-
-    const result = await api(`${API}/session`);
-    if (result.success) {
-      currentUser = result.user;
-      updateUI();
-    } else {
-      localStorage.removeItem("token");
-      token = null;
-    }
-  }
-
-  // -----------------------------
   // EVENT LISTENERS
   // -----------------------------
-  loginBtn.addEventListener("click", () => showAuth("login"));
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("token");
-    token = null;
-    currentUser = null;
+  loginBtn.addEventListener("click", () => {
+    authPanel.classList.remove("hidden");
+  });
+
+  doLogin.addEventListener("click", async () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message);
+
+    authPanel.classList.add("hidden");
+    updateUI();
+  });
+
+  doSignup.addEventListener("click", async () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) alert(error.message);
+    else alert("Check your email to confirm your account");
+
+    authPanel.classList.add("hidden");
+    updateUI();
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    await supabase.auth.signOut();
     updateUI();
   });
 
@@ -280,19 +191,9 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "/admin.html";
   });
 
-  authCancel.addEventListener("click", hideAuth);
-
-  authToggle.addEventListener("click", () => {
-    showAuth(mode === "login" ? "register" : "login");
-  });
-
-  authAction.addEventListener("click", () => {
-    if (mode === "login") doLogin();
-    else doRegister();
-  });
-
   // -----------------------------
   // INITIAL LOAD
   // -----------------------------
-  restoreSession();
+  supabase.auth.onAuthStateChange(() => updateUI());
+  updateUI();
 });

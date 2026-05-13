@@ -7,36 +7,75 @@
 
   <link rel="stylesheet" href="style.css">
   <script src="theme.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
 </head>
 
 <body>
-  <div class="page">
+  <div class="page admin-layout">
 
-    <!-- HEADER -->
-    <header class="header">
-      <div class="logo-container">
-        <img src="assets/logo.png" class="logo" alt="UNDERHEAT">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar panel">
+      <div class="sidebar-header">
+        <img src="assets/logo.png" class="sidebar-logo" alt="UNDERHEAT">
+        <h2>Admin Panel</h2>
+        <p class="small muted">Founder & Admin Only</p>
       </div>
 
-      <nav class="nav">
-        <button id="back-btn" class="btn ghost">← Back</button>
-        <button id="logout-btn" class="btn ghost">Logout</button>
+      <nav class="sidebar-nav">
+        <button id="nav-users" class="btn ghost sidebar-btn active">User Management</button>
+        <button id="nav-roles" class="btn ghost sidebar-btn">Role Editor</button>
+        <button id="nav-logs" class="btn ghost sidebar-btn">System Logs</button>
       </nav>
-    </header>
 
-    <!-- MAIN -->
-    <main class="main">
+      <div class="sidebar-footer">
+        <button id="back-btn" class="btn secondary full">← Back to Site</button>
+        <button id="logout-btn" class="btn danger full">Logout</button>
+      </div>
+    </aside>
 
-      <section class="panel">
-        <h2>Admin Panel</h2>
-        <p class="small muted">Founder & Admin access only</p>
+    <!-- MAIN CONTENT -->
+    <main class="admin-main">
 
-        <!-- Status / Errors -->
-        <div id="admin-status" class="panel small" style="margin-top: 10px;"></div>
+      <!-- HEADER -->
+      <header class="admin-header panel">
+        <h1>UNDERHEAT Studio — Admin Dashboard</h1>
+        <span id="admin-user-indicator" class="admin-user-indicator"></span>
+      </header>
 
-        <!-- User List -->
-        <h3 style="margin-top: 20px;">User Management</h3>
-        <div id="admin-user-list" class="admin-user-list"></div>
+      <!-- STATUS BOX -->
+      <section id="admin-status" class="panel admin-status-box hidden"></section>
+
+      <!-- USER MANAGEMENT -->
+      <section id="admin-users-section" class="panel admin-section">
+        <h2>User Management</h2>
+        <p class="small muted">View all users and assign roles.</p>
+
+        <div id="admin-user-list" class="admin-user-list large"></div>
+      </section>
+
+      <!-- ROLE EDITOR -->
+      <section id="admin-roles-section" class="panel admin-section hidden">
+        <h2>Role Editor</h2>
+        <p class="small muted">Assign roles manually using user IDs.</p>
+
+        <div class="role-editor">
+          <input id="role-user-id" class="input" placeholder="User ID">
+          <select id="role-select" class="input">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+            <option value="founder">Founder</option>
+          </select>
+          <button id="apply-role-btn" class="btn primary">Apply Role</button>
+        </div>
+      </section>
+
+      <!-- SYSTEM LOGS -->
+      <section id="admin-logs-section" class="panel admin-section hidden">
+        <h2>System Logs</h2>
+        <p class="small muted">Coming soon.</p>
       </section>
 
     </main>

@@ -65,8 +65,10 @@ a:hover {
 
 .header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   margin-bottom: 30px;
 }
 
@@ -85,16 +87,46 @@ a:hover {
 
 .nav {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nav > .user-indicator {
+  margin-right: auto;
+  font-size: 14px;
+  opacity: 0.8;
+  min-width: 0;
 }
 
 .nav-row {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .header {
+    justify-content: center;
+  }
+
+  .nav {
+    justify-content: center;
+  }
+
+  .nav > .user-indicator {
+    width: 100%;
+    margin-right: 0;
+    text-align: center;
+  }
+
+  .nav-row {
+    justify-content: center;
+  }
 }
 
 .user-indicator {

@@ -37,12 +37,20 @@ function proxyRequest(req, res) {
   req.pipe(proxy, { end: true });
 }
 
-// Serve static frontend files
+// Serve static frontend files with clean URL routing
 function serveStatic(req, res) {
   let pathname = url.parse(req.url).pathname;
 
   // Default route
   if (pathname === "/") pathname = "/index.html";
+
+  // Clean URL routing: /settings → /settings.html, /admin → /admin.html, etc.
+  const cleanRoutes = ["settings", "admin", "feedback", "att", "ct", "tos", "privacy", "login"];
+  const segments = pathname.split("/").filter(Boolean);
+
+  if (segments.length === 1 && cleanRoutes.includes(segments[0])) {
+    pathname = `/${segments[0]}.html`;
+  }
 
   // Normalize path
   pathname = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, "");
@@ -51,8 +59,17 @@ function serveStatic(req, res) {
 
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) {
-      res.writeHead(404, { "Content-Type": "text/plain" });
-      return res.end("Not Found");
+      // If not found, try serving 404.html instead of plain text
+      const notFoundPath = path.join(FRONTEND_DIR, "404.html");
+      fs.stat(notFoundPath, (err2, stat2) => {
+        if (!err2 && stat2.isFile()) {
+          res.writeHead(404, { "Content-Type": "text/html" });
+          return fs.createReadStream(notFoundPath).pipe(res);
+        }
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        return res.end("Not Found");
+      });
+      return;
     }
 
     const ext = path.extname(filePath).toLowerCase();

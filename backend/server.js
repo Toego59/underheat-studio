@@ -201,49 +201,12 @@ app.get("/api/auth/session", (req, res) => {
 });
 
 /* ============================================================
-   ADMIN SETUP — Create Founder Account (One-time only)
+   ADMIN SETUP — DISABLED (Founder access managed via KV only)
    ============================================================ */
 
-app.post("/api/auth/setup", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    if (!username || !password)
-      return res.status(400).json({ success: false, message: "Username and password required" });
-
-    // Check if founder already exists
-    const existing = await getFromKV(username);
-    if (existing)
-      return res.status(400).json({ success: false, message: "Account already exists" });
-
-    // Create founder account
-    const passwordHash = await hashPassword(password);
-    const founderUser = {
-      username,
-      passwordHash,
-      role: "founder"
-    };
-
-    const stored = await setInKV(username, founderUser);
-    if (!stored)
-      return res.status(500).json({ success: false, message: "Failed to create account — KV API error" });
-
-    const token = jwt.sign(
-      { username, role: "founder" },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      success: true,
-      message: "Founder account created",
-      token,
-      user: { username, role: "founder" }
-    });
-  } catch (e) {
-    console.error("Setup error:", e);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+app.post("/api/auth/setup", (req, res) => {
+  // Setup endpoint is disabled — founder accounts are managed directly in Cloudflare KV
+  res.status(403).json({ success: false, message: "Setup endpoint disabled" });
 });
 
 /* ============================================================
