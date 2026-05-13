@@ -1,45 +1,95 @@
-document.addEventListener("DOMContentLoaded", () => {
+// UNDERHEAT Studio — Feedback System (Auth0 + KV Roles + Worker API)
 
-  const token = localStorage.getItem("token");
-  let currentUser = null;
+document.addEventListener("DOMContentLoaded", async () => {
 
-  const api = async (path, method = "GET", body = null, isForm = false) => {
+  // ---------------------------------------------------------
+  // AUTH0 INITIALIZATION
+  // ---------------------------------------------------------
+  const auth0Client = await auth0.createAuth0Client({
+    domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
+    clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
+    authorizationParams: {
+      redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+    }
+  });
+
+  // Handle redirect callback (if returning from login)
+  if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
+    await auth0Client.handleRedirectCallback();
+    window.history.replaceState({}, "", window.location.pathname);
+  }
+
+  // ---------------------------------------------------------
+  // GET TOKEN
+  // ---------------------------------------------------------
+  async function getToken() {
+    try {
+      return await auth0Client.getTokenSilently();
+    } catch {
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------
+  // API HELPER
+  // ---------------------------------------------------------
+  async function api(path, method = "GET", body = null, isForm = false) {
+    const token = await getToken();
+
     const opts = { method, headers: {} };
+
     if (token) opts.headers["Authorization"] = `Bearer ${token}`;
+
     if (body && !isForm) {
       opts.headers["Content-Type"] = "application/json";
       opts.body = JSON.stringify(body);
     } else if (body && isForm) {
       opts.body = body;
     }
-    return (await fetch(path, opts)).json();
-  };
 
-  // Restore session
-  async function restoreSession() {
-    if (!token) return;
-    const res = await api("/api/auth/session");
-    if (res.success) {
-      currentUser = res.user;
-      if (["admin", "founder"].includes(currentUser.role)) {
-        document.getElementById("admin-section").classList.remove("hidden");
-        loadAdminNotes();
-      }
+    const res = await fetch(path, opts);
+    return res.json();
+  }
+
+  // ---------------------------------------------------------
+  // USER + ROLE LOADING
+  // ---------------------------------------------------------
+  let currentUser = null;
+  let currentRole = "guest";
+
+  async function loadUserRole() {
+    const isAuthenticated = await auth0Client.isAuthenticated();
+    if (!isAuthenticated) return;
+
+    currentUser = await auth0Client.getUser();
+
+    const roleRes = await api("/api/role");
+    currentRole = roleRes.role || "guest";
+
+    if (["admin", "founder"].includes(currentRole)) {
+      document.getElementById("admin-section").classList.remove("hidden");
+      loadAdminNotes();
     }
   }
 
-  // Back button
+  // ---------------------------------------------------------
+  // NAVIGATION BUTTONS
+  // ---------------------------------------------------------
   document.getElementById("back-btn").onclick = () => {
     window.location.href = "/index.html";
   };
 
-  // Logout
   document.getElementById("logout-btn").onclick = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/index.html";
+    auth0Client.logout({
+      logoutParams: {
+        returnTo: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+      }
+    });
   };
 
-  // Private feedback
+  // ---------------------------------------------------------
+  // PRIVATE FEEDBACK
+  // ---------------------------------------------------------
   document.getElementById("fb-submit").onclick = async () => {
     const result = await api("/api/feedback/private", "POST", {
       name: document.getElementById("fb-name").value,
@@ -47,7 +97,10 @@ document.addEventListener("DOMContentLoaded", () => {
       type: document.getElementById("fb-type").value,
       message: document.getElementById("fb-message").value
     });
-    document.getElementById("fb-status").textContent = result.success ? "Sent!" : result.message;
+
+    const status = document.getElementById("fb-status");
+    status.textContent = result.success ? "Sent!" : result.message;
+
     if (result.success) {
       document.getElementById("fb-name").value = "";
       document.getElementById("fb-email").value = "";
@@ -55,28 +108,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Public post
+  // ---------------------------------------------------------
+  // PUBLIC POST
+  // ---------------------------------------------------------
   document.getElementById("pub-submit").onclick = async () => {
     const form = new FormData();
     form.append("author", document.getElementById("pub-author").value);
     form.append("message", document.getElementById("pub-message").value);
     form.append("sensitive", document.getElementById("pub-anonymous").checked);
 
-    if (document.getElementById("pub-image").files[0]) {
-      form.append("image", document.getElementById("pub-image").files[0]);
-    }
+    const file = document.getElementById("pub-image").files[0];
+    if (file) form.append("image", file);
 
     const result = await api("/api/feedback/public", "POST", form, true);
-    document.getElementById("pub-status").textContent = result.success ? "Posted!" : result.message;
+
+    const status = document.getElementById("pub-status");
+    status.textContent = result.success ? "Posted!" : result.message;
+
     if (result.success) {
       document.getElementById("pub-author").value = "";
       document.getElementById("pub-message").value = "";
       document.getElementById("pub-image").value = "";
       document.getElementById("pub-anonymous").checked = false;
     }
+
     loadPublicPosts();
   };
 
+  // ---------------------------------------------------------
+  // LOAD PUBLIC POSTS
+  // ---------------------------------------------------------
   async function loadPublicPosts() {
     const res = await api("/api/feedback/public");
     const list = document.getElementById("pub-list");
@@ -104,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
         div.appendChild(img);
       }
 
-      if (currentUser && ["admin", "founder"].includes(currentUser.role)) {
+      if (["admin", "founder"].includes(currentRole)) {
         const del = document.createElement("button");
         del.textContent = "Delete";
         del.onclick = async () => {
@@ -118,15 +179,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Admin notes
+  // ---------------------------------------------------------
+  // ADMIN NOTES
+  // ---------------------------------------------------------
   document.getElementById("admin-submit").onclick = async () => {
     const result = await api("/api/feedback/admin", "POST", {
       message: document.getElementById("admin-message").value
     });
-    document.getElementById("admin-status").textContent = result.success ? "Posted!" : result.message;
+
+    const status = document.getElementById("admin-status");
+    status.textContent = result.success ? "Posted!" : result.message;
+
     if (result.success) {
       document.getElementById("admin-message").value = "";
     }
+
     loadAdminNotes();
   };
 
@@ -151,6 +218,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  restoreSession();
-  loadPublicPosts();
+  // ---------------------------------------------------------
+  // INITIAL LOAD
+  // ---------------------------------------------------------
+  await loadUserRole();
+  await loadPublicPosts();
 });
