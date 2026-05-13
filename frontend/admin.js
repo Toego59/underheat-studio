@@ -1,4 +1,4 @@
-// UNDERHEAT Studio — Admin Panel (Supabase + KV Roles)
+// UNDERHEAT Studio — Admin Panel (Auth0 + KV Roles)
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("ADMIN.JS: Loaded");
@@ -26,11 +26,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   const applyRoleBtn = document.getElementById("apply-role-btn");
 
   // ---------------------------------------------------------
+  // AUTH0 INITIALIZATION
+  // ---------------------------------------------------------
+  const auth0Client = await auth0.createAuth0Client({
+    domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
+    clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
+    authorizationParams: {
+      redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+    }
+  });
+
+  // ---------------------------------------------------------
+  // HANDLE REDIRECT CALLBACK
+  // ---------------------------------------------------------
+  if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
+    await auth0Client.handleRedirectCallback();
+    window.history.replaceState({}, "", window.location.pathname);
+  }
+
+  // ---------------------------------------------------------
   // GET TOKEN
   // ---------------------------------------------------------
   async function getToken() {
-    const session = (await supabase.auth.getSession()).data.session;
-    return session?.access_token || null;
+    try {
+      return await auth0Client.getTokenSilently();
+    } catch {
+      return null;
+    }
   }
 
   // ---------------------------------------------------------
@@ -63,15 +85,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // CHECK AUTHORIZATION
   // ---------------------------------------------------------
   async function checkAuth() {
-    const token = await getToken();
-    if (!token) {
+    const isAuthenticated = await auth0Client.isAuthenticated();
+    if (!isAuthenticated) {
       statusBox.classList.remove("hidden");
       statusBox.textContent = "Not logged in. Redirecting...";
       setTimeout(() => (window.location.href = "/index.html"), 2000);
       return null;
     }
 
-    // Get role from Worker
     const roleRes = await api("/api/role");
     const role = roleRes.role || "guest";
 
@@ -91,7 +112,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadUsers() {
     userList.innerHTML = "<p class='small muted'>Loading users...</p>";
 
-    // You don't have a list-users endpoint yet, so placeholder:
     userList.innerHTML = `
       <p class="small muted">
         User listing requires a /api/list-users endpoint.<br>
@@ -154,9 +174,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ---------------------------------------------------------
   // LOGOUT
   // ---------------------------------------------------------
-  logoutBtn.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/index.html";
+  logoutBtn.addEventListener("click", () => {
+    auth0Client.logout({
+      logoutParams: {
+        returnTo: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+      }
+    });
   });
 
   // ---------------------------------------------------------
@@ -172,8 +195,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const role = await checkAuth();
   if (!role) return;
 
-  const session = (await supabase.auth.getSession()).data.session;
-  adminUserIndicator.textContent = `${session.user.email} (${role})`;
+  const user = await auth0Client.getUser();
+  adminUserIndicator.textContent = `${user.email} (${role})`;
 
   statusBox.classList.remove("hidden");
   statusBox.textContent = "✓ Admin access granted.";

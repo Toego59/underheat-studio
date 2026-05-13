@@ -14,9 +14,8 @@
   <!-- Webamp -->
   <script src="https://unpkg.com/webamp@1.4.0/built/webamp.bundle.min.js"></script>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
+  <!-- Auth0 SDK (official) -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.18/auth0-spa-js.production.js"></script>
 </head>
 
 <body>
@@ -48,21 +47,6 @@
 
     <!-- MAIN CONTENT -->
     <main class="main">
-
-      <!-- LOGIN PANEL -->
-      <section id="auth-panel" class="section hidden">
-        <h2 class="section-title">Login</h2>
-
-        <div class="panel auth-box">
-          <input id="emailInput" type="email" placeholder="Email" class="auth-input">
-          <input id="passwordInput" type="password" placeholder="Password" class="auth-input">
-
-          <div class="auth-buttons">
-            <button id="doLogin" class="btn primary">Login</button>
-            <button id="doSignup" class="btn secondary">Sign Up</button>
-          </div>
-        </div>
-      </section>
 
       <!-- PUBLIC GAMES -->
       <section id="games" class="section">

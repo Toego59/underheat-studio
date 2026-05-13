@@ -1,6 +1,6 @@
-// UNDERHEAT Studio — Supabase Auth + KV Roles + Founder-Only Webamp
+// UNDERHEAT Studio — Auth0 Auth + KV Roles + Founder-Only Webamp
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
   // -----------------------------
   // ELEMENTS
@@ -19,25 +19,41 @@ document.addEventListener("DOMContentLoaded", () => {
   const webampContainer = document.getElementById("webamp-container");
   let webamp = null;
 
-  const authPanel = document.getElementById("auth-panel");
-  const doLogin = document.getElementById("doLogin");
-  const doSignup = document.getElementById("doSignup");
-  const emailInput = document.getElementById("emailInput");
-  const passwordInput = document.getElementById("passwordInput");
-
   let currentUser = null;
   let role = null;
+
+  // -----------------------------
+  // AUTH0 INITIALIZATION
+  // -----------------------------
+  window.auth0Client = await auth0.createAuth0Client({
+    domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
+    clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
+    authorizationParams: {
+      redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+    }
+  });
+
+  // -----------------------------
+  // HANDLE REDIRECT CALLBACK
+  // -----------------------------
+  if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
+    await window.auth0Client.handleRedirectCallback();
+    window.history.replaceState({}, "", window.location.pathname);
+  }
 
   // -----------------------------
   // GET TOKEN
   // -----------------------------
   async function getToken() {
-    const session = (await supabase.auth.getSession()).data.session;
-    return session?.access_token || null;
+    try {
+      return await window.auth0Client.getTokenSilently();
+    } catch {
+      return null;
+    }
   }
 
   // -----------------------------
-  // FETCH ROLE
+  // FETCH ROLE FROM WORKER
   // -----------------------------
   async function fetchRole() {
     const token = await getToken();
@@ -103,9 +119,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // UI UPDATE
   // -----------------------------
   async function updateUI() {
-    const session = (await supabase.auth.getSession()).data.session;
+    const isAuthenticated = await window.auth0Client.isAuthenticated();
 
-    if (!session) {
+    if (!isAuthenticated) {
       currentUser = null;
       role = null;
 
@@ -116,13 +132,12 @@ document.addEventListener("DOMContentLoaded", () => {
       adminBtn.classList.add("hidden");
       gated.classList.add("hidden");
       debug.classList.add("hidden");
-      authPanel.classList.add("hidden");
 
       updateWebampVisibility();
       return;
     }
 
-    currentUser = session.user;
+    currentUser = await window.auth0Client.getUser();
     role = await fetchRole();
 
     userIndicator.textContent = `${currentUser.email} (${role})`;
@@ -148,35 +163,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // EVENT LISTENERS
   // -----------------------------
   loginBtn.addEventListener("click", () => {
-    authPanel.classList.remove("hidden");
+    window.auth0Client.loginWithRedirect();
   });
 
-  doLogin.addEventListener("click", async () => {
-    const email = emailInput.value;
-    const password = passwordInput.value;
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message);
-
-    authPanel.classList.add("hidden");
-    updateUI();
-  });
-
-  doSignup.addEventListener("click", async () => {
-    const email = emailInput.value;
-    const password = passwordInput.value;
-
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) alert(error.message);
-    else alert("Check your email to confirm your account");
-
-    authPanel.classList.add("hidden");
-    updateUI();
-  });
-
-  logoutBtn.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    updateUI();
+  logoutBtn.addEventListener("click", () => {
+    window.auth0Client.logout({
+      logoutParams: {
+        returnTo: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+      }
+    });
   });
 
   feedbackBtn.addEventListener("click", () => {
@@ -194,6 +189,5 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
   // INITIAL LOAD
   // -----------------------------
-  supabase.auth.onAuthStateChange(() => updateUI());
   updateUI();
 });

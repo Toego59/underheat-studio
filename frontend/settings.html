@@ -7,6 +7,10 @@
 
   <link rel="stylesheet" href="style.css">
   <script src="theme.js"></script>
+
+  <!-- Auth0 SDK (official) -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.18/auth0-spa-js.production.js"></script>
+
   <style>
     .color-setting {
       display: flex;
@@ -138,8 +142,36 @@
 
   </div>
 
+  <!-- SETTINGS LOGIC -->
   <script src="settings.js"></script>
+
+  <!-- AUTH0 LOGOUT HANDLER -->
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const logoutBtn = document.getElementById("logout-btn");
+      const backBtn = document.getElementById("back-btn");
+
+      const auth0Client = await auth0.createAuth0Client({
+        domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
+        clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
+        authorizationParams: {
+          redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+        }
+      });
+
+      logoutBtn.addEventListener("click", () => {
+        auth0Client.logout({
+          logoutParams: {
+            returnTo: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+          }
+        });
+      });
+
+      backBtn.addEventListener("click", () => {
+        window.location.href = "/index.html";
+      });
+    });
+  </script>
+
 </body>
 </html>
-
-
