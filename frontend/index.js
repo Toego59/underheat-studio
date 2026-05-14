@@ -1,24 +1,6 @@
-
 // ======================================================================
-// TEMP DEBUG SECTION — REMOVE AFTER TESTING
-// ======================================================================
-document.addEventListener("DOMContentLoaded", () => {
-  const showBtn = document.getElementById("show-token");
-  const out = document.getElementById("token-output");
-
-  if (showBtn && out) {
-    showBtn.addEventListener("click", async () => {
-      const token = await auth0Client.getTokenSilently();
-      out.textContent = token;
-    });
-  }
-});
-// ======================================================================
-// END TEMP DEBUG SECTION
-// ======================================================================
-
-
 // UNDERHEAT Studio — Auth0 Auth + KV Roles + Founder-Only Webamp
+// ======================================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -40,24 +22,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   let webamp = null;
 
   let currentUser = null;
-  let role = null;
+  let role = "user";
 
   // -----------------------------
-  // AUTH0 INITIALIZATION (AUDIENCE + SCOPES)
+  // AUTH0 INITIALIZATION
   // -----------------------------
-
   window.auth0Client = await auth0.createAuth0Client({
-  domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
-  clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
-  authorizationParams: {
-    audience: "https://cold-cell-aa07.jkmeiihh.workers.dev",
-    scope: "openid profile email read:role write:role",
-    redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
-  }
-});
+    domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
+    clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
+    authorizationParams: {
+      audience: "https://cold-cell-aa07.jkmeiihh.workers.dev",
+      scope: "openid profile email read:role write:role",
+      redirect_uri: window.location.origin
+    }
+  });
 
   // -----------------------------
-  // HANDLE REDIRECT CALLBACK
+  // HANDLE REDIRECT CALLBACK FIRST
   // -----------------------------
   if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
     await window.auth0Client.handleRedirectCallback();
@@ -85,7 +66,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   async function fetchRole() {
     const token = await getToken();
-
     if (!token) return "user";
 
     try {
@@ -95,14 +75,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const data = await res.json();
       return data.role || "user";
-
     } catch {
       return "user";
     }
   }
 
   // -----------------------------
-  // WEBAMP
+  // WEBAMP VISIBILITY
   // -----------------------------
   function updateWebampVisibility() {
     if (role !== "founder") {
@@ -199,7 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   logoutBtn.addEventListener("click", () => {
     window.auth0Client.logout({
       logoutParams: {
-        returnTo: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+        returnTo: window.location.origin
       }
     });
   });
@@ -221,4 +200,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   updateUI();
 });
-
