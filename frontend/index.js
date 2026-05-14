@@ -53,14 +53,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // -----------------------------
-  // FETCH ROLE FROM WORKER
+  // API BASE URL (FIXED)
+  // -----------------------------
+  const API_BASE = "https://cold-cell-aa07.jkmeiihh.workers.dev";
+
+  // -----------------------------
+  // FETCH ROLE FROM WORKER (FIXED)
   // -----------------------------
   async function fetchRole() {
     const token = await getToken();
     if (!token) return "guest";
 
     try {
-      const res = await fetch("/api/role", {
+      const res = await fetch(`${API_BASE}/api/role`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

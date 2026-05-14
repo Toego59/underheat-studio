@@ -56,7 +56,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ---------------------------------------------------------
-  // API HELPER
+  // API BASE URL
+  // ---------------------------------------------------------
+  const API_BASE = "https://cold-cell-aa07.jkmeiihh.workers.dev";
+
+  // ---------------------------------------------------------
+  // API HELPER (FIXED)
   // ---------------------------------------------------------
   async function api(path, method = "GET", body = null) {
     const token = await getToken();
@@ -73,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (body) opts.body = JSON.stringify(body);
 
     try {
-      const res = await fetch(path, opts);
+      const res = await fetch(`${API_BASE}${path}`, opts);
       return await res.json();
     } catch (err) {
       console.error("API Error:", err);

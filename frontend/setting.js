@@ -49,14 +49,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // APPLY SETTINGS TO PAGE
   // -----------------------------
   function applySettings(s) {
-    document.documentElement.style.setProperty("--accent-color", s.accent);
-    document.documentElement.style.setProperty("--background-color", s.background);
-    document.documentElement.style.setProperty("--text-color", s.text);
+    const root = document.documentElement;
 
-    document.body.setAttribute("card-style", s.cardStyle);
-    document.body.setAttribute("font-style", s.fontStyle);
+    // FIXED: Correct CSS variable names
+    root.style.setProperty("--accent-color", s.accent);
+    root.style.setProperty("--background-color", s.background);
+    root.style.setProperty("--text-color", s.text);
 
-    document.documentElement.style.setProperty("--ui-scale", s.uiScale);
+    // FIXED: Apply card + font style to root (not body)
+    root.setAttribute("card-style", s.cardStyle);
+    root.setAttribute("font-style", s.fontStyle);
+
+    // FIXED: UI scale variable
+    root.style.setProperty("--ui-scale", s.uiScale);
 
     updatePreview(s);
   }
@@ -70,6 +75,12 @@ document.addEventListener("DOMContentLoaded", () => {
     preview.style.borderColor = s.accent;
     preview.style.background = s.background;
     preview.style.color = s.text;
+
+    // FIXED: Preview card + font style
+    preview.setAttribute("card-style", s.cardStyle);
+    preview.setAttribute("font-style", s.fontStyle);
+
+    preview.style.transform = `scale(${s.uiScale})`;
   }
 
   // -----------------------------
@@ -99,9 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // RESET SETTINGS
   // -----------------------------
   function resetSettings() {
-    Object.keys(DEFAULTS).forEach(key => {
-      localStorage.removeItem(key);
-    });
+    localStorage.removeItem("accent-color");
+    localStorage.removeItem("background-color");
+    localStorage.removeItem("text-color");
+    localStorage.removeItem("card-style");
+    localStorage.removeItem("font-style");
+    localStorage.removeItem("ui-scale");
 
     applySettings(DEFAULTS);
 

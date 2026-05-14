@@ -1,20 +1,27 @@
 /* ============================================================
-   UNDERHEAT STUDIO — GLOBAL THEME SYSTEM
+   UNDERHEAT STUDIO — GLOBAL THEME SYSTEM (FIXED + MODERNIZED)
    ============================================================ */
 
 :root {
-  --primary-color: #ff5500;
-  --secondary-color: #333333;
+  /* Core theme variables (controlled by settings.js) */
   --accent-color: #ff5500;
   --background-color: #1a1a1a;
+  --text-color: #ffffff;
+
+  /* Neon + glow */
   --neon-color: #00ffff;
 
+  /* Card + panel backgrounds */
   --panel-bg: rgba(255, 255, 255, 0.05);
   --panel-bg-dark: rgba(0, 0, 0, 0.4);
-  --text-color: #ffffff;
   --border-color: rgba(255, 255, 255, 0.15);
 
+  /* UI scale */
   --ui-scale: 1;
+
+  /* Font families */
+  --font-modern: "Inter", sans-serif;
+  --font-terminal: "Share Tech Mono", monospace;
 }
 
 /* ============================================================
@@ -30,10 +37,60 @@
 body {
   background: var(--background-color);
   color: var(--text-color);
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-modern);
   transform: scale(var(--ui-scale));
   transform-origin: top center;
-  transition: background 0.3s, color 0.3s;
+  transition: background 0.3s, color 0.3s, transform 0.2s;
+}
+
+/* ============================================================
+   FONT STYLE SYSTEM
+   ============================================================ */
+
+:root[font-style="modern"] body {
+  font-family: var(--font-modern);
+}
+
+:root[font-style="terminal"] body {
+  font-family: var(--font-terminal);
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   CARD STYLE SYSTEM
+   ============================================================ */
+
+/* Default (glass) */
+.panel,
+.card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(12px);
+  transition: background 0.3s, border-radius 0.3s;
+}
+
+/* Solid */
+:root[card-style="solid"] .panel,
+:root[card-style="solid"] .card {
+  background: var(--secondary-color, #333);
+  border: none;
+}
+
+/* Rounded */
+:root[card-style="rounded"] .panel,
+:root[card-style="rounded"] .card {
+  border-radius: 20px;
+}
+
+/* Neon */
+:root[card-style="neon"] .panel,
+:root[card-style="neon"] .card {
+  border: 2px solid var(--neon-color);
+  box-shadow: 0 0 12px var(--neon-color);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 /* ============================================================
@@ -163,24 +220,15 @@ button:active,
   transform: translateY(0);
 }
 
-.btn.primary {
-  background: var(--accent-color);
-}
-
 .btn.ghost {
   background: transparent;
   border: 2px solid var(--accent-color);
   color: var(--accent-color);
-  padding: 10px 18px;
 }
 
 .btn.ghost:hover {
   background: var(--accent-color);
   color: #fff;
-}
-
-.btn.secondary {
-  background: var(--secondary-color);
 }
 
 /* ============================================================
@@ -212,11 +260,11 @@ input[type="color"] {
 
 select {
   appearance: none;
+  background-color: var(--panel-bg);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 32px;
-  background-color: var(--panel-bg);
 }
 
 input:focus,
@@ -226,77 +274,7 @@ textarea:focus {
 }
 
 /* ============================================================
-   PANELS + CARDS
-   ============================================================ */
-
-.panel,
-.card {
-  background: var(--panel-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  backdrop-filter: blur(12px);
-}
-
-body[card-style="solid"] .panel,
-body[card-style="solid"] .card {
-  background: var(--secondary-color);
-}
-
-body[card-style="rounded"] .panel,
-body[card-style="rounded"] .card {
-  border-radius: 20px;
-}
-
-/* ============================================================
-   MAIN / SECTIONS
-   ============================================================ */
-
-.main {
-  margin-bottom: 40px;
-}
-
-.section {
-  margin-bottom: 30px;
-}
-
-.section-title {
-  font-size: 22px;
-  margin-bottom: 15px;
-}
-
-/* ============================================================
-   GAME GRID
-   ============================================================ */
-
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.game-card {
-  display: block;
-  text-decoration: none;
-  color: var(--text-color);
-  max-width: 400px;
-}
-
-.game-image {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  border-radius: 8px;
-  display: block;
-}
-
-.game-info {
-  margin-top: 10px;
-}
-
-/* ============================================================
-   AUTH MODAL — FIXED
+   AUTH MODAL
    ============================================================ */
 
 .auth-modal {
@@ -321,19 +299,6 @@ body[card-style="rounded"] .card {
   width: 100%;
   max-width: 400px;
   border: 1px solid var(--border-color);
-}
-
-/* ============================================================
-   FORM GROUPS
-   ============================================================ */
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-label {
-  font-size: 14px;
-  opacity: 0.85;
 }
 
 /* ============================================================
