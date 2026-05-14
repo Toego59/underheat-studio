@@ -1,3 +1,23 @@
+
+// ======================================================================
+// TEMP DEBUG SECTION — REMOVE AFTER TESTING
+// ======================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const showBtn = document.getElementById("show-token");
+  const out = document.getElementById("token-output");
+
+  if (showBtn && out) {
+    showBtn.addEventListener("click", async () => {
+      const token = await auth0Client.getTokenSilently();
+      out.textContent = token;
+    });
+  }
+});
+// ======================================================================
+// END TEMP DEBUG SECTION
+// ======================================================================
+
+
 // UNDERHEAT Studio — Auth0 Auth + KV Roles + Founder-Only Webamp
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -23,15 +43,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   let role = null;
 
   // -----------------------------
-  // AUTH0 INITIALIZATION
+  // AUTH0 INITIALIZATION (AUDIENCE + SCOPES)
   // -----------------------------
-  window.auth0Client = await auth0.createAuth0Client({
-    domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
-    clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
-    authorizationParams: {
-      redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
-    }
-  });
+window.auth0Client = await auth0.createAuth0Client({
+  domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
+  clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
+  authorizationParams: {
+    audience: "https://cold-cell-aa07.jkmeiihh.workers.dev",
+    scope: "openid profile email read:role write:role",
+    redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
+  }
+});
+
 
   // -----------------------------
   // HANDLE REDIRECT CALLBACK
@@ -53,16 +76,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // -----------------------------
-  // API BASE URL (FIXED)
+  // API BASE URL
   // -----------------------------
   const API_BASE = "https://cold-cell-aa07.jkmeiihh.workers.dev";
 
   // -----------------------------
-  // FETCH ROLE FROM WORKER (FIXED)
+  // FETCH ROLE FROM WORKER
   // -----------------------------
   async function fetchRole() {
     const token = await getToken();
-    if (!token) return "guest";
+
+    if (!token) return "user";
 
     try {
       const res = await fetch(`${API_BASE}/api/role`, {
@@ -71,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const data = await res.json();
       return data.role || "user";
+
     } catch {
       return "user";
     }
@@ -128,7 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!isAuthenticated) {
       currentUser = null;
-      role = null;
+      role = "user";
 
       userIndicator.textContent = "";
       loginBtn.classList.remove("hidden");
@@ -196,3 +221,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   updateUI();
 });
+

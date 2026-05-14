@@ -8,6 +8,9 @@
   --background-color: #1a1a1a;
   --text-color: #ffffff;
 
+  /* Secondary (for solid cards, etc.) */
+  --secondary-color: #333333;
+
   /* Neon + glow */
   --neon-color: #00ffff;
 
@@ -38,9 +41,7 @@ body {
   background: var(--background-color);
   color: var(--text-color);
   font-family: var(--font-modern);
-  transform: scale(var(--ui-scale));
-  transform-origin: top center;
-  transition: background 0.3s, color 0.3s, transform 0.2s;
+  transition: background 0.3s, color 0.3s;
 }
 
 /* ============================================================
@@ -69,13 +70,13 @@ body {
   padding: 20px;
   margin-bottom: 20px;
   backdrop-filter: blur(12px);
-  transition: background 0.3s, border-radius 0.3s;
+  transition: background 0.3s, border-radius 0.3s, box-shadow 0.3s, border 0.3s;
 }
 
 /* Solid */
 :root[card-style="solid"] .panel,
 :root[card-style="solid"] .card {
-  background: var(--secondary-color, #333);
+  background: var(--secondary-color);
   border: none;
 }
 
@@ -114,6 +115,9 @@ a:hover {
   max-width: 1200px;
   margin: auto;
   padding: 20px;
+  transform: scale(var(--ui-scale));
+  transform-origin: top center;
+  transition: transform 0.2s;
 }
 
 /* ============================================================
@@ -271,6 +275,36 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: 2px solid var(--accent-color);
+}
+
+/* ============================================================
+   GAME GRID — FIXED IMAGE SIZING
+   ============================================================ */
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.game-card {
+  display: block;
+  text-decoration: none;
+  color: var(--text-color);
+}
+
+.game-image {
+  width: 100%;
+  height: auto;          /* keeps natural aspect ratio */
+  max-height: 300px;     /* prevents giant images */
+  object-fit: contain;   /* no cropping, no squishing */
+  border-radius: 10px;
+  display: block;
+}
+
+
+.game-info {
+  margin-top: 10px;
 }
 
 /* ============================================================
