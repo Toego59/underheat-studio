@@ -45,7 +45,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   // AUTH0 INITIALIZATION (AUDIENCE + SCOPES)
   // -----------------------------
-window.auth0Client = await auth0.createAuth0Client({
+
+  window.auth0Client = await auth0.createAuth0Client({
   domain: "dev-4ltdfgozv6ve68zm.us.auth0.com",
   clientId: "nq6P9QVnA0WT2GCls7JNl5Unj35l8oGz",
   authorizationParams: {
@@ -54,9 +55,6 @@ window.auth0Client = await auth0.createAuth0Client({
     redirect_uri: "https://miniature-system-q7p4wgx7g96g2r95-5500.app.github.dev"
   }
 });
-
-
-
 
   // -----------------------------
   // HANDLE REDIRECT CALLBACK
