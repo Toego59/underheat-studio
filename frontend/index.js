@@ -81,6 +81,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // -----------------------------
+  // TEMP DEBUG PANEL (SAFE)
+  // -----------------------------
+  async function updateDebugPanel() {
+    if (!debug) return;
+
+    const token = await getToken();
+    const decoded = token ? JSON.parse(atob(token.split(".")[1])) : null;
+
+    debug.textContent =
+      "=== DEBUG PANEL ===\n" +
+      `Authenticated: ${await window.auth0Client.isAuthenticated()}\n` +
+      `UI Role: ${role}\n` +
+      `Decoded Token Role Permissions: ${decoded?.permissions || "none"}\n` +
+      `Decoded Token Aud: ${JSON.stringify(decoded?.aud || "none")}\n` +
+      `Decoded Token Sub: ${decoded?.sub || "none"}\n` +
+      "====================";
+  }
+
+  // -----------------------------
   // WEBAMP VISIBILITY
   // -----------------------------
   function updateWebampVisibility() {
@@ -143,6 +162,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       debug.classList.add("hidden");
 
       updateWebampVisibility();
+      updateDebugPanel();
       return;
     }
 
@@ -159,13 +179,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (role === "founder" || role === "admin") {
       adminBtn.classList.remove("hidden");
       debug.classList.remove("hidden");
-      debug.textContent = `Admin mode active\nRole: ${role}`;
     } else {
       adminBtn.classList.add("hidden");
       debug.classList.add("hidden");
     }
 
     updateWebampVisibility();
+    updateDebugPanel();
   }
 
   // -----------------------------

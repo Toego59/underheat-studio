@@ -14,7 +14,7 @@
   <!-- Webamp -->
   <script src="https://unpkg.com/webamp@1.4.0/built/webamp.bundle.min.js"></script>
 
-  <!-- Auth0 SDK (official) -->
+  <!-- Auth0 SDK -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.18/auth0-spa-js.production.js"></script>
 </head>
 
@@ -37,10 +37,6 @@
         </div>
 
         <button id="feedbackBtn" class="btn ghost">Feedback / Contact</button>
-
-         <!-- this is a placheholder 58 -->
-         <button id="show-token">Show Token</button>
-         <pre id="token-output"></pre>
 
         <div class="nav-row">
           <button id="logoutBtn" class="btn ghost hidden">Logout</button>
@@ -96,8 +92,18 @@
       </section>
     </main>
 
-    <!-- DEBUG PANEL -->
-    <div id="debug-panel" class="debug-panel hidden"></div>
+    <!-- DEBUG PANEL (TEMPORARY) -->
+    <div id="debug-panel"
+         style="white-space: pre;
+                background: #111;
+                color: #0f0;
+                padding: 10px;
+                margin-top: 20px;
+                font-family: monospace;
+                font-size: 13px;
+                border: 1px solid #333;
+                display: none;">
+    </div>
 
     <!-- FOOTER -->
     <footer class="footer">
